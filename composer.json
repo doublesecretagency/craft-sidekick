@@ -1,0 +1,42 @@
+{
+    "name": "doublesecretagency/craft-sidekick",
+    "description": "Build complex Craft sites in the blink of an eye.",
+    "type": "craft-plugin",
+    "version": "0.9.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "ai",
+        "chatgpt",
+        "openai",
+        "alt-tags",
+        "code-generation",
+        "dummy-data"
+    ],
+    "support": {
+        "docs": "https://plugins.doublesecretagency.com/sidekick",
+        "issues": "https://github.com/doublesecretagency/craft-sidekick/issues"
+    },
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Double Secret Agency",
+            "homepage": "https://plugins.doublesecretagency.com"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^4.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "doublesecretagency\\sidekick\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Sidekick",
+        "handle": "sidekick",
+        "class": "doublesecretagency\\sidekick\\Sidekick"
+    }
+}
