@@ -1,0 +1,53 @@
+#chat-message {
+    border: 1px solid #333; /* Dark solid border */
+    padding: 10px;
+    margin-top: 5px;
+    resize: vertical; /* Allow vertical resizing */
+    border-radius: 4px; /* Optional: rounded corners */
+}
+
+#chat-window {
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 400px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.form-footer button {
+    margin-right: 10px; /* Add space between button and edge */
+}
+
+.instruction-text {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0;
+    margin-left: auto; /* Push the instruction text to the right */
+}
+
+/* Mobile Optimization */
+@media (max-width: 600px) {
+    .form-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-footer button,
+    .form-footer .instruction-text {
+        align-self: center;
+        margin-top: 5px;
+        text-align: center;
+    }
+
+    .instruction-text {
+        margin-left: 0;
+    }
+}

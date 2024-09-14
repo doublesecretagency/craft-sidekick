@@ -6,7 +6,9 @@ use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterUrlRulesEvent;
 use craft\services\UserPermissions;
+use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
 use doublesecretagency\sidekick\models\Settings;
@@ -31,6 +33,11 @@ class Sidekick extends Plugin
 
     // Hold an instance of the plugin
     public static $plugin;
+
+    /**
+     * @var bool $hasCpSection The plugin has a section with subpages.
+     */
+    public bool $hasCpSection = true;
 
     // Indicates the plugin has a settings page in the control panel
     public bool $hasCpSettings = true;
@@ -85,6 +92,42 @@ class Sidekick extends Plugin
             }
         );
 
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            static function (RegisterUrlRulesEvent $event) {
+                $event->rules['sidekick/chat'] = 'sidekick/chat/index';
+                $event->rules['sidekick/chat/send-message'] = 'sidekick/chat/send-message';
+                $event->rules['sidekick/chat/get-conversation'] = 'sidekick/chat/get-conversation';
+            }
+        );
+
+    }
+
+    /**
+     * @return array
+     */
+    public function getCpNavItem(): array
+    {
+        $navItem = parent::getCpNavItem();
+        $navItem['label'] = 'Sidekick';
+        $navItem['url'] = 'sidekick/chat';
+//        $navItem['icon'] = '@doublesecretagency/sidekick/resources/icon.svg';
+        return $navItem;
+    }
+
+    /**
+     * @return array[]
+     */
+    public function definePermissions(): array
+    {
+        return [
+            'accessSidekick' => ['label' => 'Access Sidekick Plugin'],
+            'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
+            'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
+            'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
+            'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
+        ];
     }
 
     /**

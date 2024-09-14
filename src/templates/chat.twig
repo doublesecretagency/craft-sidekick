@@ -1,0 +1,25 @@
+{% extends "_layouts/cp" %}
+{% set title = 'Sidekick Chat' %}
+
+{% do view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\ChatAssetBundle') %}
+
+{% block content %}
+    <p><strong>Talk to Sidekick.</strong> Let it know what kind of changes you'd like to make.</p>
+    <div id="chat-window">
+        <!-- Chat messages will be dynamically inserted here -->
+    </div>
+    <form id="chat-form">
+        {{ csrfInput() }}
+        <textarea
+            id="chat-message"
+            name="message"
+            rows="3"
+            style="width: 100%;"
+            placeholder="Type your message..."
+        ></textarea>
+        <div class="form-footer">
+            <button type="submit" class="btn submit">Send</button>
+            <p class="instruction-text">Press Enter to send, Shift+Enter for a new line</p>
+        </div>
+    </form>
+{% endblock %}

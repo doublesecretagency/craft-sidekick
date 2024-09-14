@@ -11,7 +11,7 @@
         "ai",
         "chatgpt",
         "openai",
-        "alt-tags",
+        "alt-text",
         "code-generation",
         "dummy-data"
     ],
@@ -27,7 +27,8 @@
         }
     ],
     "require": {
-        "craftcms/cms": "^4.0.0"
+        "craftcms/cms": "^4.0",
+        "jfcherng/php-diff": "^6.0"
     },
     "autoload": {
         "psr-4": {
