@@ -3,6 +3,10 @@
 
 {% do view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\ChatAssetBundle') %}
 
+{% block actionButton %}
+    <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
+{% endblock %}
+
 {% block content %}
     <p><strong>Talk to Sidekick.</strong> Let it know what kind of changes you'd like to make.</p>
     <div id="chat-window">
@@ -19,6 +23,9 @@
         ></textarea>
         <div class="form-footer">
             <button type="submit" class="btn submit">Send</button>
+            <div id="chat-spinner" class="chat-spinner" aria-hidden="true" role="status" aria-live="polite">
+                <span class="visually-hidden">Loading...</span>
+            </div>
             <p class="instruction-text">Press Enter to send, Shift+Enter for a new line</p>
         </div>
     </form>

@@ -21,6 +21,7 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use yii\base\Event;
 use yii\base\Exception;
+use yii\log\FileTarget;
 
 /**
  * Class Sidekick
@@ -41,6 +42,12 @@ class Sidekick extends Plugin
 
     // Indicates the plugin has a settings page in the control panel
     public bool $hasCpSettings = true;
+
+    /**
+     * @var string The AI model to use.
+     */
+    public static string $aiModel = 'gpt-4o';
+    // public static string $aiModel = 'o1-preview';
 
     /**
      * Initializes the plugin.
@@ -75,6 +82,7 @@ class Sidekick extends Plugin
                         'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
                         'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
                         'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
+                        'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
                     ],
                 ];
             }
@@ -99,9 +107,36 @@ class Sidekick extends Plugin
                 $event->rules['sidekick/chat'] = 'sidekick/chat/index';
                 $event->rules['sidekick/chat/send-message'] = 'sidekick/chat/send-message';
                 $event->rules['sidekick/chat/get-conversation'] = 'sidekick/chat/get-conversation';
+                $event->rules['sidekick/chat/clear-conversation'] = 'sidekick/chat/clear-conversation';
             }
         );
 
+        // ===== Custom Logging Configuration =====
+
+        // Initialize the custom log target for Sidekick
+        $this->initializeCustomLogger();
+    }
+
+    /**
+     * Initializes a custom logger to write Sidekick logs to sidekick.log
+     */
+    private function initializeCustomLogger(): void
+    {
+        // Define the log file path
+        $logFilePath = Craft::getAlias('@storage/logs/sidekick.log');
+
+        // Create a new FileTarget instance
+        $sidekickLogTarget = new FileTarget([
+            'levels' => ['error', 'warning', 'info'],
+            'categories' => ['doublesecretagency\sidekick\*'],
+            'logFile' => $logFilePath,
+            'logVars' => [], // Disable logging of global variables like $_SERVER
+            'maxFileSize' => 10240, // 10MB
+            'maxLogFiles' => 5,
+        ]);
+
+        // Add the custom log target to Craft's logger
+        Craft::getLogger()->dispatcher->targets[] = $sidekickLogTarget;
     }
 
     /**
@@ -112,23 +147,24 @@ class Sidekick extends Plugin
         $navItem = parent::getCpNavItem();
         $navItem['label'] = 'Sidekick';
         $navItem['url'] = 'sidekick/chat';
-//        $navItem['icon'] = '@doublesecretagency/sidekick/resources/icon.svg';
+        // $navItem['icon'] = '@doublesecretagency/sidekick/resources/icon.svg';
         return $navItem;
     }
 
-    /**
-     * @return array[]
-     */
-    public function definePermissions(): array
-    {
-        return [
-            'accessSidekick' => ['label' => 'Access Sidekick Plugin'],
-            'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
-            'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
-            'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
-            'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
-        ];
-    }
+//    /**
+//     * @return array[]
+//     */
+//    public function definePermissions(): array
+//    {
+//        return [
+//            'accessSidekick' => ['label' => 'Access Sidekick Plugin'],
+//            'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
+//            'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
+//            'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
+//            'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
+//            'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
+//        ];
+//    }
 
     /**
      * Creates the settings model for the plugin.

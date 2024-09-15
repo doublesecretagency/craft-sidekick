@@ -49,7 +49,7 @@ class OpenAIService extends Component
         try {
             $client = new Client();
 
-            $response = $client->post('https://api.openai.com/v1/chat/completions', [
+            $response = $client->post($this->apiEndpoint, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
                     'Content-Type' => 'application/json',
@@ -65,6 +65,7 @@ class OpenAIService extends Component
                     'results' => trim($body['choices'][0]['message']['content']),
                 ];
             } else {
+                Craft::error('OpenAI API Response Missing Content.', __METHOD__);
                 return [
                     'success' => false,
                     'error' => 'Failed to generate completion.',
@@ -86,12 +87,16 @@ class OpenAIService extends Component
      * @param int $maxTokens
      * @param float $temperature
      * @return array
+     * @throws GuzzleException
      */
     public function getCompletion(string $prompt, int $maxTokens = 150, float $temperature = 0.7): array
     {
         try {
             // Prepare the Guzzle client
             $client = new Client();
+
+            // Get the current version of Craft
+            $currentVersion = Craft::$app->getVersion();
 
             // Send a POST request to the OpenAI API
             $response = $client->post($this->apiEndpoint, [
@@ -100,11 +105,11 @@ class OpenAIService extends Component
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'gpt-4',
+                    'model' => Sidekick::$aiModel,
                     'messages' => [
                         [
                             'role' => 'system',
-                            'content' => 'You are an assistant that helps generate and modify Twig templates for a Craft CMS website.',
+                            'content' => "You are an assistant that helps generate and modify Twig templates for a Craft CMS website. Our current version of Craft is {$currentVersion}.",
                         ],
                         [
                             'role' => 'user',
@@ -126,6 +131,7 @@ class OpenAIService extends Component
                     'results' => trim($body['choices'][0]['message']['content']),
                 ];
             } else {
+                Craft::error('OpenAI API Response Missing Content.', __METHOD__);
                 return [
                     'success' => false,
                     'error' => 'Failed to generate completion.',
