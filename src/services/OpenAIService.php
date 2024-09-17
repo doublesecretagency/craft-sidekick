@@ -3,212 +3,218 @@
 namespace doublesecretagency\sidekick\services;
 
 use Craft;
-use craft\elements\Asset;
 use doublesecretagency\sidekick\Sidekick;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use yii\base\Component;
 use yii\base\Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class OpenAIService
  *
- * Handles communication with the OpenAI API for generating content.
+ * Handles communication with the AI assistant.
  */
 class OpenAIService extends Component
 {
-    // OpenAI API endpoint
-    private string $apiEndpoint = 'https://api.openai.com/v1/chat/completions';
-
-    // OpenAI API key
+    /**
+     * @var string The API key for OpenAI.
+     */
     private string $apiKey;
 
     /**
-     * Initializes the service.
+     * @var string The endpoint URL for OpenAI's chat completion.
      */
-    public function init(): void
+    private string $apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+
+    /**
+     * @var string The complex system prompt guiding the AI assistant.
+     */
+    private string $systemPrompt = '';
+
+    /**
+     * Initializes the service.
+     *
+     * Loads the system prompt from a Markdown file.
+     *
+     * @throws Exception if the system prompt file cannot be read.
+     */
+    public function init()
     {
         parent::init();
 
-        // Get the API key from plugin settings
+        // Retrieve the OpenAI API key from plugin settings or environment variables
         $this->apiKey = Sidekick::$plugin->getSettings()->openAiApiKey ?? '';
 
-        // Throw an error if API key is not set
         if (empty($this->apiKey)) {
+            Craft::error('OpenAI API key is not set.', __METHOD__);
             throw new Exception('OpenAI API key is not set.');
         }
+
+        // Load the system prompt from the Markdown file
+        $systemPromptPath = Craft::getAlias('@sidekick') . '/prompts/start-chat.md';
+
+        if (!file_exists($systemPromptPath)) {
+            Craft::error("System prompt file not found at {$systemPromptPath}.", __METHOD__);
+            throw new Exception("System prompt file not found at {$systemPromptPath}.");
+        }
+
+        $systemPromptContent = file_get_contents($systemPromptPath);
+
+        if ($systemPromptContent === false) {
+            Craft::error("Failed to read system prompt file at {$systemPromptPath}.", __METHOD__);
+            throw new Exception("Failed to read system prompt file at {$systemPromptPath}.");
+        }
+
+        $this->systemPrompt = $systemPromptContent;
+        Craft::info("Loaded system prompt from {$systemPromptPath}", __METHOD__);
     }
 
     /**
-     * @param array $payload
-     * @return array
-     * @throws GuzzleException
+     * Retrieves the current Craft CMS version.
+     *
+     * @return string
      */
-    public function callChatCompletion(array $payload): array
+    public function getCurrentCraftVersion(): string
     {
-        try {
-            $client = new Client();
+        return Craft::$app->version;
+    }
 
+    /**
+     * Calls the AI assistant's chat completion API.
+     *
+     * @param array $apiRequest The API request payload.
+     * @return array The API response.
+     */
+    public function callChatCompletion(array $apiRequest): array
+    {
+        $client = new Client();
+
+        // Extract additional context if available
+        $additionalContext = $apiRequest['additionalContext'] ?? null;
+        unset($apiRequest['additionalContext']);
+
+        // Initialize messages with the system prompt
+        $messages = [
+            ['role' => 'system', 'content' => $this->systemPrompt],
+        ];
+
+        // Append conversation messages
+        if (isset($apiRequest['messages']) && is_array($apiRequest['messages'])) {
+            $messages = array_merge($messages, $apiRequest['messages']);
+        }
+
+        // If additional context is provided, prepend it to the messages
+        if ($additionalContext && is_array($additionalContext)) {
+            foreach ($additionalContext as $contextItem) {
+                $filePath = $contextItem['filePath'];
+                $content = $contextItem['content'];
+                $contextMessage = "The file {$filePath} has the following content:\n\n{$content}";
+                array_splice($messages, 1, 0, [['role' => 'system', 'content' => $contextMessage]]);
+                Craft::info("Added additional context to messages: {$contextMessage}", __METHOD__);
+            }
+        }
+
+        // Prepare the request payload
+        $payload = [
+            'model' => $apiRequest['model'] ?? 'gpt-4',
+            'messages' => $messages,
+            'max_tokens' => 1500,
+            'temperature' => 0.7,
+            'n' => 1,
+            'stop' => null,
+        ];
+
+        // Log the API request payload
+        Craft::info("Sending API request with payload: " . json_encode($payload), __METHOD__);
+
+        try {
             $response = $client->post($this->apiEndpoint, [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . $this->apiKey,
                     'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->apiKey,
                 ],
                 'json' => $payload,
             ]);
 
-            $body = json_decode($response->getBody(), true);
+            $responseBody = json_decode($response->getBody()->getContents(), true);
+            Craft::info("Received API response: " . json_encode($responseBody), __METHOD__);
 
-            if (isset($body['choices'][0]['message']['content'])) {
+            if (isset($responseBody['choices'][0]['message']['content'])) {
+                $content = $responseBody['choices'][0]['message']['content'];
+                Craft::info("Assistant's raw response content: {$content}", __METHOD__);
+
+                // Validate the response to ensure only allowed commands are present
+                $validatedContent = $this->validateResponse($content);
+                Craft::info("Validated assistant response content: {$validatedContent}", __METHOD__);
+
                 return [
                     'success' => true,
-                    'results' => trim($body['choices'][0]['message']['content']),
+                    'results' => $validatedContent,
                 ];
             } else {
-                Craft::error('OpenAI API Response Missing Content.', __METHOD__);
+                Craft::error('Invalid response structure from OpenAI.', __METHOD__);
                 return [
                     'success' => false,
-                    'error' => 'Failed to generate completion.',
+                    'error' => 'Invalid response structure from OpenAI.',
                 ];
             }
-        } catch (\Exception $e) {
-            Craft::error('Error fetching OpenAI completion: ' . $e->getMessage(), __METHOD__);
+        } catch (RequestException $e) {
+            Craft::error('OpenAI API Request Exception: ' . $e->getMessage(), __METHOD__);
             return [
                 'success' => false,
-                'error' => 'Error fetching OpenAI completion: ' . $e->getMessage(),
+                'error' => 'OpenAI API Request Exception: ' . $e->getMessage(),
+            ];
+        } catch (\Exception $e) {
+            Craft::error('OpenAI API Exception: ' . $e->getMessage(), __METHOD__);
+            return [
+                'success' => false,
+                'error' => 'OpenAI API Exception: ' . $e->getMessage(),
             ];
         }
     }
 
     /**
-     * Sends a prompt to OpenAI and retrieves the response.
+     * Validates the assistant's response to ensure only supported commands are present.
      *
-     * @param string $prompt
-     * @param int $maxTokens
-     * @param float $temperature
-     * @return array
-     * @throws GuzzleException
+     * @param string $content The assistant's response content.
+     * @return string The validated content with unsupported commands removed.
      */
-    public function getCompletion(string $prompt, int $maxTokens = 150, float $temperature = 0.7): array
+    private function validateResponse(string $content): string
     {
-        try {
-            // Prepare the Guzzle client
-            $client = new Client();
+        // Define allowed commands
+        $allowedCommands = ['CREATE_FILE', 'UPDATE_FILE', 'DELETE_FILE'];
 
-            // Get the current version of Craft
-            $currentVersion = Craft::$app->getVersion();
+        // Regex to match any command enclosed in square brackets
+        $pattern = '#\[(\w+)(?:\s.*?)?\]#';
+        Craft::info("Validating assistant response with pattern: {$pattern}", __METHOD__);
+        preg_match_all($pattern, $content, $matches);
 
-            // Send a POST request to the OpenAI API
-            $response = $client->post($this->apiEndpoint, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => [
-                    'model' => Sidekick::$aiModel,
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => "You are an assistant that helps generate and modify Twig templates for a Craft CMS website. Our current version of Craft is {$currentVersion}.",
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => $prompt,
-                        ],
-                    ],
-                    'max_tokens' => $maxTokens,
-                    'temperature' => $temperature,
-                ],
-            ]);
+        foreach ($matches[1] as $command) {
+            if (!in_array($command, $allowedCommands)) {
+                // Log the unrecognized command
+                Craft::warning("Unrecognized file operation command detected and removed: [{$command}]", __METHOD__);
 
-            // Parse the response
-            $body = json_decode($response->getBody(), true);
-
-            // Check if the response contains a result
-            if (isset($body['choices'][0]['message']['content'])) {
-                return [
-                    'success' => true,
-                    'results' => trim($body['choices'][0]['message']['content']),
-                ];
-            } else {
-                Craft::error('OpenAI API Response Missing Content.', __METHOD__);
-                return [
-                    'success' => false,
-                    'error' => 'Failed to generate completion.',
-                ];
+                // Remove the unsupported command from the content
+                // Also remove the content within the command if it's a block command
+                if (in_array($command, ['CREATE_FILE', 'UPDATE_FILE'])) {
+                    // Remove both the opening and closing tags along with the content
+                    $blockPattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?\].*?\[/'. preg_quote($command, '#') .'\]#s';
+                    Craft::info("Removing block command with pattern: {$blockPattern}", __METHOD__);
+                    $content = preg_replace($blockPattern, '', $content);
+                } elseif ($command === 'DELETE_FILE') {
+                    // Remove self-closing DELETE_FILE commands
+                    $selfClosingPattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?/\]#s';
+                    Craft::info("Removing self-closing command with pattern: {$selfClosingPattern}", __METHOD__);
+                    $content = preg_replace($selfClosingPattern, '', $content);
+                } else {
+                    // For any other unsupported command, remove just the command
+                    $simplePattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?\]#s';
+                    Craft::info("Removing unsupported command with pattern: {$simplePattern}", __METHOD__);
+                    $content = preg_replace($simplePattern, '', $content);
+                }
             }
-
-        } catch (\Exception $e) {
-            Craft::error('Error fetching OpenAI completion: ' . $e->getMessage(), __METHOD__);
-            return [
-                'success' => false,
-                'error' => 'Error fetching OpenAI completion: ' . $e->getMessage(),
-            ];
-        }
-    }
-
-    /**
-     * Generates alt text for a given image asset using OpenAI.
-     *
-     * @param Asset $asset
-     * @return string
-     * @throws Exception
-     */
-    public function generateAltText(Asset $asset): string
-    {
-        // Ensure the asset is an image
-        if ($asset->kind !== 'image') {
-            throw new Exception('The provided asset is not an image.');
         }
 
-        // Prepare the prompt for OpenAI
-        $prompt = "Generate a descriptive and SEO-friendly alt tag for the image located at the following URL: " . $asset->getUrl();
-
-        // Call the OpenAI API to generate the alt text
-        $response = $this->getCompletion($prompt, 60, 0.5);
-
-        // If the call to OpenAI was successful
-        if ($response['success']) {
-            return $response['results'];
-        }
-
-        // If the call to OpenAI failed, throw an error
-        throw new Exception('Failed to generate alt text: ' . $response['error']);
-    }
-
-    /**
-     * Generates code snippets for Twig templates using OpenAI.
-     *
-     * @param string $description The description provided by the user.
-     * @param string $operation The type of operation (insert, replace, append, prepend, conditional).
-     * @return string|null The generated code snippet or null on failure.
-     */
-    public function generateTwigSnippet(string $description, string $operation): ?string
-    {
-        // Define predefined prompts based on the operation
-        $prompts = [
-            'insert' => "Generate a Twig code snippet to {$description}. Provide the code only without explanations.",
-            'replace' => "Generate a Twig code snippet to {$description}. Replace the existing code. Provide the code only without explanations.",
-            'append' => "Generate a Twig code snippet to {$description}. Append it to the existing template. Provide the code only without explanations.",
-            'prepend' => "Generate a Twig code snippet to {$description}. Prepend it to the existing template. Provide the code only without explanations.",
-            'conditional' => "Generate a Twig code snippet to {$description}. Include necessary conditions. Provide the code only without explanations.",
-        ];
-
-        if (!isset($prompts[$operation])) {
-            Craft::error("Invalid operation type: {$operation}", __METHOD__);
-            return null;
-        }
-
-        $prompt = $prompts[$operation];
-
-        // Get the completion from OpenAI
-        $response = $this->getCompletion($prompt, 200, 0.7);
-
-        if ($response['success']) {
-            return $response['results'];
-        }
-
-        Craft::error('Failed to generate Twig snippet: ' . $response['error'], __METHOD__);
-        return null;
+        return $content;
     }
 }

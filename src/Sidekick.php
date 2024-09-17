@@ -16,12 +16,9 @@ use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
 use yii\base\Event;
-use yii\base\Exception;
 use yii\log\FileTarget;
+use craft\console\Application as ConsoleApplication;
 
 /**
  * Class Sidekick
@@ -31,7 +28,6 @@ use yii\log\FileTarget;
  */
 class Sidekick extends Plugin
 {
-
     // Hold an instance of the plugin
     public static $plugin;
 
@@ -57,6 +53,9 @@ class Sidekick extends Plugin
         parent::init();
         self::$plugin = $this;
 
+        // Set path alias
+        Craft::setAlias('@sidekick', Craft::getAlias('@vendor/doublesecretagency/craft-sidekick/src'));
+
         // Register services
         $this->setComponents([
             'openAIService' => OpenAIService::class,
@@ -66,8 +65,8 @@ class Sidekick extends Plugin
         ]);
 
         // Register console commands
-        if (Craft::$app->request->isConsoleRequest) {
-            $this->controllerNamespace = 'doublesecretagency\\sidekick\\console';
+        if (Craft::$app instanceof ConsoleApplication) {
+            $this->controllerNamespace = 'doublesecretagency\sidekick\console';
         }
 
         // Register user permissions for plugin features
@@ -111,9 +110,7 @@ class Sidekick extends Plugin
             }
         );
 
-        // ===== Custom Logging Configuration =====
-
-        // Initialize the custom log target for Sidekick
+        // Custom Logging Configuration
         $this->initializeCustomLogger();
     }
 
@@ -147,24 +144,8 @@ class Sidekick extends Plugin
         $navItem = parent::getCpNavItem();
         $navItem['label'] = 'Sidekick';
         $navItem['url'] = 'sidekick/chat';
-        // $navItem['icon'] = '@doublesecretagency/sidekick/resources/icon.svg';
         return $navItem;
     }
-
-//    /**
-//     * @return array[]
-//     */
-//    public function definePermissions(): array
-//    {
-//        return [
-//            'accessSidekick' => ['label' => 'Access Sidekick Plugin'],
-//            'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
-//            'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
-//            'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
-//            'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
-//            'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
-//        ];
-//    }
 
     /**
      * Creates the settings model for the plugin.
@@ -180,10 +161,10 @@ class Sidekick extends Plugin
      * Renders the settings page HTML for the control panel.
      *
      * @return string|null The rendered HTML.
-     * @throws LoaderError
-     * @throws RuntimeError
-     * @throws SyntaxError
-     * @throws Exception
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \yii\base\Exception
      */
     protected function settingsHtml(): ?string
     {
@@ -192,5 +173,4 @@ class Sidekick extends Plugin
             ['settings' => $this->getSettings()]
         );
     }
-
 }

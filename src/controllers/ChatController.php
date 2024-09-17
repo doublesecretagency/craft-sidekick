@@ -3,12 +3,10 @@
 namespace doublesecretagency\sidekick\controllers;
 
 use Craft;
-use craft\errors\MissingComponentException;
 use craft\web\Controller;
 use doublesecretagency\sidekick\Sidekick;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
-use yii\base\Exception;
 
 /**
  * Class ChatController
@@ -17,8 +15,8 @@ use yii\base\Exception;
  */
 class ChatController extends Controller
 {
-    // Restrict access to authenticated users
-    protected array|int|bool $allowAnonymous = false;
+    // Allow anonymous access to specific actions if necessary
+    protected array|int|bool $allowAnonymous = [];
 
     /**
      * Renders the chat interface.
@@ -31,11 +29,10 @@ class ChatController extends Controller
     }
 
     /**
-     * Handles sending messages to ChatGPT and processing responses.
+     * Handles sending messages to the AI model and processing responses.
      *
      * @return Response
      * @throws BadRequestHttpException
-     * @throws MissingComponentException
      */
     public function actionSendMessage(): Response
     {
@@ -44,6 +41,35 @@ class ChatController extends Controller
         $request = Craft::$app->getRequest();
         $message = $request->getRequiredBodyParam('message');
 
+        // Log the received user message
+        Craft::info("Received user message: {$message}", __METHOD__);
+
+        // Check if the user is requesting to view a file
+        $fileRequest = $this->detectFileDisplayRequest($message);
+
+        if ($fileRequest) {
+            // Fetch and display the file content directly
+            $filePath = $fileRequest['filePath'];
+            Craft::info("User requested to view file: {$filePath}", __METHOD__);
+            $fileContent = Sidekick::$plugin->fileManagementService->readFile($filePath);
+
+            if ($fileContent !== null) {
+                $responseMessage = "Here are the contents of the `{$filePath}` file:\n\n```twig\n{$fileContent}\n```";
+                Craft::info("Displaying file contents for: {$filePath}", __METHOD__);
+                return $this->asJson([
+                    'success' => true,
+                    'message' => $responseMessage,
+                ]);
+            } else {
+                Craft::warning("Failed to retrieve contents of: {$filePath}", __METHOD__);
+                return $this->asJson([
+                    'success' => false,
+                    'message' => "Sorry, I couldn't retrieve the contents of the `{$filePath}` file.",
+                ]);
+            }
+        }
+
+        // Proceed with normal AI processing
         // Get the existing conversation from the session
         $session = Craft::$app->getSession();
         $conversation = $session->get('sidekickConversation', []);
@@ -51,49 +77,31 @@ class ChatController extends Controller
         // Append the user's message to the conversation
         $conversation[] = ['role' => 'user', 'content' => $message];
 
-        // Check if this is the first message to send all Twig files
-        if (count($conversation) === 1) { // if only user message exists
-            $this->sendAllTwigFiles($conversation);
-        }
+        // Process any file mentions in the user's message
+        $additionalContext = $this->processUserMessageForFiles($message);
 
-        // Get the current version of Craft
-        $currentVersion = Craft::$app->getVersion();
+        // Save the updated conversation back to the session
+        $session->set('sidekickConversation', $conversation);
 
-        // Prepare the system prompt
-        $systemPrompt = "You are an assistant that helps manage Twig templates and module files for a Craft CMS website. The current version of Craft is {$currentVersion}. You can read, create, rewrite, and delete Twig files as requested. Use the following tags to denote actions:\n\n" .
-            "[CREATE_FILE]\n" .
-            "Path: relative/path/to/file.twig\n" .
-            "Content: ```twig\n" .
-            "<!-- Your Twig content here -->\n" .
-            "```\n" .
-            "[/CREATE_FILE]\n\n" .
-            "[REWRITE_FILE]\n" .
-            "Path: relative/path/to/file.twig\n" .
-            "Content: ```twig\n" .
-            "<!-- New content here -->\n" .
-            "```\n" .
-            "[/REWRITE_FILE]\n\n" .
-            "[DELETE_FILE]\n" .
-            "Path: relative/path/to/file.twig\n" .
-            "[/DELETE_FILE]\n\n" .
-            "Always confirm destructive actions like file deletions with the user.";
-
-        // Prepare the OpenAI API request
+        // Prepare the AI API request
         $apiRequest = [
             'model' => Sidekick::$aiModel,
-            'messages' => array_merge(
-                [['role' => 'system', 'content' => $systemPrompt]],
-                $conversation
-            ),
+            'messages' => $conversation,
         ];
 
-        // Call the OpenAI API
+        // Include additional context if available
+        if (!empty($additionalContext)) {
+            $apiRequest['additionalContext'] = $additionalContext;
+            Craft::info("Added additional context for files: " . implode(', ', array_column($additionalContext, 'filePath')), __METHOD__);
+        }
+
+        // Call the AI API
         $openAIService = Sidekick::$plugin->openAIService;
         $apiResponse = $openAIService->callChatCompletion($apiRequest);
 
         if (!$apiResponse['success']) {
             // Log the error for debugging
-            Craft::error("OpenAI API Error: " . $apiResponse['error'], __METHOD__);
+            Craft::error("AI API Error: " . $apiResponse['error'], __METHOD__);
 
             return $this->asJson([
                 'success' => false,
@@ -103,35 +111,180 @@ class ChatController extends Controller
 
         $assistantMessage = $apiResponse['results'];
 
-        // Append the assistant's response to the conversation
+        // Log the assistant's raw response
+        Craft::info("Assistant's raw response: {$assistantMessage}", __METHOD__);
+
+        // Extract and execute file operations
+        $fileOperations = $this->extractFileOperations($assistantMessage);
+        if (!empty($fileOperations)) {
+            Craft::info("Extracted file operations: " . json_encode($fileOperations), __METHOD__);
+            $this->executeFileOperations($fileOperations);
+            // Remove the file operation commands from the assistant's message
+            $assistantMessage = preg_replace('#\[(CREATE_FILE|UPDATE_FILE|DELETE_FILE) "([^"]+)"\](.*?)\[/\1\]#s', '', $assistantMessage);
+            $assistantMessage = preg_replace('#\[(DELETE_FILE) "([^"]+)" /\]#s', '', $assistantMessage);
+            // Log the cleaned assistant message
+            Craft::info("Assistant's message after removing file operations: {$assistantMessage}", __METHOD__);
+        }
+
+        // Append the assistant's message to the conversation
         $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
 
         // Save the updated conversation back to the session
         $session->set('sidekickConversation', $conversation);
 
-        // Process any file operations requested by the assistant
-        $fileOperationResponse = $this->processAssistantMessage($assistantMessage);
+        // Log the final message to be sent to the user
+        Craft::info("Sending assistant message to user: {$assistantMessage}", __METHOD__);
 
         return $this->asJson([
             'success' => true,
             'message' => $assistantMessage,
-            'fileOperation' => $fileOperationResponse,
+            'fileOperation' => $fileOperations,
         ]);
     }
 
     /**
-     * Retrieves the current conversation from the session.
+     * Detects if the user is requesting to display a file's contents.
+     *
+     * @param string $message
+     * @return array|null
+     */
+    private function detectFileDisplayRequest(string $message): ?array
+    {
+        // Regex to match phrases like "show me the `index.twig`" or "Get `index.twig`"
+        $pattern = '#(?:show me|get)\s+the\s+[`\'"]?(?<fileName>[\w\-\/]+\.twig)[`\'"]?#i';
+        Craft::info("Detecting file display request with pattern: {$pattern}", __METHOD__);
+
+        if (preg_match($pattern, $message, $matches)) {
+            $fileName = $matches['fileName'];
+            Craft::info("Detected file name: {$fileName}", __METHOD__);
+
+            // Construct the relative file path
+            $filePath = "/templates/{$fileName}";
+
+            // Validate the file path
+            if (Sidekick::$plugin->fileManagementService->isTwigFile($filePath)) {
+                Craft::info("Validated Twig file path: {$filePath}", __METHOD__);
+                return ['filePath' => $filePath];
+            } else {
+                Craft::warning("Invalid Twig file path detected: {$filePath}", __METHOD__);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extracts file operation commands from the assistant's response.
+     *
+     * @param string $assistantResponse
+     * @return array
+     */
+    private function extractFileOperations(string $assistantResponse): array
+    {
+        $fileOperations = [];
+
+        // Regex to match CREATE_FILE and UPDATE_FILE commands
+        $patternCreateUpdate = '#\[(CREATE_FILE|UPDATE_FILE) "([^"]+)"\](.*?)\[/\1\]#s';
+        Craft::info("Extracting CREATE_FILE and UPDATE_FILE commands with pattern: {$patternCreateUpdate}", __METHOD__);
+
+        if (preg_match_all($patternCreateUpdate, $assistantResponse, $matchesCreateUpdate, PREG_SET_ORDER)) {
+            foreach ($matchesCreateUpdate as $match) {
+                $operation = $match[1];
+                $filePath = $match[2];
+                $fileContent = $match[3];
+                $fileOperations[] = [
+                    'operation' => $operation,
+                    'filePath' => $filePath,
+                    'fileContent' => $fileContent,
+                ];
+                Craft::info("Extracted {$operation} for file: {$filePath}", __METHOD__);
+            }
+        }
+
+        // Regex to match DELETE_FILE commands
+        $patternDelete = '#\[DELETE_FILE "([^"]+)" /\]#s';
+        Craft::info("Extracting DELETE_FILE commands with pattern: {$patternDelete}", __METHOD__);
+
+        if (preg_match_all($patternDelete, $assistantResponse, $matchesDelete, PREG_SET_ORDER)) {
+            foreach ($matchesDelete as $match) {
+                $filePath = $match[1];
+                $fileOperations[] = [
+                    'operation' => 'DELETE_FILE',
+                    'filePath' => $filePath,
+                    'fileContent' => null,
+                ];
+                Craft::info("Extracted DELETE_FILE for file: {$filePath}", __METHOD__);
+            }
+        }
+
+        return $fileOperations;
+    }
+
+    /**
+     * Executes the extracted file operation commands.
+     *
+     * @param array $fileOperations
+     */
+    private function executeFileOperations(array $fileOperations): void
+    {
+        foreach ($fileOperations as $op) {
+            $operation = $op['operation'];
+            $filePath = $op['filePath'];
+            $fileContent = $op['fileContent'];
+
+            Craft::info("Executing operation: {$operation} on file: {$filePath}", __METHOD__);
+
+            switch ($operation) {
+                case 'CREATE_FILE':
+                    $result = $this->fileManagementService->createFile($filePath, $fileContent);
+                    $this->logOperationResult($operation, $filePath, $result);
+                    break;
+
+                case 'UPDATE_FILE':
+                    $result = $this->fileManagementService->rewriteFile($filePath, $fileContent);
+                    $this->logOperationResult($operation, $filePath, $result);
+                    break;
+
+                case 'DELETE_FILE':
+                    $result = $this->fileManagementService->deleteFile($filePath);
+                    $this->logOperationResult($operation, $filePath, $result);
+                    break;
+
+                default:
+                    Craft::warning("Unsupported file operation: {$operation}", __METHOD__);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Logs the result of a file operation.
+     *
+     * @param string $operation
+     * @param string $filePath
+     * @param bool $success
+     */
+    private function logOperationResult(string $operation, string $filePath, bool $success): void
+    {
+        if ($success) {
+            Craft::info("Successfully executed {$operation} on {$filePath}", __METHOD__);
+        } else {
+            Craft::error("Failed to execute {$operation} on {$filePath}", __METHOD__);
+        }
+    }
+
+    /**
+     * Retrieves the conversation history from the session.
      *
      * @return Response
-     * @throws MissingComponentException
      */
     public function actionGetConversation(): Response
     {
-        // Retrieve the conversation from the session
+        $this->requireAcceptsJson();
+
         $session = Craft::$app->getSession();
         $conversation = $session->get('sidekickConversation', []);
 
-        // Return the conversation as JSON
         return $this->asJson([
             'success' => true,
             'conversation' => $conversation,
@@ -139,60 +292,22 @@ class ChatController extends Controller
     }
 
     /**
-     * Clears the current conversation from the session.
+     * Clears the conversation history from the session.
      *
      * @return Response
-     * @throws BadRequestHttpException
      */
     public function actionClearConversation(): Response
     {
         $this->requirePostRequest();
+        $this->requireAcceptsJson();
 
-        try {
-            // Get the session component
-            $session = Craft::$app->getSession();
+        $session = Craft::$app->getSession();
+        $session->remove('sidekickConversation');
 
-            // Clear the conversation from the session
-            $session->remove('sidekickConversation');
-
-            return $this->asJson([
-                'success' => true,
-                'message' => 'Conversation has been cleared.',
-            ]);
-        } catch (Exception $e) {
-            Craft::error('Error clearing conversation: ' . $e->getMessage(), __METHOD__);
-            return $this->asJson([
-                'success' => false,
-                'message' => 'Failed to clear the conversation.',
-            ]);
-        }
-    }
-
-    /**
-     * Sends all Twig files as foundational context to the GPT API.
-     *
-     * @param array &$conversation
-     * @return void
-     */
-    private function sendAllTwigFiles(array &$conversation): void
-    {
-        $fileService = Sidekick::$plugin->fileManagementService;
-        $twigFiles = $fileService->listTwigTemplates();
-
-        Craft::info("Found " . count($twigFiles) . " Twig files to send.", __METHOD__);
-
-        foreach ($twigFiles as $filePath) {
-            $content = $fileService->readFile(ltrim($filePath, '/\\'));
-            if ($content !== null) {
-                Craft::info("Sending file: {$filePath}", __METHOD__);
-                $conversation[] = [
-                    'role' => 'system',
-                    'content' => "File: {$filePath}\nContent:\n```twig\n{$content}\n```",
-                ];
-            } else {
-                Craft::warning("Failed to read file: {$filePath}", __METHOD__);
-            }
-        }
+        return $this->asJson([
+            'success' => true,
+            'message' => 'Conversation cleared.',
+        ]);
     }
 
     /**
@@ -203,180 +318,160 @@ class ChatController extends Controller
      */
     private function processAssistantMessage(string $message): ?array
     {
-        // Detect if the message contains a file operation command
-        if (preg_match('/\[(CREATE_FILE|REWRITE_FILE|DELETE_FILE)\](.*?)\[\1\]/s', $message, $matches)) {
-            $operation = $matches[1];
-            $content = $matches[2];
+        $fileService = Sidekick::$plugin->fileManagementService;
 
-            switch ($operation) {
-                case 'CREATE_FILE':
-                    return $this->handleCreateFile($content);
-                case 'REWRITE_FILE':
-                    return $this->handleRewriteFile($content);
-                case 'DELETE_FILE':
-                    return $this->handleDeleteFile($content);
-                default:
-                    return ['error' => 'Unknown file operation command.'];
+        // Match CREATE_FILE and UPDATE_FILE commands
+        $patternCreateUpdate = '#\[(CREATE_FILE|UPDATE_FILE) "([^"]+)"\](.*?)\[/\1\]#s';
+        Craft::info("Processing assistant message for CREATE_FILE and UPDATE_FILE with pattern: {$patternCreateUpdate}", __METHOD__);
+
+        if (preg_match($patternCreateUpdate, $message, $matchesCreateUpdate)) {
+            $operation = $matchesCreateUpdate[1];
+            $filePath = $matchesCreateUpdate[2];
+            $fileContent = $matchesCreateUpdate[3];
+
+            Craft::info("Detected {$operation} for file: {$filePath}", __METHOD__);
+
+            // Execute the file operation
+            if ($operation === 'CREATE_FILE') {
+                $result = $fileService->createFile($filePath, $fileContent);
+            } else { // UPDATE_FILE
+                $result = $fileService->rewriteFile($filePath, $fileContent);
             }
+
+            // Send a message to the UX
+            $this->sendFileOperationMessage($operation, $filePath);
+
+            // Remove the file operation command from the assistant's message
+            $assistantMessage = preg_replace($patternCreateUpdate, '', $message);
+            Craft::info("Assistant message after removing CREATE_FILE/UPDATE_FILE: {$assistantMessage}", __METHOD__);
+
+            return [
+                'success' => $result === true,
+                'requiresNextChange' => true,
+                'assistantMessage' => trim($assistantMessage),
+            ];
         }
 
-        // Check if a deletion confirmation is pending
-        if ($this->isDeletionConfirmationPending()) {
-            return $this->handleConfirmDeleteFile($message);
+        // Match DELETE_FILE commands
+        $patternDelete = '#\[DELETE_FILE "([^"]+)" /\]#s';
+        Craft::info("Processing assistant message for DELETE_FILE with pattern: {$patternDelete}", __METHOD__);
+
+        if (preg_match_all($patternDelete, $message, $matchesDelete)) {
+            foreach ($matchesDelete[1] as $filePath) {
+                Craft::info("Detected DELETE_FILE for file: {$filePath}", __METHOD__);
+                $fileService->deleteFile($filePath);
+
+                // Send a message to the UX
+                $this->sendFileOperationMessage('DELETE_FILE', $filePath);
+            }
+
+            // Remove the DELETE_FILE commands from the assistant's message
+            $assistantMessage = preg_replace($patternDelete, '', $message);
+            Craft::info("Assistant message after removing DELETE_FILE: {$assistantMessage}", __METHOD__);
+
+            return [
+                'success' => true,
+                'requiresNextChange' => true,
+                'assistantMessage' => trim($assistantMessage),
+            ];
         }
 
+        // Check for unrecognized file operation commands
+        $patternRead = '#\[(READ_FILE) "([^"]+)"\]#s';
+        Craft::info("Processing assistant message for unrecognized READ_FILE with pattern: {$patternRead}", __METHOD__);
+
+        if (preg_match($patternRead, $message, $matchesRead)) {
+            $command = $matchesRead[1];
+            $filePath = $matchesRead[2];
+            Craft::warning("Unrecognized file operation command: [{$command} \"{$filePath}\"]", __METHOD__);
+
+            // Remove the unrecognized command from the assistant's message
+            $assistantMessage = preg_replace($patternRead, '', $message);
+            Craft::info("Assistant message after removing unrecognized READ_FILE: {$assistantMessage}", __METHOD__);
+
+            return [
+                'success' => false,
+                'requiresNextChange' => false,
+                'assistantMessage' => trim($assistantMessage),
+            ];
+        }
+
+        // No file operation detected
         return null;
     }
 
     /**
-     * Checks if a file deletion is pending confirmation.
+     * Sends a file operation message to the UX.
      *
-     * @return bool
-     * @throws MissingComponentException
+     * @param string $operation
+     * @param string $filePath
      */
-    private function isDeletionConfirmationPending(): bool
-    {
-        return Craft::$app->getSession()->has('pendingDeleteFile');
-    }
-
-    /**
-     * Handles the creation of a new Twig file.
-     *
-     * @param string $content
-     * @return array
-     */
-    private function handleCreateFile(string $content): array
-    {
-        // Check user permissions
-        if (!Craft::$app->user->can('sidekick-create-update-templates')) {
-            return ['success' => false, 'message' => 'You do not have permission to create Twig templates.'];
-        }
-
-        // Parse the command content
-        if (preg_match('/Path:\s*(.*?)\nContent:\s*```twig\s*(.*?)\s*```/s', $content, $matches)) {
-            $filePath = trim($matches[1]);
-            $fileContent = trim($matches[2]);
-
-            // Get the FileManagementService
-            $fileService = Sidekick::$plugin->fileManagementService;
-
-            // Create the file
-            $result = $fileService->createFile($filePath, $fileContent);
-
-            if ($result === true) {
-                return ['success' => true, 'message' => "File `{$filePath}` created successfully."];
-            } else {
-                return ['success' => false, 'message' => $result];
-            }
-        }
-
-        return ['success' => false, 'message' => 'Invalid CREATE_FILE command format.'];
-    }
-
-    /**
-     * Handles the rewriting of an existing Twig file.
-     *
-     * @param string $content
-     * @return array
-     */
-    private function handleRewriteFile(string $content): array
-    {
-        // Check user permissions
-        if (!Craft::$app->user->can('sidekick-create-update-templates')) {
-            return ['success' => false, 'message' => 'You do not have permission to rewrite Twig templates.'];
-        }
-
-        // Parse the command content
-        if (preg_match('/Path:\s*(.*?)\nContent:\s*```twig\s*(.*?)\s*```/s', $content, $matches)) {
-            $filePath = trim($matches[1]);
-            $newContent = trim($matches[2]);
-
-            // Get the FileManagementService
-            $fileService = Sidekick::$plugin->fileManagementService;
-
-            // Rewrite the file
-            $result = $fileService->rewriteFile($filePath, $newContent);
-
-            if ($result === true) {
-                return ['success' => true, 'message' => "File `{$filePath}` rewritten successfully."];
-            } else {
-                return ['success' => false, 'message' => $result];
-            }
-        }
-
-        return ['success' => false, 'message' => 'Invalid REWRITE_FILE command format.'];
-    }
-
-    /**
-     * Handles the deletion of an existing Twig file.
-     * Initiates a confirmation step.
-     *
-     * @param string $content
-     * @return array
-     * @throws MissingComponentException
-     */
-    private function handleDeleteFile(string $content): array
-    {
-        // Check user permissions
-        if (!Craft::$app->user->can('sidekick-create-update-templates')) {
-            return ['success' => false, 'message' => 'You do not have permission to delete Twig templates.'];
-        }
-
-        // Parse the command content
-        if (preg_match('/Path:\s*(.*?)\s*/s', $content, $matches)) {
-            $filePath = trim($matches[1]);
-
-            // Store the file path in session for confirmation
-            Craft::$app->getSession()->set('pendingDeleteFile', $filePath);
-
-            // Respond with a confirmation prompt
-            return [
-                'success' => true,
-                'message' => "Are you sure you want to delete `{$filePath}`? Please confirm by typing 'Yes' or cancel by typing 'No'.",
-                'requiresConfirmation' => true,
-            ];
-        }
-
-        return ['success' => false, 'message' => 'Invalid DELETE_FILE command format.'];
-    }
-
-    /**
-     * Handles the confirmation response for file deletion.
-     *
-     * @param string $content
-     * @return array
-     * @throws MissingComponentException
-     */
-    private function handleConfirmDeleteFile(string $content): array
+    private function sendFileOperationMessage(string $operation, string $filePath): void
     {
         $session = Craft::$app->getSession();
-        $filePath = $session->get('pendingDeleteFile');
+        $conversation = $session->get('sidekickConversation', []);
 
-        if (!$filePath) {
-            return ['success' => false, 'message' => 'No pending file deletion to confirm.'];
-        }
+        $operationText = match ($operation) {
+            'CREATE_FILE' => 'Created',
+            'UPDATE_FILE' => 'Updated',
+            'DELETE_FILE' => 'Deleted',
+            default => 'Modified',
+        };
 
-        $confirmation = strtolower(trim($content));
+        $message = "[{$operationText} \"{$filePath}\"]";
 
-        if ($confirmation === 'yes') {
-            // Proceed with deletion
-            $fileService = Sidekick::$plugin->fileManagementService;
-            $result = $fileService->deleteFile($filePath);
+        // Append the message to the conversation
+        $conversation[] = ['role' => 'system', 'content' => $message];
+        $session->set('sidekickConversation', $conversation);
 
-            // Clear the pending deletion from session
-            $session->remove('pendingDeleteFile');
+        Craft::info("Sent file operation message to UX: {$message}", __METHOD__);
+    }
 
-            if ($result === true) {
-                return ['success' => true, 'message' => "File `{$filePath}` deleted successfully."];
-            } else {
-                return ['success' => false, 'message' => $result];
+    /**
+     * Processes the user's message to detect file mentions and read their contents.
+     *
+     * @param string $message
+     * @return array|null Additional context to pass to the AI assistant.
+     */
+    private function processUserMessageForFiles(string $message): ?array
+    {
+        $fileService = Sidekick::$plugin->fileManagementService;
+        $additionalContext = [];
+
+        // Regex pattern to detect file paths, e.g., "/templates/index.twig"
+        $pattern = '#\/[\w\-\/\.]+\.twig#';
+        Craft::info("Detecting file paths in user message with pattern: {$pattern}", __METHOD__);
+
+        if (preg_match_all($pattern, $message, $matches)) {
+            $filePaths = $matches[0];
+            Craft::info("Detected file paths: " . implode(', ', $filePaths), __METHOD__);
+
+            foreach ($filePaths as $filePath) {
+                // Sanitize and resolve the file path
+                $filePath = $fileService->sanitizeFilePath($filePath);
+                $absolutePath = $fileService->resolveFilePath($filePath);
+
+                // Ensure the path is allowed
+                if ($fileService->isPathAllowed($absolutePath)) {
+                    // Read the file contents
+                    $content = $fileService->readFile($filePath);
+
+                    if ($content !== null) {
+                        // Include the file content in the additional context
+                        $additionalContext[] = [
+                            'filePath' => $filePath,
+                            'content' => $content,
+                        ];
+                        Craft::info("Added file content to additional context for: {$filePath}", __METHOD__);
+                    } else {
+                        Craft::warning("Failed to read content for file: {$filePath}", __METHOD__);
+                    }
+                } else {
+                    Craft::warning("Unauthorized file access attempt: {$filePath}", __METHOD__);
+                }
             }
-        } elseif ($confirmation === 'no') {
-            // Cancel deletion
-            $session->remove('pendingDeleteFile');
-            return ['success' => true, 'message' => "File deletion for `{$filePath}` has been canceled."];
-        } else {
-            return ['success' => false, 'message' => "Invalid confirmation response. Please type 'Yes' to confirm or 'No' to cancel."];
         }
+
+        return $additionalContext ?: null;
     }
 }
