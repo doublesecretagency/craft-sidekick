@@ -174,47 +174,29 @@ class OpenAIService extends Component
     }
 
     /**
-     * Validates the assistant's response to ensure only supported commands are present.
+     * Validates the assistant's response to ensure it's a valid JSON or regular message.
      *
      * @param string $content The assistant's response content.
-     * @return string The validated content with unsupported commands removed.
+     * @return string The validated content.
      */
     private function validateResponse(string $content): string
     {
-        // Define allowed commands
-        $allowedCommands = ['CREATE_FILE', 'UPDATE_FILE', 'DELETE_FILE'];
+        // Attempt to decode JSON
+        $decodedJson = json_decode($content, true);
 
-        // Regex to match any command enclosed in square brackets
-        $pattern = '#\[(\w+)(?:\s.*?)?\]#';
-        Craft::info("Validating assistant response with pattern: {$pattern}", __METHOD__);
-        preg_match_all($pattern, $content, $matches);
-
-        foreach ($matches[1] as $command) {
-            if (!in_array($command, $allowedCommands)) {
-                // Log the unrecognized command
-                Craft::warning("Unrecognized file operation command detected and removed: [{$command}]", __METHOD__);
-
-                // Remove the unsupported command from the content
-                // Also remove the content within the command if it's a block command
-                if (in_array($command, ['CREATE_FILE', 'UPDATE_FILE'])) {
-                    // Remove both the opening and closing tags along with the content
-                    $blockPattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?\].*?\[/'. preg_quote($command, '#') .'\]#s';
-                    Craft::info("Removing block command with pattern: {$blockPattern}", __METHOD__);
-                    $content = preg_replace($blockPattern, '', $content);
-                } elseif ($command === 'DELETE_FILE') {
-                    // Remove self-closing DELETE_FILE commands
-                    $selfClosingPattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?/\]#s';
-                    Craft::info("Removing self-closing command with pattern: {$selfClosingPattern}", __METHOD__);
-                    $content = preg_replace($selfClosingPattern, '', $content);
-                } else {
-                    // For any other unsupported command, remove just the command
-                    $simplePattern = '#\[' . preg_quote($command, '#') . '(?:\s.*?)?\]#s';
-                    Craft::info("Removing unsupported command with pattern: {$simplePattern}", __METHOD__);
-                    $content = preg_replace($simplePattern, '', $content);
-                }
+        if (json_last_error() === JSON_ERROR_NONE) {
+            // It's valid JSON, ensure it has required keys
+            if (isset($decodedJson['operation'], $decodedJson['filePath'])) {
+                Craft::info("Assistant's response is valid JSON with required keys.", __METHOD__);
+                return $content;
+            } else {
+                Craft::warning("JSON response missing required keys.", __METHOD__);
+                return $content;
             }
+        } else {
+            // Not JSON, return content as is
+            Craft::info("Assistant's response is not JSON, returning as is.", __METHOD__);
+            return $content;
         }
-
-        return $content;
     }
 }
