@@ -12,11 +12,16 @@ use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
 use doublesecretagency\sidekick\models\Settings;
+use doublesecretagency\sidekick\services\ActionsService;
 use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use yii\base\Event;
+use yii\base\Exception;
 use yii\log\FileTarget;
 use craft\console\Application as ConsoleApplication;
 
@@ -58,10 +63,11 @@ class Sidekick extends Plugin
 
         // Register services
         $this->setComponents([
-            'openAIService' => OpenAIService::class,
+            'actionsService' => ActionsService::class,
             'altTagService' => AltTagService::class,
-            'fileManagementService' => FileManagementService::class,
             'dummyDataService' => DummyDataService::class,
+            'fileManagementService' => FileManagementService::class,
+            'openAIService' => OpenAIService::class,
         ]);
 
         // Register console commands
@@ -161,10 +167,10 @@ class Sidekick extends Plugin
      * Renders the settings page HTML for the control panel.
      *
      * @return string|null The rendered HTML.
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \yii\base\Exception
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws Exception
      */
     protected function settingsHtml(): ?string
     {

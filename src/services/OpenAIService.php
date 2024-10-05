@@ -108,6 +108,16 @@ class OpenAIService extends Component
     }
 
     /**
+     * Get the system prompt.
+     *
+     * @return string
+     */
+    public function getSystemPrompt(): string
+    {
+        return $this->systemPrompt;
+    }
+
+    /**
      * Retrieves the current Craft CMS version.
      *
      * @return string

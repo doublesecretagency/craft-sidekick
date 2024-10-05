@@ -6,15 +6,15 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ## **Supported Actions**
 
-### **1. update_element**
+### **updateElement**
 
 - **Description:** Update the content of a specific HTML element within a Twig template.
 
 - **Parameters:**
-  - **action**: `"update_element"`
+  - **action**: `"updateElement"`
   - **file**: The path to the target Twig file.
   - **element**: The HTML tag or Twig block to update.
-  - **new_value**: The new content to insert.
+  - **newValue**: The new content to insert.
 
 - **User Instruction Example:**
 
@@ -26,10 +26,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "update_element",
+      "action": "updateElement",
       "file": "/templates/index.twig",
       "element": "h1",
-      "new_value": "Welcome to Our Site"
+      "newValue": "Welcome to Our Site"
     }
   ]
 }
@@ -37,12 +37,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **2. create_file**
+### **createFile**
 
 - **Description:** Create a new Twig template file with specified content.
 
 - **Parameters:**
-  - **action**: `"create_file"`
+  - **action**: `"createFile"`
   - **file**: The path to the new file.
   - **content**: The content to include in the file.
 
@@ -56,7 +56,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "create_file",
+      "action": "createFile",
       "file": "/templates/about.twig",
       "content": "<!DOCTYPE html>\n<html>\n<head>\n    <title>About Us</title>\n</head>\n<body>\n    <!-- Content goes here -->\n</body>\n</html>"
     }
@@ -66,12 +66,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **3. delete_file**
+### **deleteFile**
 
 - **Description:** Delete an existing Twig template file.
 
 - **Parameters:**
-  - **action**: `"delete_file"`
+  - **action**: `"deleteFile"`
   - **file**: The path to the file to delete.
 
 - **User Instruction Example:**
@@ -84,7 +84,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "delete_file",
+      "action": "deleteFile",
       "file": "/templates/old_layout.twig"
     }
   ]
@@ -93,14 +93,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **4. insert_content**
+### **insertContent**
 
 - **Description:** Insert specific content into a file at a specified location.
 
 - **Parameters:**
-  - **action**: `"insert_content"`
+  - **action**: `"insertContent"`
   - **file**: The path to the target Twig file.
-  - **location**: The reference point for insertion (e.g., `"after_element": "header"`).
+  - **location**: The reference point for insertion (e.g., `"afterElement": "header"`).
   - **content**: The content to insert.
 
 - **User Instruction Example:**
@@ -113,10 +113,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "insert_content",
+      "action": "insertContent",
       "file": "/templates/index.twig",
       "location": {
-        "after_element": "header"
+        "afterElement": "header"
       },
       "content": "<nav>...navigation menu...</nav>"
     }
@@ -126,15 +126,15 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **5. replace_content**
+### **replaceContent**
 
 - **Description:** Replace a specific block of content in a file.
 
 - **Parameters:**
-  - **action**: `"replace_content"`
+  - **action**: `"replaceContent"`
   - **file**: The path to the target Twig file.
   - **target**: The content or element to replace.
-  - **new_content**: The new content to insert.
+  - **newContent**: The new content to insert.
 
 - **User Instruction Example:**
 
@@ -146,10 +146,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "replace_content",
+      "action": "replaceContent",
       "file": "/templates/base.twig",
       "target": "footer",
-      "new_content": "<footer>...new footer content...</footer>"
+      "newContent": "<footer>...new footer content...</footer>"
     }
   ]
 }
@@ -157,12 +157,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **6. append_content**
+### **appendContent**
 
 - **Description:** Add content to the end of a file.
 
 - **Parameters:**
-  - **action**: `"append_content"`
+  - **action**: `"appendContent"`
   - **file**: The path to the target Twig file.
   - **content**: The content to append.
 
@@ -176,7 +176,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "append_content",
+      "action": "appendContent",
       "file": "/templates/layout.twig",
       "content": "<script src='app.js'></script>"
     }
@@ -186,12 +186,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **7. prepend_content**
+### **prependContent**
 
 - **Description:** Add content to the beginning of a file.
 
 - **Parameters:**
-  - **action**: `"prepend_content"`
+  - **action**: `"prependContent"`
   - **file**: The path to the target Twig file.
   - **content**: The content to prepend.
 
@@ -205,7 +205,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "prepend_content",
+      "action": "prependContent",
       "file": "/templates/index.twig",
       "content": "{# Last updated on 2023-10-05 #}\n"
     }
@@ -215,15 +215,15 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **8. update_variable**
+### **updateVariable**
 
 - **Description:** Change the value of a variable within the template.
 
 - **Parameters:**
-  - **action**: `"update_variable"`
+  - **action**: `"updateVariable"`
   - **file**: The path to the target Twig file.
   - **variable**: The name of the variable to update.
-  - **new_value**: The new value for the variable.
+  - **newValue**: The new value for the variable.
 
 - **User Instruction Example:**
 
@@ -235,10 +235,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "update_variable",
+      "action": "updateVariable",
       "file": "/templates/config.twig",
       "variable": "siteTitle",
-      "new_value": "My New Site"
+      "newValue": "My New Site"
     }
   ]
 }
@@ -246,14 +246,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **9. add_block**
+### **addBlock**
 
 - **Description:** Add a new Twig block to a template.
 
 - **Parameters:**
-  - **action**: `"add_block"`
+  - **action**: `"addBlock"`
   - **file**: The path to the target Twig file.
-  - **block_name**: The name of the new block.
+  - **blockName**: The name of the new block.
   - **content**: The content of the new block.
 
 - **User Instruction Example:**
@@ -266,9 +266,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "add_block",
+      "action": "addBlock",
       "file": "/templates/base.twig",
-      "block_name": "sidebar",
+      "blockName": "sidebar",
       "content": "{% block sidebar %}\n<!-- Sidebar content here -->\n{% endblock %}"
     }
   ]
@@ -277,14 +277,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **10. remove_block**
+### **removeBlock**
 
 - **Description:** Remove a Twig block from a template.
 
 - **Parameters:**
-  - **action**: `"remove_block"`
+  - **action**: `"removeBlock"`
   - **file**: The path to the target Twig file.
-  - **block_name**: The name of the block to remove.
+  - **blockName**: The name of the block to remove.
 
 - **User Instruction Example:**
 
@@ -296,9 +296,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "remove_block",
+      "action": "removeBlock",
       "file": "/templates/layout.twig",
-      "block_name": "advertisement"
+      "blockName": "advertisement"
     }
   ]
 }
@@ -306,14 +306,43 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **11. wrap_content**
+### **removeElement**
+
+- **Description:** Remove an HTML element and its content from a Twig template.
+
+- **Parameters:**
+  - **action**: `"removeElement"`
+  - **file**: The path to the target Twig file.
+  - **element**: The HTML tag to remove.
+
+- **User Instruction Example:**
+
+  "Remove the `<h1>` tag from `index.twig`."
+
+- **Assistant JSON Response:**
+
+```json
+{
+  "actions": [
+    {
+      "action": "removeElement",
+      "file": "/templates/index.twig",
+      "element": "h1"
+    }
+  ]
+}
+```
+
+---
+
+### **wrapContent**
 
 - **Description:** Wrap existing content within a new element or block.
 
 - **Parameters:**
-  - **action**: `"wrap_content"`
+  - **action**: `"wrapContent"`
   - **file**: The path to the target Twig file.
-  - **target_content**: The content or selector to wrap.
+  - **targetContent**: The content or selector to wrap.
   - **wrapper**: The new element or block to wrap around the target content.
 
 - **User Instruction Example:**
@@ -326,9 +355,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "wrap_content",
+      "action": "wrapContent",
       "file": "/templates/index.twig",
-      "target_content": "main",
+      "targetContent": "main",
       "wrapper": "<div class='container'>{{ content }}</div>"
     }
   ]
@@ -337,16 +366,16 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **12. modify_attribute**
+### **modifyAttribute**
 
 - **Description:** Change attributes of HTML elements within the template.
 
 - **Parameters:**
-  - **action**: `"modify_attribute"`
+  - **action**: `"modifyAttribute"`
   - **file**: The path to the target Twig file.
   - **element**: The HTML tag or selector to modify.
   - **attribute**: The attribute to change.
-  - **new_value**: The new value for the attribute.
+  - **newValue**: The new value for the attribute.
 
 - **User Instruction Example:**
 
@@ -358,11 +387,11 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "modify_attribute",
+      "action": "modifyAttribute",
       "file": "/templates/index.twig",
       "element": "body",
       "attribute": "class",
-      "new_value": "homepage"
+      "newValue": "homepage"
     }
   ]
 }
@@ -370,14 +399,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **13. duplicate_file**
+### **duplicateFile**
 
 - **Description:** Create a copy of an existing template file.
 
 - **Parameters:**
-  - **action**: `"duplicate_file"`
-  - **source_file**: The path to the existing file.
-  - **destination_file**: The path for the new duplicate file.
+  - **action**: `"duplicateFile"`
+  - **sourceFile**: The path to the existing file.
+  - **destinationFile**: The path for the new duplicate file.
 
 - **User Instruction Example:**
 
@@ -389,9 +418,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "duplicate_file",
-      "source_file": "/templates/index.twig",
-      "destination_file": "/templates/landing.twig"
+      "action": "duplicateFile",
+      "sourceFile": "/templates/index.twig",
+      "destinationFile": "/templates/landing.twig"
     }
   ]
 }
@@ -399,14 +428,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **14. rename_file**
+### **renameFile**
 
 - **Description:** Rename an existing template file.
 
 - **Parameters:**
-  - **action**: `"rename_file"`
-  - **old_file**: The current path to the file.
-  - **new_file**: The new path for the file.
+  - **action**: `"renameFile"`
+  - **oldFile**: The current path to the file.
+  - **newFile**: The new path for the file.
 
 - **User Instruction Example:**
 
@@ -418,9 +447,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "rename_file",
-      "old_file": "/templates/old_home.twig",
-      "new_file": "/templates/home.twig"
+      "action": "renameFile",
+      "oldFile": "/templates/old_home.twig",
+      "newFile": "/templates/home.twig"
     }
   ]
 }
@@ -428,12 +457,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **15. search_and_replace**
+### **searchAndReplace**
 
 - **Description:** Search for a specific string in a file and replace it with another string.
 
 - **Parameters:**
-  - **action**: `"search_and_replace"`
+  - **action**: `"searchAndReplace"`
   - **file**: The path to the target Twig file.
   - **search**: The string to search for.
   - **replace**: The string to replace it with.
@@ -448,7 +477,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "search_and_replace",
+      "action": "searchAndReplace",
       "file": "/templates/base.twig",
       "search": "oldBrand",
       "replace": "newBrand"
@@ -459,12 +488,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **16. list_files**
+### **listFiles**
 
 - **Description:** Provide a list of all Twig templates in the `/templates` directory.
 
 - **Parameters:**
-  - **action**: `"list_files"`
+  - **action**: `"listFiles"`
 
 - **User Instruction Example:**
 
@@ -476,7 +505,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "list_files"
+      "action": "listFiles"
     }
   ]
 }
@@ -484,12 +513,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **17. get_file_info**
+### **getFileInfo**
 
 - **Description:** Retrieve metadata about a file, such as its size or last modified date.
 
 - **Parameters:**
-  - **action**: `"get_file_info"`
+  - **action**: `"getFileInfo"`
   - **file**: The path to the target Twig file.
 
 - **User Instruction Example:**
@@ -502,7 +531,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "get_file_info",
+      "action": "getFileInfo",
       "file": "/templates/layout.twig"
     }
   ]
@@ -511,12 +540,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **18. comment_block**
+### **commentBlock**
 
 - **Description:** Comment out a block of code within a template.
 
 - **Parameters:**
-  - **action**: `"comment_block"`
+  - **action**: `"commentBlock"`
   - **file**: The path to the target Twig file.
   - **target**: The content or selector to comment out.
 
@@ -530,7 +559,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "comment_block",
+      "action": "commentBlock",
       "file": "/templates/header.twig",
       "target": "navigation menu"
     }
@@ -540,12 +569,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **19. uncomment_block**
+### **uncommentBlock**
 
 - **Description:** Uncomment a previously commented block of code.
 
 - **Parameters:**
-  - **action**: `"uncomment_block"`
+  - **action**: `"uncommentBlock"`
   - **file**: The path to the target Twig file.
   - **target**: The content or selector to uncomment.
 
@@ -559,7 +588,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "uncomment_block",
+      "action": "uncommentBlock",
       "file": "/templates/base.twig",
       "target": "footer section"
     }
@@ -569,14 +598,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **20. add_include**
+### **addInclude**
 
 - **Description:** Add an `{% include %}` statement to include another template.
 
 - **Parameters:**
-  - **action**: `"add_include"`
+  - **action**: `"addInclude"`
   - **file**: The path to the target Twig file.
-  - **include_file**: The path to the template to include.
+  - **includeFile**: The path to the template to include.
   - **location**: (Optional) The location to insert the include statement.
 
 - **User Instruction Example:**
@@ -589,9 +618,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "add_include",
+      "action": "addInclude",
       "file": "/templates/index.twig",
-      "include_file": "header.twig",
+      "includeFile": "header.twig",
       "location": "top"
     }
   ]
@@ -600,14 +629,14 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **21. update_extends**
+### **updateExtends**
 
 - **Description:** Change the template that a file extends.
 
 - **Parameters:**
-  - **action**: `"update_extends"`
+  - **action**: `"updateExtends"`
   - **file**: The path to the target Twig file.
-  - **new_parent**: The new template to extend.
+  - **newParent**: The new template to extend.
 
 - **User Instruction Example:**
 
@@ -619,9 +648,9 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "update_extends",
+      "action": "updateExtends",
       "file": "/templates/page.twig",
-      "new_parent": "new_base.twig"
+      "newParent": "new_base.twig"
     }
   ]
 }
@@ -629,15 +658,15 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **22. update_macro**
+### **updateMacro**
 
 - **Description:** Modify a macro within a template.
 
 - **Parameters:**
-  - **action**: `"update_macro"`
+  - **action**: `"updateMacro"`
   - **file**: The path to the target Twig file.
-  - **macro_name**: The name of the macro to update.
-  - **new_content**: The new content or parameters for the macro.
+  - **macroName**: The name of the macro to update.
+  - **newContent**: The new content or parameters for the macro.
 
 - **User Instruction Example:**
 
@@ -649,10 +678,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "update_macro",
+      "action": "updateMacro",
       "file": "/templates/macros.twig",
-      "macro_name": "button",
-      "new_content": "{% macro button(label, type='button') %}\n<button type=\"{{ type }}\">{{ label }}</button>\n{% endmacro %}"
+      "macroName": "button",
+      "newContent": "{% macro button(label, type='button') %}\n<button type=\"{{ type }}\">{{ label }}</button>\n{% endmacro %}"
     }
   ]
 }
@@ -660,12 +689,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **23. insert_before**
+### **insertBefore**
 
 - **Description:** Insert content before a specific element or line in a file.
 
 - **Parameters:**
-  - **action**: `"insert_before"`
+  - **action**: `"insertBefore"`
   - **file**: The path to the target Twig file.
   - **target**: The element or content before which to insert.
   - **content**: The content to insert.
@@ -680,7 +709,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "insert_before",
+      "action": "insertBefore",
       "file": "/templates/layout.twig",
       "target": "</head>",
       "content": "<meta name=\"description\" content=\"...\">"
@@ -691,12 +720,12 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **24. insert_after**
+### **insertAfter**
 
 - **Description:** Insert content after a specific element or line in a file.
 
 - **Parameters:**
-  - **action**: `"insert_after"`
+  - **action**: `"insertAfter"`
   - **file**: The path to the target Twig file.
   - **target**: The element or content after which to insert.
   - **content**: The content to insert.
@@ -711,7 +740,7 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "insert_after",
+      "action": "insertAfter",
       "file": "/templates/index.twig",
       "target": "</body>",
       "content": "<script src=\"analytics.js\"></script>"
@@ -722,15 +751,15 @@ This document outlines all the supported actions that the Sidekick assistant can
 
 ---
 
-### **25. extract_partial**
+### **extractPartial**
 
 - **Description:** Extract a section of code into a new partial template and include it.
 
 - **Parameters:**
-  - **action**: `"extract_partial"`
+  - **action**: `"extractPartial"`
   - **file**: The path to the original Twig file.
   - **target**: The content or selector to extract.
-  - **new_partial**: The path for the new partial template.
+  - **newPartial**: The path for the new partial template.
 
 - **User Instruction Example:**
 
@@ -742,10 +771,10 @@ This document outlines all the supported actions that the Sidekick assistant can
 {
   "actions": [
     {
-      "action": "extract_partial",
+      "action": "extractPartial",
       "file": "/templates/index.twig",
       "target": "header section",
-      "new_partial": "/templates/header.twig"
+      "newPartial": "/templates/header.twig"
     }
   ]
 }

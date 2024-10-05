@@ -3,6 +3,7 @@
 namespace doublesecretagency\sidekick\controllers;
 
 use Craft;
+use craft\errors\MissingComponentException;
 use craft\web\Controller;
 use doublesecretagency\sidekick\Sidekick;
 use yii\web\BadRequestHttpException;
@@ -33,6 +34,7 @@ class ChatController extends Controller
      *
      * @return Response
      * @throws BadRequestHttpException
+     * @throws MissingComponentException
      */
     public function actionSendMessage(): Response
     {
@@ -44,19 +46,42 @@ class ChatController extends Controller
         // Append the user's message to the conversation
         $session = Craft::$app->getSession();
         $conversation = $session->get('sidekickConversation', []);
-        $conversation[] = ['role' => 'user', 'content' => $message];
-        $session->set('sidekickConversation', $conversation);
+
+        // Load the assistant's system prompt
+        $prompt = Sidekick::$plugin->openAIService->getSystemPrompt();
+
+        // Include the system prompt as the first message
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => $prompt
+            ],
+        ];
+
+        // Add the conversation history
+        foreach ($conversation as $msg) {
+            $messages[] = $msg;
+        }
+
+        // Add the new user message
+        $messages[] = [
+            'role' => 'user',
+            'content' => $message
+        ];
 
         // Prepare the AI API request
         $apiRequest = [
             'model' => Sidekick::$aiModel,
-            'messages' => $conversation,
+            'messages' => $messages,
+            'max_tokens' => 1500,
+            'temperature' => 0.2,
         ];
 
         // Call the AI API
         $openAIService = Sidekick::$plugin->openAIService;
         $apiResponse = $openAIService->callChatCompletion($apiRequest);
 
+        // Handle API errors
         if (!$apiResponse['success']) {
             Craft::error("AI API Error: " . $apiResponse['error'], __METHOD__);
             return $this->asJson([
@@ -65,24 +90,32 @@ class ChatController extends Controller
             ]);
         }
 
+        // Extract the assistant's message from the API response
         $assistantMessage = $apiResponse['results'];
-        $decodedJson = json_decode($assistantMessage, true);
 
-        if (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions'])) {
-            // Execute the actions
-            $executionResults = $this->_executeActions($decodedJson['actions']);
+        // Preprocess the assistant's response to remove code block markers and trim whitespace
+        $assistantMessageClean = trim($assistantMessage);
 
+        // Remove any backticks or code block formatting
+        if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/m', $assistantMessageClean, $matches)) {
+            $assistantMessageClean = $matches[1];
+        }
+
+        // Alternatively, remove any backticks at the start and end
+        $assistantMessageClean = trim($assistantMessageClean, "`");
+
+        // Decode the JSON response
+        $decodedJson = json_decode($assistantMessageClean, true);
+
+        // Whether the response contains actions
+        $actions = (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions']));
+
+        if (!$actions) {
             // Append the assistant's message to the conversation
-            $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
-            $session->set('sidekickConversation', $conversation);
-
-            return $this->asJson([
-                'success' => true,
-                'message' => $executionResults['message'],
-            ]);
-        } else {
-            // Append the assistant's message to the conversation
-            $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
+            $conversation[] = [
+                'role' => 'assistant',
+                'content' => $assistantMessage
+            ];
             $session->set('sidekickConversation', $conversation);
 
             return $this->asJson([
@@ -90,79 +123,27 @@ class ChatController extends Controller
                 'message' => $assistantMessage,
             ]);
         }
-    }
 
-    /**
-     * Executes a list of actions provided by the assistant.
-     *
-     * @param array $actions
-     * @return array
-     */
-    private function _executeActions(array $actions): array
-    {
-        foreach ($actions as $action) {
-            $result = $this->_handleAction($action);
-            if (!$result['success']) {
-                return $result; // Return on first failure
-            }
-        }
-        return ['success' => true, 'message' => 'All actions executed successfully.'];
-    }
+        // Execute the actions using ActionsService
+        $actionsService = Sidekick::$plugin->actionsService;
+        $executionResults = $actionsService->executeActions($decodedJson['actions']);
 
-    /**
-     * Handles a single action.
-     *
-     * @param array $action
-     * @return array
-     */
-    private function _handleAction(array $action): array
-    {
-        $fileService = Sidekick::$plugin->fileManagementService;
+        // Append the assistant's message to the conversation
+        $conversation[] = [
+            'role' => 'assistant',
+            'content' => $assistantMessage
+        ];
 
-        switch ($action['action']) {
-            case 'update_element':
-                $filePath = $action['file'];
-                $element = $action['element'];
-                $newValue = $action['new_value'];
+        // Update the conversation history
+        $session->set('sidekickConversation', $conversation);
 
-                $content = $fileService->readFile($filePath);
-                if ($content === null) {
-                    return ['success' => false, 'message' => "File not found: {$filePath}"];
-                }
+        // Prepare the response message
+        $responseMessage = $executionResults['message'];
 
-                // Modify the content
-                $modifiedContent = $this->_modifyElementInContent($content, $element, $newValue);
-
-                $result = $fileService->rewriteFile($filePath, $modifiedContent);
-                if ($result) {
-                    return ['success' => true, 'message' => "Element '{$element}' in '{$filePath}' updated successfully."];
-                } else {
-                    return ['success' => false, 'message' => "Failed to write changes to '{$filePath}'."];
-                }
-
-            // Handle other actions...
-
-            default:
-                return ['success' => false, 'message' => "Unsupported action: {$action['action']}"];
-        }
-    }
-
-    /**
-     * Modifies a specific element in the content.
-     *
-     * @param string $content
-     * @param string $element
-     * @param string $newValue
-     * @return string
-     */
-    private function _modifyElementInContent(string $content, string $element, string $newValue): string
-    {
-        // Implement logic to modify the specific element in the content
-        // For example, using regular expressions or DOM parsing
-        // Simplified example using regex:
-
-        $pattern = "/(<{$element}[^>]*>)(.*?)(<\/{$element}>)/s";
-        $replacement = "\$1{$newValue}\$3";
-        return preg_replace($pattern, $replacement, $content);
+        // Return the response message
+        return $this->asJson([
+            'success' => true,
+            'message' => $responseMessage,
+        ]);
     }
 }
