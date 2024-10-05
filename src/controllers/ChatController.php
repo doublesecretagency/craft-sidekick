@@ -232,16 +232,17 @@ class ChatController extends Controller
      */
     private function detectFileDisplayRequest(string $message): ?array
     {
-        // Regex to match phrases like "show me the `index.twig`" or "Get `index.twig`"
-        $pattern = '#(?:show me|get)\s+the\s+[`\'"]?(?<fileName>[\w\-\/]+\.twig)[`\'"]?#i';
-        Craft::info("Detecting file display request with pattern: {$pattern}", __METHOD__);
+        // Updated regex pattern
+        $pattern = '#(?:show|display|get|view|see)(?:\s+me)?(?:\s+the)?\s+[`\'"]?(?<fileName>(?:/)?[\w\-\./]+\.twig)[`\'"]?#i';
 
         if (preg_match($pattern, $message, $matches)) {
             $fileName = $matches['fileName'];
-            Craft::info("Detected file name: {$fileName}", __METHOD__);
 
-            // Construct the relative file path
-            $filePath = "/templates/{$fileName}";
+            // Normalize file path
+            $filePath = $fileName;
+            if (!str_starts_with($filePath, '/templates/')) {
+                $filePath = "/templates/{$filePath}";
+            }
 
             // Validate the file path
             if (Sidekick::$plugin->fileManagementService->isTwigFile($filePath)) {
