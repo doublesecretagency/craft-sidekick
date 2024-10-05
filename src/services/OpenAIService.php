@@ -4,6 +4,7 @@ namespace doublesecretagency\sidekick\services;
 
 use Craft;
 use doublesecretagency\sidekick\Sidekick;
+use GuzzleHttp\Exception\GuzzleException;
 use yii\base\Component;
 use yii\base\Exception;
 use GuzzleHttp\Client;
@@ -32,6 +33,18 @@ class OpenAIService extends Component
     private string $systemPrompt = '';
 
     /**
+     * @var array The list of system prompt files to compile.
+     */
+    private array $systemPromptFiles = [
+        'introduction.md',
+        'general-guidelines.md',
+        'actions.md',
+        'formatting-style.md',
+        'security-compliance.md',
+        'examples.md',
+    ];
+
+    /**
      * Initializes the service.
      *
      * Loads the system prompt from a Markdown file.
@@ -50,23 +63,48 @@ class OpenAIService extends Component
             throw new Exception('OpenAI API key is not set.');
         }
 
-        // Load the system prompt from the Markdown file
-        $systemPromptPath = Craft::getAlias('@sidekick') . '/prompts/start-chat.md';
+        // Compile the system prompt
+        $this->_compileSystemPrompt();
+    }
 
-        if (!file_exists($systemPromptPath)) {
-            Craft::error("System prompt file not found at {$systemPromptPath}.", __METHOD__);
-            throw new Exception("System prompt file not found at {$systemPromptPath}.");
+    /**
+     * Compiles the system prompt from multiple Markdown files.
+     *
+     * @throws Exception if the system prompt file cannot be read.
+     */
+    private function _compileSystemPrompt(): void
+    {
+        // Get the path to the Sidekick plugin
+        $path = Craft::getAlias('@sidekick');
+
+        // Loop through each prompt file
+        foreach ($this->systemPromptFiles as $file) {
+
+            // Load the content of each prompt file
+            $filePath = "{$path}/prompts/{$file}";
+
+            // Ensure the file exists
+            if (file_exists($filePath)) {
+                // Load the file content
+                $content = file_get_contents($filePath);
+                // Ensure there's a line break between sections
+                $this->systemPrompt .= "{$content}\n\n";
+            } else {
+                // Handle missing files if necessary
+                Craft::warning("Prompt file not found: {$filePath}", __METHOD__);
+            }
+
         }
 
-        $systemPromptContent = file_get_contents($systemPromptPath);
-
-        if ($systemPromptContent === false) {
-            Craft::error("Failed to read system prompt file at {$systemPromptPath}.", __METHOD__);
-            throw new Exception("Failed to read system prompt file at {$systemPromptPath}.");
+        // If no prompt content was loaded, throw an exception
+        if (!$this->systemPrompt) {
+            $error = "Unable to compile the system prompt.";
+            Craft::error($error, __METHOD__);
+            throw new Exception($error);
         }
 
-        $this->systemPrompt = $systemPromptContent;
-        Craft::info("Loaded system prompt from {$systemPromptPath}", __METHOD__);
+        // Log that the system prompt has been compiled
+        Craft::info("Compiled system prompt.", __METHOD__);
     }
 
     /**
@@ -84,6 +122,7 @@ class OpenAIService extends Component
      *
      * @param array $apiRequest The API request payload.
      * @return array The API response.
+     * @throws GuzzleException
      */
     public function callChatCompletion(array $apiRequest): array
     {
@@ -184,19 +223,20 @@ class OpenAIService extends Component
         // Attempt to decode JSON
         $decodedJson = json_decode($content, true);
 
-        if (json_last_error() === JSON_ERROR_NONE) {
-            // It's valid JSON, ensure it has required keys
-            if (isset($decodedJson['operation'], $decodedJson['filePath'])) {
-                Craft::info("Assistant's response is valid JSON with required keys.", __METHOD__);
-                return $content;
-            } else {
-                Craft::warning("JSON response missing required keys.", __METHOD__);
-                return $content;
-            }
-        } else {
-            // Not JSON, return content as is
+        // If not JSON, return content as is
+        if (json_last_error() !== JSON_ERROR_NONE) {
             Craft::info("Assistant's response is not JSON, returning as is.", __METHOD__);
             return $content;
         }
+
+        // If any required keys are missing, return content as is
+        if (!isset($decodedJson['operation'], $decodedJson['filePath'])) {
+            Craft::warning("JSON response missing required keys.", __METHOD__);
+            return $content;
+        }
+
+        // It's valid JSON with required keys
+        Craft::info("Assistant's response is valid JSON with required keys.", __METHOD__);
+        return $content;
     }
 }
