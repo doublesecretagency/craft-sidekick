@@ -29,6 +29,53 @@ class ChatController extends Controller
         return $this->renderTemplate('sidekick/chat');
     }
 
+    // ========================================================================= //
+
+    /**
+     * Retrieves the conversation history from the session.
+     *
+     * @return Response
+     * @throws BadRequestHttpException
+     * @throws MissingComponentException
+     */
+    public function actionGetConversation(): Response
+    {
+        $this->requireAcceptsJson();
+
+        // Retrieve the conversation from the session
+        $conversation = Craft::$app->getSession()->get('sidekickConversation', []);
+
+        // Return the conversation
+        return $this->asJson([
+            'success' => true,
+            'conversation' => $conversation,
+        ]);
+    }
+
+    /**
+     * Clears the conversation history from the session.
+     *
+     * @return Response
+     * @throws BadRequestHttpException
+     * @throws MissingComponentException
+     */
+    public function actionClearConversation(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        // Clear the conversation from the session
+        Craft::$app->getSession()->remove('sidekickConversation');
+
+        // Return a success message
+        return $this->asJson([
+            'success' => true,
+            'message' => 'Conversation cleared.',
+        ]);
+    }
+
+    // ========================================================================= //
+
     /**
      * Handles sending messages to the AI model and processing responses.
      *
