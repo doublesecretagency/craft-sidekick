@@ -41,43 +41,10 @@ class ChatController extends Controller
         $request = Craft::$app->getRequest();
         $message = $request->getRequiredBodyParam('message');
 
-        // Log the received user message
-        Craft::info("Received user message: {$message}", __METHOD__);
-
-        // Check if the user is requesting to view a file
-        $fileRequest = $this->detectFileDisplayRequest($message);
-
-        if ($fileRequest) {
-            // Fetch and display the file content directly
-            $filePath = $fileRequest['filePath'];
-            Craft::info("User requested to view file: {$filePath}", __METHOD__);
-            $fileContent = Sidekick::$plugin->fileManagementService->readFile($filePath);
-
-            if ($fileContent !== null) {
-                $responseMessage = "Here are the contents of the `{$filePath}` file:\n\n```twig\n{$fileContent}\n```";
-                Craft::info("Displaying file contents for: {$filePath}", __METHOD__);
-                return $this->asJson([
-                    'success' => true,
-                    'message' => $responseMessage,
-                ]);
-            } else {
-                Craft::warning("Failed to retrieve contents of: {$filePath}", __METHOD__);
-                return $this->asJson([
-                    'success' => false,
-                    'message' => "Sorry, I couldn't retrieve the contents of the `{$filePath}` file.",
-                ]);
-            }
-        }
-
-        // Proceed with normal AI processing
-        // Get the existing conversation from the session
+        // Append the user's message to the conversation
         $session = Craft::$app->getSession();
         $conversation = $session->get('sidekickConversation', []);
-
-        // Append the user's message to the conversation
         $conversation[] = ['role' => 'user', 'content' => $message];
-
-        // Save the updated conversation back to the session
         $session->set('sidekickConversation', $conversation);
 
         // Prepare the AI API request
@@ -91,9 +58,7 @@ class ChatController extends Controller
         $apiResponse = $openAIService->callChatCompletion($apiRequest);
 
         if (!$apiResponse['success']) {
-            // Log the error for debugging
             Craft::error("AI API Error: " . $apiResponse['error'], __METHOD__);
-
             return $this->asJson([
                 'success' => false,
                 'error' => $apiResponse['error'],
@@ -101,46 +66,24 @@ class ChatController extends Controller
         }
 
         $assistantMessage = $apiResponse['results'];
+        $decodedJson = json_decode($assistantMessage, true);
 
-        // Log the assistant's raw response
-        Craft::info("Assistant's raw response: {$assistantMessage}", __METHOD__);
+        if (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions'])) {
+            // Execute the actions
+            $executionResults = $this->_executeActions($decodedJson['actions']);
 
-        // Try to decode JSON from the assistant's message
-        $fileOperation = $this->parseJsonResponse($assistantMessage);
-
-        if ($fileOperation) {
-            // Execute the file operation
-            Craft::info("Executing file operation: " . json_encode($fileOperation), __METHOD__);
-            $executionResult = $this->executeFileOperation($fileOperation);
-
-            if ($executionResult['success']) {
-                // Append the assistant's message to the conversation
-                $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
-                $session->set('sidekickConversation', $conversation);
-
-                // Respond with a confirmation message
-                return $this->asJson([
-                    'success' => true,
-                    'message' => "File operation executed successfully.",
-                ]);
-            } else {
-                // Append the assistant's message to the conversation
-                $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
-                $session->set('sidekickConversation', $conversation);
-
-                // Respond with an error message
-                return $this->asJson([
-                    'success' => false,
-                    'message' => $executionResult['message'],
-                ]);
-            }
-        } else {
-            // Handle regular assistant messages
+            // Append the assistant's message to the conversation
             $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
             $session->set('sidekickConversation', $conversation);
 
-            // Log the final message to be sent to the user
-            Craft::info("Sending assistant message to user: {$assistantMessage}", __METHOD__);
+            return $this->asJson([
+                'success' => true,
+                'message' => $executionResults['message'],
+            ]);
+        } else {
+            // Append the assistant's message to the conversation
+            $conversation[] = ['role' => 'assistant', 'content' => $assistantMessage];
+            $session->set('sidekickConversation', $conversation);
 
             return $this->asJson([
                 'success' => true,
@@ -150,146 +93,76 @@ class ChatController extends Controller
     }
 
     /**
-     * Parses the assistant's response to detect JSON-formatted file operations.
+     * Executes a list of actions provided by the assistant.
      *
-     * @param string $assistantResponse
-     * @return array|null
-     */
-    private function parseJsonResponse(string $assistantResponse): ?array
-    {
-        $decodedResponse = json_decode($assistantResponse, true);
-
-        if (json_last_error() === JSON_ERROR_NONE) {
-            // Validate the required keys
-            if (isset($decodedResponse['operation'], $decodedResponse['filePath'])) {
-                return $decodedResponse;
-            } else {
-                Craft::warning("JSON response missing required keys.", __METHOD__);
-            }
-        } else {
-            Craft::info("Assistant's response is not valid JSON.", __METHOD__);
-        }
-
-        return null;
-    }
-
-    /**
-     * Executes a single file operation based on the provided data.
-     *
-     * @param array $fileOperation
+     * @param array $actions
      * @return array
      */
-    private function executeFileOperation(array $fileOperation): array
+    private function _executeActions(array $actions): array
     {
-        $operation = $fileOperation['operation'];
-        $filePath = $fileOperation['filePath'];
-        $fileContent = $fileOperation['content'] ?? null;
+        foreach ($actions as $action) {
+            $result = $this->_handleAction($action);
+            if (!$result['success']) {
+                return $result; // Return on first failure
+            }
+        }
+        return ['success' => true, 'message' => 'All actions executed successfully.'];
+    }
 
+    /**
+     * Handles a single action.
+     *
+     * @param array $action
+     * @return array
+     */
+    private function _handleAction(array $action): array
+    {
         $fileService = Sidekick::$plugin->fileManagementService;
 
-        try {
-            switch ($operation) {
-                case 'CREATE_FILE':
-                    $result = $fileService->createFile($filePath, $fileContent);
-                    $message = $result ? "File created: {$filePath}" : "Failed to create file: {$filePath}";
-                    break;
+        switch ($action['action']) {
+            case 'update_element':
+                $filePath = $action['file'];
+                $element = $action['element'];
+                $newValue = $action['new_value'];
 
-                case 'UPDATE_FILE':
-                    $result = $fileService->rewriteFile($filePath, $fileContent);
-                    $message = $result ? "File updated: {$filePath}" : "Failed to update file: {$filePath}";
-                    break;
+                $content = $fileService->readFile($filePath);
+                if ($content === null) {
+                    return ['success' => false, 'message' => "File not found: {$filePath}"];
+                }
 
-                case 'DELETE_FILE':
-                    $result = $fileService->deleteFile($filePath);
-                    $message = $result ? "File deleted: {$filePath}" : "Failed to delete file: {$filePath}";
-                    break;
+                // Modify the content
+                $modifiedContent = $this->_modifyElementInContent($content, $element, $newValue);
 
-                default:
-                    $result = false;
-                    $message = "Unsupported file operation: {$operation}";
-                    break;
-            }
+                $result = $fileService->rewriteFile($filePath, $modifiedContent);
+                if ($result) {
+                    return ['success' => true, 'message' => "Element '{$element}' in '{$filePath}' updated successfully."];
+                } else {
+                    return ['success' => false, 'message' => "Failed to write changes to '{$filePath}'."];
+                }
 
-            if ($result) {
-                Craft::info($message, __METHOD__);
-                return ['success' => true, 'message' => $message];
-            } else {
-                Craft::error($message, __METHOD__);
-                return ['success' => false, 'message' => $message];
-            }
-        } catch (\Exception $e) {
-            $errorMessage = "Error executing file operation: " . $e->getMessage();
-            Craft::error($errorMessage, __METHOD__);
-            return ['success' => false, 'message' => $errorMessage];
+            // Handle other actions...
+
+            default:
+                return ['success' => false, 'message' => "Unsupported action: {$action['action']}"];
         }
     }
 
     /**
-     * Detects if the user is requesting to display a file's contents.
+     * Modifies a specific element in the content.
      *
-     * @param string $message
-     * @return array|null
+     * @param string $content
+     * @param string $element
+     * @param string $newValue
+     * @return string
      */
-    private function detectFileDisplayRequest(string $message): ?array
+    private function _modifyElementInContent(string $content, string $element, string $newValue): string
     {
-        // Updated regex pattern
-        $pattern = '#(?:show|display|get|view|see)(?:\s+me)?(?:\s+the)?\s+[`\'"]?(?<fileName>(?:/)?[\w\-\./]+\.twig)[`\'"]?#i';
+        // Implement logic to modify the specific element in the content
+        // For example, using regular expressions or DOM parsing
+        // Simplified example using regex:
 
-        if (preg_match($pattern, $message, $matches)) {
-            $fileName = $matches['fileName'];
-
-            // Normalize file path
-            $filePath = $fileName;
-            if (!str_starts_with($filePath, '/templates/')) {
-                $filePath = "/templates/{$filePath}";
-            }
-
-            // Validate the file path
-            if (Sidekick::$plugin->fileManagementService->isTwigFile($filePath)) {
-                Craft::info("Validated Twig file path: {$filePath}", __METHOD__);
-                return ['filePath' => $filePath];
-            } else {
-                Craft::warning("Invalid Twig file path detected: {$filePath}", __METHOD__);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retrieves the conversation history from the session.
-     *
-     * @return Response
-     */
-    public function actionGetConversation(): Response
-    {
-        $this->requireAcceptsJson();
-
-        $session = Craft::$app->getSession();
-        $conversation = $session->get('sidekickConversation', []);
-
-        return $this->asJson([
-            'success' => true,
-            'conversation' => $conversation,
-        ]);
-    }
-
-    /**
-     * Clears the conversation history from the session.
-     *
-     * @return Response
-     */
-    public function actionClearConversation(): Response
-    {
-        $this->requirePostRequest();
-        $this->requireAcceptsJson();
-
-        $session = Craft::$app->getSession();
-        $session->remove('sidekickConversation');
-
-        return $this->asJson([
-            'success' => true,
-            'message' => 'Conversation cleared.',
-        ]);
+        $pattern = "/(<{$element}[^>]*>)(.*?)(<\/{$element}>)/s";
+        $replacement = "\$1{$newValue}\$3";
+        return preg_replace($pattern, $replacement, $content);
     }
 }
