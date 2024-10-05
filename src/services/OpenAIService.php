@@ -119,7 +119,7 @@ class OpenAIService extends Component
             'model' => $apiRequest['model'] ?? 'gpt-4',
             'messages' => $messages,
             'max_tokens' => 1500,
-            'temperature' => 0.7,
+            'temperature' => 0.2,
             'n' => 1,
             'stop' => null,
         ];
