@@ -87,46 +87,15 @@ class ChatController extends Controller
     {
         $this->requirePostRequest();
 
+        // Step 1: Receive the user's message
         $request = Craft::$app->getRequest();
         $message = $request->getRequiredBodyParam('message');
 
-        // Append the user's message to the conversation
-        $session = Craft::$app->getSession();
-        $conversation = $session->get('sidekickConversation', []);
+        // Step 2: Append the user's message to the conversation history
+        $conversation = $this->_appendUserMessage($message);
 
-        // Load the assistant's system prompt
-        $prompt = Sidekick::$plugin->openAi->getSystemPrompt();
-
-        // Include the system prompt as the first message
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => $prompt
-            ],
-        ];
-
-        // Add the conversation history
-        foreach ($conversation as $msg) {
-            $messages[] = $msg;
-        }
-
-        // Add the new user message
-        $messages[] = [
-            'role' => 'user',
-            'content' => $message
-        ];
-
-        // Prepare the AI API request
-        $apiRequest = [
-            'model' => Sidekick::$aiModel,
-            'messages' => $messages,
-            'max_tokens' => 1500,
-            'temperature' => 0.2,
-        ];
-
-        // Call the AI API
-        $openAIService = Sidekick::$plugin->openAi;
-        $apiResponse = $openAIService->callChatCompletion($apiRequest);
+        // Step 3: Prepare and send the API request to OpenAI
+        $apiResponse = $this->_callOpenAiApi($conversation);
 
         // Handle API errors
         if (!$apiResponse['success']) {
@@ -137,60 +106,174 @@ class ChatController extends Controller
             ]);
         }
 
-        // Extract the assistant's message from the API response
-        $assistantMessage = $apiResponse['results'];
+        // Step 4: Process the assistant's response
+        return $this->_processAssistantResponse($apiResponse['results'], $conversation);
+    }
 
-        // Preprocess the assistant's response to remove code block markers and trim whitespace
-        $assistantMessageClean = trim($assistantMessage);
+    // ========================================================================= //
 
-        // Remove any backticks or code block formatting
-        if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/m', $assistantMessageClean, $matches)) {
-            $assistantMessageClean = $matches[1];
-        }
+    /**
+     * Appends the user's message to the conversation history.
+     *
+     * @param string $message
+     * @return array The updated conversation history
+     * @throws MissingComponentException
+     */
+    private function _appendUserMessage(string $message): array
+    {
+        $session = Craft::$app->getSession();
+        $conversation = $session->get('sidekickConversation', []);
 
-        // Alternatively, remove any backticks at the start and end
-        $assistantMessageClean = trim($assistantMessageClean, "`");
+        // Append the user's message
+        $conversation[] = [
+            'role' => 'user',
+            'content' => $message
+        ];
+
+        // Update the session
+        $session->set('sidekickConversation', $conversation);
+
+        return $conversation;
+    }
+
+    /**
+     * Prepares and sends the API request to OpenAI.
+     *
+     * @param array $conversation
+     * @return array The API response
+     */
+    private function _callOpenAiApi(array $conversation): array
+    {
+        // Load the assistant's system prompt
+        $prompt = Sidekick::$plugin->openAi->getSystemPrompt();
+
+        // Prepare messages for the API request
+        $messages = [
+            [
+                'role' => 'system',
+                'content' => $prompt
+            ],
+        ];
+
+        // Add the conversation history
+        $messages = array_merge($messages, $conversation);
+
+        // Prepare the API request
+        $apiRequest = [
+            'model' => Sidekick::$aiModel,
+            'messages' => $messages,
+            'max_tokens' => 1500,
+            'temperature' => 0.2,
+        ];
+
+        // Call the OpenAI API
+        return Sidekick::$plugin->openAi->callChatCompletion($apiRequest);
+    }
+
+    /**
+     * Processes the assistant's response.
+     *
+     * @param string $assistantMessage
+     * @param array $conversation
+     * @return Response
+     * @throws BadRequestHttpException
+     */
+    private function _processAssistantResponse(string $assistantMessage, array $conversation): Response
+    {
+        $session = Craft::$app->getSession();
+
+        // Preprocess the assistant's response
+        $assistantMessageClean = $this->_cleanAssistantMessage($assistantMessage);
 
         // Decode the JSON response
         $decodedJson = json_decode($assistantMessageClean, true);
+        $isJsonAction = (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions']));
 
-        // Whether the response contains actions
-        $actions = (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions']));
-
-        if (!$actions) {
-            // Append the assistant's message to the conversation
-            $conversation[] = [
-                'role' => 'assistant',
-                'content' => $assistantMessage
-            ];
-            $session->set('sidekickConversation', $conversation);
-
+        if ($isJsonAction) {
+            // Handle JSON actions
+            $actionResponse = $this->_executeActions($decodedJson['actions'], $conversation);
+            return $this->asJson($actionResponse);
+        } else {
+            // Handle conversational message
+            $this->_appendAssistantMessage($assistantMessage, $conversation);
             return $this->asJson([
                 'success' => true,
                 'message' => $assistantMessage,
             ]);
         }
+    }
 
-        // Execute the actions using ActionsService
+    /**
+     * Cleans the assistant's message by removing code block markers and trimming whitespace.
+     *
+     * @param string $message
+     * @return string
+     */
+    private function _cleanAssistantMessage(string $message): string
+    {
+        $message = trim($message);
+
+        // Remove code block markers
+        if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/m', $message, $matches)) {
+            $message = $matches[1];
+        }
+
+        // Remove any backticks at the start and end
+        $message = trim($message, "`");
+
+        return $message;
+    }
+
+    /**
+     * Executes actions provided by the assistant.
+     *
+     * @param array $actions
+     * @param array $conversation
+     * @return array
+     */
+    private function _executeActions(array $actions, array $conversation): array
+    {
         $actionsService = Sidekick::$plugin->actions;
-        $executionResults = $actionsService->executeActions($decodedJson['actions']);
+        $executionResults = $actionsService->executeActions($actions);
 
-        // Append the assistant's message to the conversation
+        // Prepare the response message
+        $responseMessage = $executionResults['message'];
+
+        // Split the message into individual system messages
+        $systemMessages = explode("\n", $responseMessage);
+        foreach ($systemMessages as $systemMessage) {
+            // Append each system message to the conversation history
+            $conversation[] = [
+                'role' => 'system',
+                'content' => $systemMessage
+            ];
+        }
+
+        // Update the session with the new conversation history
+        Craft::$app->getSession()->set('sidekickConversation', $conversation);
+
+        return [
+            'success' => true,
+            'message' => $responseMessage,
+        ];
+    }
+
+    /**
+     * Appends the assistant's message to the conversation history.
+     *
+     * @param string $assistantMessage
+     * @param array $conversation
+     * @throws MissingComponentException
+     */
+    private function _appendAssistantMessage(string $assistantMessage, array $conversation): void
+    {
+        // Append the assistant's message
         $conversation[] = [
             'role' => 'assistant',
             'content' => $assistantMessage
         ];
 
-        // Update the conversation history
-        $session->set('sidekickConversation', $conversation);
-
-        // Prepare the response message
-        $responseMessage = $executionResults['message'];
-
-        // Return the response message
-        return $this->asJson([
-            'success' => true,
-            'message' => $responseMessage,
-        ]);
+        // Update the session
+        Craft::$app->getSession()->set('sidekickConversation', $conversation);
     }
 }

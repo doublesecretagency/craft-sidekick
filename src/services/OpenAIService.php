@@ -126,17 +126,22 @@ class OpenAIService extends Component
         // Create a new instance of the DocBlockFactory
         $docFactory = DocBlockFactory::createInstance();
 
+        // Get the path to the Sidekick plugin
+        $path = Craft::getAlias('@sidekick');
+
+        // Load the content of the actions documentation
+        $filePath = "{$path}/prompts/actions.md";
+
+        // If the file doesn't exist, bail
+        if (!file_exists($filePath)) {
+            return;
+        }
+
+        // Load the actions documentation
+        $actionsDocumentation = file_get_contents($filePath);
+
         // Initialize the actions documentation
-        $actionsDocumentation = <<<DOC
-# Actions for Sidekick Assistant
-
-This document outlines all the supported actions that the Sidekick assistant can generate in response to user instructions. Each action includes a description, required parameters, and example usage.
-
----
-
-## **Supported Actions**
-
-DOC;
+        $listOfActions = '';
 
         // Loop through each method
         foreach ($methods as $method) {
@@ -165,44 +170,11 @@ DOC;
             $description = $docBlock->getDescription();
 
             // Append the action documentation to the system prompt
-            $actionsDocumentation .= "\n{$summary}\n\n{$description}\n";
+            $listOfActions .= "\n{$summary}\n\n{$description}\n";
         }
 
-        // Append guidelines and formatting notes to the system prompt
-        $actionsDocumentation .= <<<DOC
-
-## **Important Guidelines**
-
-- **Output Only Raw JSON for Actions:**
-  - Do not include any code block formatting, backticks, or additional text.
-  - Ensure responses are clean and focused.
-
-- **No Explanations or Text Outside JSON:**
-  - Keep responses concise and limited to the JSON structure.
-
-- **Ensure Valid JSON:**
-  - The JSON should be well-formed and parseable.
-  - Double-check for syntax errors before responding.
-
-- **Stay Within Scope:**
-  - Only generate commands for allowed operations within the `/templates` directory.
-
-- **Handle Errors Appropriately:**
-  - If a file does not exist or an action cannot be performed, include an error action or inform the user politely.
-
----
-
-## **Note on Formatting**
-
-To prevent any issues with code rendering, the assistant should:
-
-- Avoid including unnecessary whitespace or line breaks within JSON snippets.
-- Ensure that code examples are clear and correctly formatted.
-- Do not use backticks or code block formatting around code snippets in responses.
-
----
-
-DOC;
+        // Replace the placeholder with the actions documentation
+        $actionsDocumentation = str_replace('{listOfActions}', $listOfActions, $actionsDocumentation);
 
         // Append the actions documentation to the system prompt
         $this->systemPrompt .= $actionsDocumentation;
@@ -335,14 +307,15 @@ DOC;
         $decodedJson = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Craft::warning("Assistant's response is not valid JSON: " . json_last_error_msg(), __METHOD__);
-            return "I'm sorry, but I couldn't understand your request. Please ensure it follows the correct JSON format.";
+            // Assistant's response is not JSON; treat it as a natural language response
+            Craft::info("Assistant's response is not JSON. Treating as natural language response.", __METHOD__);
+            return $content;
         }
 
-        // Check for 'actions' key
+        // Check for 'actions' key in JSON
         if (!isset($decodedJson['actions']) || !is_array($decodedJson['actions'])) {
-            Craft::warning("Assistant's response missing 'actions' key.", __METHOD__);
-            return "I'm sorry, but I couldn't find any actions in your request.";
+            Craft::warning("Assistant's JSON response missing 'actions' key.", __METHOD__);
+            return $content;
         }
 
         // Validate each action
@@ -353,11 +326,9 @@ DOC;
                 Craft::warning("Invalid or unsupported action: " . ($action['action'] ?? 'undefined'), __METHOD__);
                 return "I'm sorry, but one of the actions you requested is not supported.";
             }
-
-            // Additional validation can be added here for required parameters per action
         }
 
-        // If all validations pass, return the content
+        // If all validations pass, return the original content
         return $content;
     }
 }
