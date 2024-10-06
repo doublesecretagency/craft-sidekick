@@ -3,8 +3,11 @@
 namespace doublesecretagency\sidekick\services;
 
 use Craft;
+use doublesecretagency\sidekick\helpers\ActionsHelper;
 use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Exception\GuzzleException;
+use phpDocumentor\Reflection\DocBlockFactory;
+use ReflectionClass;
 use yii\base\Component;
 use yii\base\Exception;
 use GuzzleHttp\Client;
@@ -38,7 +41,6 @@ class OpenAIService extends Component
     private array $systemPromptFiles = [
         'introduction.md',
         'general-guidelines.md',
-        'actions.md',
         'formatting-style.md',
         'security-compliance.md',
         'examples.md',
@@ -103,8 +105,107 @@ class OpenAIService extends Component
             throw new Exception($error);
         }
 
+        // Append the actions documentation to the system prompt
+        $this->appendActionsDocs();
+
         // Log that the system prompt has been compiled
         Craft::info("Compiled system prompt.", __METHOD__);
+    }
+
+    /**
+     * Appends the actions documentation to the system prompt.
+     */
+    public function appendActionsDocs(): void
+    {
+        // Get the actions service
+        $actionsService = Sidekick::$plugin->actions;
+
+        // Get all methods from the ActionsHelper class
+        $methods = (new ReflectionClass(ActionsHelper::class))->getMethods();
+
+        // Create a new instance of the DocBlockFactory
+        $docFactory = DocBlockFactory::createInstance();
+
+        // Initialize the actions documentation
+        $actionsDocumentation = <<<DOC
+# Actions for Sidekick Assistant
+
+This document outlines all the supported actions that the Sidekick assistant can generate in response to user instructions. Each action includes a description, required parameters, and example usage.
+
+---
+
+## **Supported Actions**
+
+DOC;
+
+        // Loop through each method
+        foreach ($methods as $method) {
+
+            // Get the method name
+            $action = $method->getName();
+
+            // Skip methods that aren't valid actions
+            if (!in_array($action, $actionsService->getValidActions(), true)) {
+                continue;
+            }
+
+            // Get the method's doc comment
+            $docComment = $method->getDocComment();
+
+            // If no doc comment is present, skip this method
+            if (!$docComment) {
+                continue;
+            }
+
+            // Create a new DocBlock instance
+            $docBlock = $docFactory->create($docComment);
+
+            // Get the summary and description
+            $summary = $docBlock->getSummary();
+            $description = $docBlock->getDescription();
+
+            // Append the action documentation to the system prompt
+            $actionsDocumentation .= "\n{$summary}\n\n{$description}\n";
+        }
+
+        // Append guidelines and formatting notes to the system prompt
+        $actionsDocumentation .= <<<DOC
+
+## **Important Guidelines**
+
+- **Output Only Raw JSON for Actions:**
+  - Do not include any code block formatting, backticks, or additional text.
+  - Ensure responses are clean and focused.
+
+- **No Explanations or Text Outside JSON:**
+  - Keep responses concise and limited to the JSON structure.
+
+- **Ensure Valid JSON:**
+  - The JSON should be well-formed and parseable.
+  - Double-check for syntax errors before responding.
+
+- **Stay Within Scope:**
+  - Only generate commands for allowed operations within the `/templates` directory.
+
+- **Handle Errors Appropriately:**
+  - If a file does not exist or an action cannot be performed, include an error action or inform the user politely.
+
+---
+
+## **Note on Formatting**
+
+To prevent any issues with code rendering, the assistant should:
+
+- Avoid including unnecessary whitespace or line breaks within JSON snippets.
+- Ensure that code examples are clear and correctly formatted.
+- Do not use backticks or code block formatting around code snippets in responses.
+
+---
+
+DOC;
+
+        // Append the actions documentation to the system prompt
+        $this->systemPrompt .= $actionsDocumentation;
     }
 
     /**
@@ -193,7 +294,7 @@ class OpenAIService extends Component
                 Craft::info("Assistant's raw response content: {$content}", __METHOD__);
 
                 // Validate the response to ensure only allowed commands are present
-                $validatedContent = $this->validateResponse($content);
+                $validatedContent = $this->_validateResponse($content);
                 Craft::info("Validated assistant response content: {$validatedContent}", __METHOD__);
 
                 return [
@@ -228,25 +329,35 @@ class OpenAIService extends Component
      * @param string $content The assistant's response content.
      * @return string The validated content.
      */
-    private function validateResponse(string $content): string
+    private function _validateResponse(string $content): string
     {
         // Attempt to decode JSON
         $decodedJson = json_decode($content, true);
 
-        // If not JSON, return content as is
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Craft::info("Assistant's response is not JSON, returning as is.", __METHOD__);
-            return $content;
+            Craft::warning("Assistant's response is not valid JSON: " . json_last_error_msg(), __METHOD__);
+            return "I'm sorry, but I couldn't understand your request. Please ensure it follows the correct JSON format.";
         }
 
-        // If any required keys are missing, return content as is
-        if (!isset($decodedJson['operation'], $decodedJson['filePath'])) {
-            Craft::warning("JSON response missing required keys.", __METHOD__);
-            return $content;
+        // Check for 'actions' key
+        if (!isset($decodedJson['actions']) || !is_array($decodedJson['actions'])) {
+            Craft::warning("Assistant's response missing 'actions' key.", __METHOD__);
+            return "I'm sorry, but I couldn't find any actions in your request.";
         }
 
-        // It's valid JSON with required keys
-        Craft::info("Assistant's response is valid JSON with required keys.", __METHOD__);
+        // Validate each action
+        $validActions = Sidekick::$plugin->actions->getValidActions();
+
+        foreach ($decodedJson['actions'] as $action) {
+            if (!isset($action['action']) || !in_array($action['action'], $validActions)) {
+                Craft::warning("Invalid or unsupported action: " . ($action['action'] ?? 'undefined'), __METHOD__);
+                return "I'm sorry, but one of the actions you requested is not supported.";
+            }
+
+            // Additional validation can be added here for required parameters per action
+        }
+
+        // If all validations pass, return the content
         return $content;
     }
 }

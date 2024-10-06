@@ -30,6 +30,12 @@ use craft\console\Application as ConsoleApplication;
  *
  * Main plugin class for Sidekick.
  * Registers services, custom fields, and user permissions.
+ *
+ * @property ActionsService $actions
+ * @property AltTagService $altTag
+ * @property DummyDataService $dummyData
+ * @property FileManagementService $fileManagement
+ * @property OpenAIService $openAi
  */
 class Sidekick extends Plugin
 {
@@ -63,11 +69,11 @@ class Sidekick extends Plugin
 
         // Register services
         $this->setComponents([
-            'actionsService' => ActionsService::class,
-            'altTagService' => AltTagService::class,
-            'dummyDataService' => DummyDataService::class,
-            'fileManagementService' => FileManagementService::class,
-            'openAIService' => OpenAIService::class,
+            'actions'        => ActionsService::class,
+            'altTag'         => AltTagService::class,
+            'dummyData'      => DummyDataService::class,
+            'fileManagement' => FileManagementService::class,
+            'openAi'         => OpenAIService::class,
         ]);
 
         // Register console commands

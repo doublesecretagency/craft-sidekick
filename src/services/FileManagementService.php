@@ -56,6 +56,32 @@ class FileManagementService extends Component
     }
 
     /**
+     * Get the full path to a file.
+     *
+     * @param string $filePath
+     * @return string
+     */
+    public function getFullPath(string $filePath): string
+    {
+        $filePath = $this->sanitizeFilePath($filePath);
+        return $this->resolveFilePath($filePath);
+    }
+
+    /**
+     * Check whether a file exists.
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    public function fileExists(string $filePath): bool
+    {
+        $filePath = $this->sanitizeFilePath($filePath);
+        $absolutePath = $this->resolveFilePath($filePath);
+
+        return file_exists($absolutePath);
+    }
+
+    /**
      * Reads the contents of a file.
      *
      * @param string $filePath The relative path to the file within the project.
@@ -167,6 +193,146 @@ class FileManagementService extends Component
 
         } catch (\Exception $e) {
             Craft::error('Error updating file: ' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * Writes content to a file.
+     *
+     * @param string $filePath
+     * @param string $content
+     * @return bool
+     */
+    public function writeFile(string $filePath, string $content): bool
+    {
+        try {
+            $filePath = $this->sanitizeFilePath($filePath);
+            $absolutePath = $this->resolveFilePath($filePath);
+
+            if (!$this->isPathAllowed($absolutePath)) {
+                throw new Exception('Unauthorized file path.');
+            }
+
+            // Ensure the directory exists
+            $directory = dirname($absolutePath);
+            if (!is_dir($directory)) {
+                FileHelper::createDirectory($directory);
+            }
+
+            file_put_contents($absolutePath, $content);
+            Craft::info("Successfully wrote to file: {$filePath}", __METHOD__);
+            return true;
+        } catch (\Exception $e) {
+            Craft::error('Error writing to file: ' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * Appends content to a file.
+     *
+     * @param string $filePath
+     * @param string $content
+     * @return bool
+     */
+    public function appendToFile(string $filePath, string $content): bool
+    {
+        try {
+            $filePath = $this->sanitizeFilePath($filePath);
+            $absolutePath = $this->resolveFilePath($filePath);
+
+            if (!$this->isPathAllowed($absolutePath)) {
+                throw new Exception('Unauthorized file path.');
+            }
+
+            if (!file_exists($absolutePath)) {
+                throw new Exception('File does not exist.');
+            }
+
+            file_put_contents($absolutePath, $content, FILE_APPEND);
+            Craft::info("Successfully appended to file: {$filePath}", __METHOD__);
+            return true;
+        } catch (\Exception $e) {
+            Craft::error('Error appending to file: ' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * Copies a file from one location to another.
+     *
+     * @param string $sourceFile
+     * @param string $destinationFile
+     * @return bool
+     */
+    public function copyFile(string $sourceFile, string $destinationFile): bool
+    {
+        try {
+            $sourceFile = $this->sanitizeFilePath($sourceFile);
+            $destinationFile = $this->sanitizeFilePath($destinationFile);
+
+            $sourceAbsolutePath = $this->resolveFilePath($sourceFile);
+            $destinationAbsolutePath = $this->resolveFilePath($destinationFile);
+
+            if (!$this->isPathAllowed($sourceAbsolutePath) || !$this->isPathAllowed($destinationAbsolutePath)) {
+                throw new Exception('Unauthorized file path.');
+            }
+
+            if (!file_exists($sourceAbsolutePath)) {
+                throw new Exception('Source file does not exist.');
+            }
+
+            // Ensure the destination directory exists
+            $directory = dirname($destinationAbsolutePath);
+            if (!is_dir($directory)) {
+                FileHelper::createDirectory($directory);
+            }
+
+            copy($sourceAbsolutePath, $destinationAbsolutePath);
+            Craft::info("Successfully copied file to: {$destinationFile}", __METHOD__);
+            return true;
+        } catch (\Exception $e) {
+            Craft::error('Error copying file: ' . $e->getMessage(), __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * Renames a file.
+     *
+     * @param string $oldFile
+     * @param string $newFile
+     * @return bool
+     */
+    public function renameFile(string $oldFile, string $newFile): bool
+    {
+        try {
+            $oldFile = $this->sanitizeFilePath($oldFile);
+            $newFile = $this->sanitizeFilePath($newFile);
+
+            $oldAbsolutePath = $this->resolveFilePath($oldFile);
+            $newAbsolutePath = $this->resolveFilePath($newFile);
+
+            if (!$this->isPathAllowed($oldAbsolutePath) || !$this->isPathAllowed($newAbsolutePath)) {
+                throw new Exception('Unauthorized file path.');
+            }
+
+            if (!file_exists($oldAbsolutePath)) {
+                throw new Exception('File does not exist.');
+            }
+
+            // Ensure the destination directory exists
+            $directory = dirname($newAbsolutePath);
+            if (!is_dir($directory)) {
+                FileHelper::createDirectory($directory);
+            }
+
+            rename($oldAbsolutePath, $newAbsolutePath);
+            Craft::info("Successfully renamed file to: {$newFile}", __METHOD__);
+            return true;
+        } catch (\Exception $e) {
+            Craft::error('Error renaming file: ' . $e->getMessage(), __METHOD__);
             return false;
         }
     }

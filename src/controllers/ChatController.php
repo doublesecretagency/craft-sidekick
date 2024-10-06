@@ -95,7 +95,7 @@ class ChatController extends Controller
         $conversation = $session->get('sidekickConversation', []);
 
         // Load the assistant's system prompt
-        $prompt = Sidekick::$plugin->openAIService->getSystemPrompt();
+        $prompt = Sidekick::$plugin->openAi->getSystemPrompt();
 
         // Include the system prompt as the first message
         $messages = [
@@ -125,7 +125,7 @@ class ChatController extends Controller
         ];
 
         // Call the AI API
-        $openAIService = Sidekick::$plugin->openAIService;
+        $openAIService = Sidekick::$plugin->openAi;
         $apiResponse = $openAIService->callChatCompletion($apiRequest);
 
         // Handle API errors
@@ -172,7 +172,7 @@ class ChatController extends Controller
         }
 
         // Execute the actions using ActionsService
-        $actionsService = Sidekick::$plugin->actionsService;
+        $actionsService = Sidekick::$plugin->actions;
         $executionResults = $actionsService->executeActions($decodedJson['actions']);
 
         // Append the assistant's message to the conversation
