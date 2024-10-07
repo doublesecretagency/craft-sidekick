@@ -28,7 +28,7 @@
     ],
     "require": {
         "craftcms/cms": "^4.0",
-        "phpdocumentor/reflection-docblock": "*",
+        "phpdocumentor/reflection-docblock": "^5.4",
         "symfony/css-selector": "^6.0",
         "symfony/dom-crawler": "^6.0"
     },

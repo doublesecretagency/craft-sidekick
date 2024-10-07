@@ -115,6 +115,7 @@ class ActionsHelper
         $filePath = $action['file'];
         $content = $action['content'] ?? '';
 
+        // Get the file management service
         $fileService = Sidekick::$plugin->fileManagement;
 
         // Check if file already exists
@@ -122,12 +123,25 @@ class ActionsHelper
             return ['success' => false, 'message' => "File already exists: {$filePath}"];
         }
 
+        // Get the full path to the templates directory
+//        $writePath = str_replace('/templates', Craft::getAlias('@templates'), $filePath);
+
+        // Create the file
         $result = $fileService->writeFile($filePath, $content);
-        if ($result) {
-            return ['success' => true, 'message' => "File '{$filePath}' created successfully."];
-        } else {
-            return ['success' => false, 'message' => "Failed to create file '{$filePath}'."];
+
+        // If the file was created successfully
+        if (!$result) {
+            return [
+                'success' => false,
+                'message' => "Failed to create file '{$filePath}'."
+            ];
         }
+
+        // Return a success message
+        return [
+            'success' => true,
+            'message' => "File '{$filePath}' created successfully."
+        ];
     }
 
     /**
@@ -226,9 +240,94 @@ class ActionsHelper
             return ['success' => false, 'message' => "File not found: {$filePath}"];
         }
 
-        // Implement logic to insert content at the specified location
-        $modifiedContent = $contentToInsert;
-//        $modifiedContent = $this->_insertContentAtLocation($content, $location, $contentToInsert);
+        // Implement logic to insert content at the specified location using DomCrawler
+        try {
+            // Initialize the DomCrawler with the file content
+            $crawler = new Crawler($content);
+
+            // Initialize a flag to indicate if insertion was successful
+            $insertionDone = false;
+
+            // Handle different types of location specifications
+            if (isset($location['beforeElement'])) {
+                $targetSelector = $location['beforeElement'];
+
+                // Find the target element(s)
+                $nodes = $crawler->filter($targetSelector);
+
+                if ($nodes->count() > 0) {
+                    // Get the first node
+                    $node = $nodes->getNode(0);
+
+                    // Create a new DOMDocument fragment for the content to insert
+                    $fragment = $node->ownerDocument->createDocumentFragment();
+                    $fragment->appendXML($contentToInsert);
+
+                    // Insert the fragment before the target node
+                    $node->parentNode->insertBefore($fragment, $node);
+
+                    $insertionDone = true;
+                }
+
+            } elseif (isset($location['afterElement'])) {
+                $targetSelector = $location['afterElement'];
+
+                // Find the target element(s)
+                $nodes = $crawler->filter($targetSelector);
+
+                if ($nodes->count() > 0) {
+                    // Get the first node
+                    $node = $nodes->getNode(0);
+
+                    // Create a new DOMDocument fragment for the content to insert
+                    $fragment = $node->ownerDocument->createDocumentFragment();
+                    $fragment->appendXML($contentToInsert);
+
+                    // Insert the fragment after the target node
+                    if ($node->nextSibling) {
+                        $node->parentNode->insertBefore($fragment, $node->nextSibling);
+                    } else {
+                        $node->parentNode->appendChild($fragment);
+                    }
+
+                    $insertionDone = true;
+                }
+
+            } elseif (isset($location['lineNumber'])) {
+                $lineNumber = (int)$location['lineNumber'];
+                $lines = explode("\n", $content);
+
+                // Adjust line number for array index (starting from 0)
+                $index = $lineNumber - 1;
+
+                if ($index < 0 || $index > count($lines)) {
+                    return ['success' => false, 'message' => "Invalid line number specified in location."];
+                }
+
+                // Insert the content at the specified line number
+                array_splice($lines, $index, 0, $contentToInsert);
+                $modifiedContent = implode("\n", $lines);
+
+                $insertionDone = true;
+            } else {
+                // Append content at the end
+                $modifiedContent = $content . "\n" . $contentToInsert;
+                $insertionDone = true;
+            }
+
+            if (!$insertionDone) {
+                return ['success' => false, 'message' => "Failed to locate the target element in '{$filePath}'."];
+            }
+
+            // If insertion was done using DomCrawler, get the modified content
+            if (!isset($modifiedContent)) {
+                // Get the modified HTML
+                $modifiedContent = $crawler->html();
+            }
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => "Error processing '{$filePath}': " . $e->getMessage()];
+        }
 
         $result = $fileService->rewriteFile($filePath, $modifiedContent);
         if ($result) {

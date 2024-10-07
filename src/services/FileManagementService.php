@@ -15,14 +15,14 @@ use yii\base\Exception;
 class FileManagementService extends Component
 {
     /**
-     * @var string The path to the project root.
+     * @var string|null The path to the project root.
      */
-    private string $projectRootPath = '';
+    public ?string $projectRootPath;
 
     /**
-     * @var string The path to the templates directory.
+     * @var string|null The path to the templates directory.
      */
-    private string $templatesPath = '';
+    public ?string $templatesPath;
 
     /**
      * Initializes the service.
@@ -31,11 +31,9 @@ class FileManagementService extends Component
     {
         parent::init();
 
-        // Set the project root path
-        $this->projectRootPath = Craft::getAlias('@root');
-
-        // Set the templates path
-        $this->templatesPath = Craft::getAlias('@templates');
+        // Set default paths if not set (allows overriding in tests)
+        $this->projectRootPath = $this->projectRootPath ?? Craft::getAlias('@root');
+        $this->templatesPath = $this->templatesPath ?? Craft::getAlias('@templates');
     }
 
     /**
@@ -211,7 +209,7 @@ class FileManagementService extends Component
             $absolutePath = $this->resolveFilePath($filePath);
 
             if (!$this->isPathAllowed($absolutePath)) {
-                throw new Exception('Unauthorized file path.');
+                throw new Exception("Unauthorized file path. ({$absolutePath})");
             }
 
             // Ensure the directory exists

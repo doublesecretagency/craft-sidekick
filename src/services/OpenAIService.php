@@ -77,7 +77,7 @@ class OpenAIService extends Component
     private function _compileSystemPrompt(): void
     {
         // Get the path to the Sidekick plugin
-        $path = Craft::getAlias('@sidekick');
+        $path = Craft::getAlias('@doublesecretagency/sidekick');
 
         // Loop through each prompt file
         foreach ($this->systemPromptFiles as $file) {
@@ -127,7 +127,7 @@ class OpenAIService extends Component
         $docFactory = DocBlockFactory::createInstance();
 
         // Get the path to the Sidekick plugin
-        $path = Craft::getAlias('@sidekick');
+        $path = Craft::getAlias('@doublesecretagency/sidekick');
 
         // Load the content of the actions documentation
         $filePath = "{$path}/prompts/actions.md";

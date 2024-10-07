@@ -64,9 +64,6 @@ class Sidekick extends Plugin
         parent::init();
         self::$plugin = $this;
 
-        // Set path alias
-        Craft::setAlias('@sidekick', Craft::getAlias('@vendor/doublesecretagency/craft-sidekick/src'));
-
         // Register services
         $this->setComponents([
             'actions'        => ActionsService::class,
