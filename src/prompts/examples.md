@@ -39,6 +39,34 @@
 }
 ```
 
+**User:** "Combine all `<p>` tags containing the haiku in `index.twig` into a single `<p>` tag, and replace the haiku with a new one of your choice."
+
+**Assistant:**
+
+```json
+{
+  "actions": [
+    {
+      "action": "removeElement",
+      "file": "/templates/index.twig",
+      "element": "p.haiku"
+    },
+    {
+      "action": "insertContent",
+      "file": "/templates/index.twig",
+      "location": {
+        "afterElement": "header"
+      },
+      "content": "<p class='haiku'>An old silent pond / A frog jumps into the pond— / Splash! Silence again.</p>"
+    }
+  ]
+}
+```
+
+In this example, the assistant removes the existing `<p>` tags containing the haiku and then inserts a new `<p>` tag with a new haiku.
+
+---
+
 #### **Handling Unsupported Actions**
 
 If the user requests an unsupported action:
