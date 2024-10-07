@@ -44,25 +44,26 @@ function escapeHtml(text) {
 
 // Append a message to the chat window
 function appendMessage(sender, message, role) {
-    // Do not display file operation commands
-    if (message.match(/^\[(CREATE_FILE|UPDATE_FILE|DELETE_FILE).*?\]/s)) {
-        return;
-    }
-
     const messageElement = document.createElement('div');
-    messageElement.style.marginBottom = '10px';
+    messageElement.classList.add('chat-message');
 
-    // Check if the message is a system file operation message
-    if (role === 'system' && message.startsWith('[') && message.endsWith(']')) {
-        messageElement.innerHTML = `<span style="color: green;">${message}</span>`;
+    // Escape the message content
+    const escapedMessage = escapeHtml(message).replace(/\n/g, '<br>');
+
+    // If system message
+    if (role === 'system') {
+        // Display stylized system messages
+        messageElement.classList.add('system-message');
+        messageElement.innerHTML = `${escapedMessage}`;
     } else {
-        // Escape the message content
-        const escapedMessage = escapeHtml(message).replace(/\n/g, '<br>');
         // Display sender's name in bold
         messageElement.innerHTML = `<strong>${sender}:</strong> ${escapedMessage}`;
     }
 
+    // Add the message to the chat window
     chatWindow.appendChild(messageElement);
+
+    // Scroll to the bottom of the chat window
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
@@ -128,13 +129,15 @@ chatForm.addEventListener('submit', function (event) {
             hideSpinner();
 
             if (data.success) {
-                // Check if there's a file operation message to display
-                if (data.fileOperation && data.fileOperation.requiresNextChange) {
-                    // Do not display the assistant message if it's empty
-                    if (data.fileOperation.assistantMessage) {
-                        appendMessage('Sidekick', data.fileOperation.assistantMessage, 'assistant');
-                    }
-                } else {
+                // Display action messages if any
+                if (data.actionMessages && Array.isArray(data.actionMessages)) {
+                    data.actionMessages.forEach(systemMessage => {
+                        appendMessage('Sidekick', systemMessage, 'system');
+                    });
+                }
+
+                // Then display the assistant's final message
+                if (data.message) {
                     appendMessage('Sidekick', data.message, 'assistant');
                 }
             } else {

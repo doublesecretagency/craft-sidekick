@@ -20,6 +20,11 @@ class ChatController extends Controller
     protected array|int|bool $allowAnonymous = [];
 
     /**
+     * @var array The conversation history.
+     */
+    private array $conversation = [];
+
+    /**
      * Renders the chat interface.
      *
      * @return Response
@@ -42,13 +47,13 @@ class ChatController extends Controller
     {
         $this->requireAcceptsJson();
 
-        // Retrieve the conversation from the session
-        $conversation = Craft::$app->getSession()->get('sidekickConversation', []);
+        // Load the conversation from the session
+        $this->_loadConversation();
 
         // Return the conversation
         return $this->asJson([
             'success' => true,
-            'conversation' => $conversation,
+            'conversation' => $this->conversation,
         ]);
     }
 
@@ -66,6 +71,9 @@ class ChatController extends Controller
 
         // Clear the conversation from the session
         Craft::$app->getSession()->remove('sidekickConversation');
+
+        // Reset the conversation property
+        $this->conversation = [];
 
         // Return a success message
         return $this->asJson([
@@ -92,10 +100,10 @@ class ChatController extends Controller
         $message = $request->getRequiredBodyParam('message');
 
         // Step 2: Append the user's message to the conversation history
-        $conversation = $this->_appendUserMessage($message);
+        $this->_appendUserMessage($message);
 
         // Step 3: Prepare and send the API request to OpenAI
-        $apiResponse = $this->_callOpenAiApi($conversation);
+        $apiResponse = $this->_callOpenAiApi();
 
         // Handle API errors
         if (!$apiResponse['success']) {
@@ -107,42 +115,55 @@ class ChatController extends Controller
         }
 
         // Step 4: Process the assistant's response
-        return $this->_processAssistantResponse($apiResponse['results'], $conversation);
+        return $this->_processAssistantResponse($apiResponse['results']);
     }
 
     // ========================================================================= //
 
     /**
+     * Loads the conversation history from the session.
+     */
+    private function _loadConversation(): void
+    {
+        $session = Craft::$app->getSession();
+        $this->conversation = $session->get('sidekickConversation', []);
+    }
+
+    /**
+     * Saves the conversation history to the session.
+     */
+    private function _saveConversation(): void
+    {
+        $session = Craft::$app->getSession();
+        $session->set('sidekickConversation', $this->conversation);
+    }
+
+    /**
      * Appends the user's message to the conversation history.
      *
      * @param string $message
-     * @return array The updated conversation history
-     * @throws MissingComponentException
      */
-    private function _appendUserMessage(string $message): array
+    private function _appendUserMessage(string $message): void
     {
-        $session = Craft::$app->getSession();
-        $conversation = $session->get('sidekickConversation', []);
+        // Load the current conversation
+        $this->_loadConversation();
 
         // Append the user's message
-        $conversation[] = [
+        $this->conversation[] = [
             'role' => 'user',
-            'content' => $message
+            'content' => $message,
         ];
 
-        // Update the session
-        $session->set('sidekickConversation', $conversation);
-
-        return $conversation;
+        // Save the updated conversation
+        $this->_saveConversation();
     }
 
     /**
      * Prepares and sends the API request to OpenAI.
      *
-     * @param array $conversation
      * @return array The API response
      */
-    private function _callOpenAiApi(array $conversation): array
+    private function _callOpenAiApi(): array
     {
         // Load the assistant's system prompt
         $prompt = Sidekick::$plugin->openAi->getSystemPrompt();
@@ -151,18 +172,18 @@ class ChatController extends Controller
         $messages = [
             [
                 'role' => 'system',
-                'content' => $prompt
+                'content' => $prompt,
             ],
         ];
 
         // Add the conversation history
-        $messages = array_merge($messages, $conversation);
+        $messages = array_merge($messages, $this->conversation);
 
         // Prepare the API request
         $apiRequest = [
-            'model' => Sidekick::$aiModel,
-            'messages' => $messages,
-            'max_tokens' => 1500,
+            'model'       => Sidekick::$aiModel,
+            'messages'    => $messages,
+            'max_tokens'  => 1500,
             'temperature' => 0.2,
         ];
 
@@ -174,13 +195,13 @@ class ChatController extends Controller
      * Processes the assistant's response.
      *
      * @param string $assistantMessage
-     * @param array $conversation
      * @return Response
-     * @throws BadRequestHttpException
+     * @throws MissingComponentException
      */
-    private function _processAssistantResponse(string $assistantMessage, array $conversation): Response
+    private function _processAssistantResponse(string $assistantMessage): Response
     {
-        $session = Craft::$app->getSession();
+        // Load the current conversation
+        $this->_loadConversation();
 
         // Preprocess the assistant's response
         $assistantMessageClean = $this->_cleanAssistantMessage($assistantMessage);
@@ -191,11 +212,11 @@ class ChatController extends Controller
 
         if ($isJsonAction) {
             // Handle JSON actions
-            $actionResponse = $this->_executeActions($decodedJson['actions'], $conversation);
+            $actionResponse = $this->_executeActions($decodedJson['actions']);
             return $this->asJson($actionResponse);
         } else {
             // Handle conversational message
-            $this->_appendAssistantMessage($assistantMessage, $conversation);
+            $this->_appendAssistantMessage($assistantMessage);
             return $this->asJson([
                 'success' => true,
                 'message' => $assistantMessage,
@@ -228,33 +249,45 @@ class ChatController extends Controller
      * Executes actions provided by the assistant.
      *
      * @param array $actions
-     * @param array $conversation
      * @return array
+     * @throws MissingComponentException
      */
-    private function _executeActions(array $actions, array $conversation): array
+    private function _executeActions(array $actions): array
     {
-        $actionsService = Sidekick::$plugin->actions;
+        // Load the current conversation
+        $this->_loadConversation();
+
+        $actionsService   = Sidekick::$plugin->actions;
         $executionResults = $actionsService->executeActions($actions);
 
-        // Prepare the response message
-        $responseMessage = $executionResults['message'];
+        // Collect the messages from action execution
+        $actionMessages = $executionResults['messages'] ?? [];
 
-        // Split the message into individual system messages
-        $systemMessages = explode("\n", $responseMessage);
-        foreach ($systemMessages as $systemMessage) {
-            // Append each system message to the conversation history
-            $conversation[] = [
-                'role' => 'system',
-                'content' => $systemMessage
+        // Append each action message as a system message
+        foreach ($actionMessages as $systemMessage) {
+            $this->conversation[] = [
+                'role'    => 'system',
+                'content' => $systemMessage,
             ];
         }
 
-        // Update the session with the new conversation history
-        Craft::$app->getSession()->set('sidekickConversation', $conversation);
+        // Prepare the final response message
+        $responseMessage = $executionResults['message'];
 
+        // Append the final response message as an assistant message
+        $this->conversation[] = [
+            'role'    => 'assistant',
+            'content' => $responseMessage,
+        ];
+
+        // Save the updated conversation
+        $this->_saveConversation();
+
+        // Return the response message and action messages
         return [
-            'success' => true,
-            'message' => $responseMessage,
+            'success'        => true,
+            'message'        => $responseMessage,
+            'actionMessages' => $actionMessages,
         ];
     }
 
@@ -262,18 +295,19 @@ class ChatController extends Controller
      * Appends the assistant's message to the conversation history.
      *
      * @param string $assistantMessage
-     * @param array $conversation
-     * @throws MissingComponentException
      */
-    private function _appendAssistantMessage(string $assistantMessage, array $conversation): void
+    private function _appendAssistantMessage(string $assistantMessage): void
     {
+        // Load the current conversation
+        $this->_loadConversation();
+
         // Append the assistant's message
-        $conversation[] = [
-            'role' => 'assistant',
-            'content' => $assistantMessage
+        $this->conversation[] = [
+            'role'    => 'assistant',
+            'content' => $assistantMessage,
         ];
 
-        // Update the session
-        Craft::$app->getSession()->set('sidekickConversation', $conversation);
+        // Save the updated conversation
+        $this->_saveConversation();
     }
 }

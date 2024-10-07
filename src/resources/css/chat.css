@@ -26,6 +26,13 @@
     margin-right: 10px; /* Add space between button and edge */
 }
 
+.chat-message {
+    margin-bottom: 10px;
+}
+.system-message {
+    color: green;
+}
+
 .instruction-text {
     font-size: 0.9em;
     color: #666;

@@ -37,21 +37,34 @@ class ActionsService extends Component
      */
     public function executeActions(array $actions): array
     {
+        $messages = [];
+
         // Execute each action in the list
         foreach ($actions as $action) {
-
             // Handle the action
             $result = $this->_handleAction($action);
 
-            // Return immediately if an action fails
-            if (!$result['success']) {
-                return $result;
+            // Collect the message from the action result
+            if (isset($result['message'])) {
+                $messages[] = $result['message'];
             }
 
+            // Return immediately if an action fails
+            if (!$result['success']) {
+                return [
+                    'success' => false,
+                    'messages' => $messages,
+                    'message' => $result['message'],
+                ];
+            }
         }
 
         // Return success message if all actions succeed
-        return ['success' => true, 'message' => 'All actions executed successfully.'];
+        return [
+            'success' => true,
+            'messages' => $messages,
+            'message' => 'All actions executed successfully.',
+        ];
     }
 
     /**
