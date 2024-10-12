@@ -39,15 +39,19 @@ use craft\console\Application as ConsoleApplication;
  */
 class Sidekick extends Plugin
 {
-    // Hold an instance of the plugin
-    public static $plugin;
+    /**
+     * @var Sidekick|null $plugin The plugin instance.
+     */
+    public static ?Sidekick $plugin = null;
 
     /**
      * @var bool $hasCpSection The plugin has a section with subpages.
      */
     public bool $hasCpSection = true;
 
-    // Indicates the plugin has a settings page in the control panel
+    /**
+     * @var bool $hasCpSettings The plugin has a settings page in the control panel.
+     */
     public bool $hasCpSettings = true;
 
     /**
