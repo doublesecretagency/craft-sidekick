@@ -1,13 +1,71 @@
 <?php
 
+use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\Sidekick;
+use doublesecretagency\sidekick\helpers\ActionsHelper;
 use markhuot\craftpest\test\TestCase;
 
 uses(TestCase::class);
 
+beforeEach(function () {
+    $this->actionsService = Sidekick::$plugin->actions;
+
+    // Create a mock for the FileManagementService
+    $mockFileService = Mockery::mock(FileManagementService::class);
+
+    // Mock the fileExists method to return false (file doesn't exist)
+    $mockFileService->shouldReceive('fileExists')->andReturn(false);
+
+    // Mock the writeFile method to return true (file write succeeds)
+    $mockFileService->shouldReceive('writeFile')->andReturn(true);
+
+    // Inject the mocked service into the plugin
+    Sidekick::$plugin->set('fileManagement', $mockFileService);
+});
+
 test('Retrieves valid actions from ActionsService', function () {
     // Get valid actions
-    $validActions = Sidekick::getInstance()->actions->getValidActions();
+    $validActions = $this->actionsService->getValidActions();
+
     // Expect valid actions to be a non-empty array
-    expect($validActions)->toBeArray()->and($validActions)->not->toBeEmpty();
+    expect($validActions)->toBeArray()->not->toBeEmpty();
+
+    // Expect specific actions to be present
+    expect($validActions)->toContain('createFile', 'deleteFile', 'updateElement');
+});
+
+test('Executes a valid action successfully', function () {
+    $action = [
+        'action' => 'createFile',
+        'file' => '/templates/test.twig',
+        'content' => '<h1>Test Template</h1>',
+    ];
+
+    $result = ActionsHelper::createFile($action);
+
+    expect($result['success'])->toBeTrue();
+    expect($result['message'])->toBe("File '/templates/test.twig' created successfully.");
+});
+
+test('Fails to execute an invalid action', function () {
+    $action = [
+        'action' => 'nonExistentAction',
+        'file' => '/templates/test.twig',
+    ];
+
+    $result = $this->actionsService->executeActions([$action]);
+
+    expect($result['success'])->toBeFalse();
+    expect($result['message'])->toBe("Unsupported action: nonExistentAction");
+});
+
+test('Handles missing action type gracefully', function () {
+    $action = [
+        'file' => '/templates/test.twig',
+    ];
+
+    $result = $this->actionsService->executeActions([$action]);
+
+    expect($result['success'])->toBeFalse();
+    expect($result['message'])->toBe("Action type is missing.");
 });

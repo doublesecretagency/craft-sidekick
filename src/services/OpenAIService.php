@@ -36,6 +36,11 @@ class OpenAIService extends Component
     private string $systemPrompt = '';
 
     /**
+     * @var Client The HTTP client for making API requests.
+     */
+    protected Client $httpClient;
+
+    /**
      * @var array The list of system prompt files to compile.
      */
     private array $systemPromptFiles = [
@@ -67,6 +72,31 @@ class OpenAIService extends Component
 
         // Compile the system prompt
         $this->_compileSystemPrompt();
+
+        // Initialize the HTTP client if not already set
+        if (!isset($this->httpClient)) {
+            $this->httpClient = new Client();
+        }
+    }
+
+    /**
+     * Sets the HTTP client for making API requests.
+     *
+     * @param Client $client The HTTP client.
+     */
+    public function setHttpClient(Client $client): void
+    {
+        $this->httpClient = $client;
+    }
+
+    /**
+     * Sets the system prompt.
+     *
+     * @param string $prompt The system prompt.
+     */
+    public function setSystemPrompt(string $prompt): void
+    {
+        $this->systemPrompt = $prompt;
     }
 
     /**
@@ -209,7 +239,7 @@ class OpenAIService extends Component
      */
     public function callChatCompletion(array $apiRequest): array
     {
-        $client = new Client();
+        $client = $this->httpClient;
 
         // Extract additional context if available
         $additionalContext = $apiRequest['additionalContext'] ?? null;
