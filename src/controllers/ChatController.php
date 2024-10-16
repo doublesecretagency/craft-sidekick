@@ -334,11 +334,14 @@ class ChatController extends Controller
         // Load the current conversation
         $this->_loadConversation();
 
-        $actionsService   = Sidekick::$plugin->actions;
-        $executionResults = $actionsService->executeActions($actions);
+        // Execute the actions
+        $executionResults = Sidekick::$plugin->actions->executeActions($actions);
 
         // Collect the messages from action execution
         $actionMessages = $executionResults['messages'] ?? [];
+
+        // If there's content to display, include it
+        $content = $executionResults['content'] ?? null;
 
         // Append each action message as a system message
         foreach ($actionMessages as $systemMessage) {
@@ -365,6 +368,7 @@ class ChatController extends Controller
             'success'        => true,
             'message'        => $responseMessage,
             'actionMessages' => $actionMessages,
+            'content'        => $content,
         ];
     }
 

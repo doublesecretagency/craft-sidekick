@@ -38,6 +38,7 @@ class ActionsService extends Component
     public function executeActions(array $actions): array
     {
         $messages = [];
+        $content = '';
 
         // Execute each action in the list
         foreach ($actions as $action) {
@@ -49,12 +50,18 @@ class ActionsService extends Component
                 $messages[] = $result['message'];
             }
 
+            // Collect content if present
+            if (isset($result['content'])) {
+                $content .= "{$result['content']}\n";
+            }
+
             // Return immediately if an action fails
             if (!$result['success']) {
                 return [
                     'success' => false,
                     'messages' => $messages,
                     'message' => $result['message'],
+                    'content' => $content,
                 ];
             }
         }
@@ -64,6 +71,7 @@ class ActionsService extends Component
             'success' => true,
             'messages' => $messages,
             'message' => 'All actions executed successfully.',
+            'content' => $content,
         ];
     }
 

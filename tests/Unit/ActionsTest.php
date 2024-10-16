@@ -69,3 +69,29 @@ test('Handles missing action type gracefully', function () {
     expect($result['success'])->toBeFalse();
     expect($result['message'])->toBe("Action type is missing.");
 });
+
+test('Displays file contents successfully', function () {
+    // Mock the file content
+    $mockContent = '<h1>Test Template</h1>';
+
+    // Mock the FileManagementService
+    $mockFileService = Mockery::mock(FileManagementService::class);
+    $mockFileService->shouldReceive('readFile')->andReturn($mockContent);
+
+    // Inject the mocked service
+    Sidekick::$plugin->set('fileManagement', $mockFileService);
+
+    // Prepare the action
+    $action = [
+        'action' => 'displayFileContents',
+        'file' => '/templates/test.twig',
+    ];
+
+    // Execute the action
+    $result = ActionsHelper::displayFileContents($action);
+
+    // Assertions
+    expect($result['success'])->toBeTrue();
+    expect($result['message'])->toBe("Contents of '/templates/test.twig':");
+    expect($result['content'])->toBe($mockContent);
+});

@@ -146,6 +146,13 @@ chatForm.addEventListener('submit', function (event) {
                     });
                 }
 
+                // Display file content if present
+                if (data.content) {
+                    // Format the content appropriately, e.g., within a code block
+                    const formattedContent = `<pre>${escapeHtml(data.content)}</pre>`;
+                    appendMessage('Sidekick', formattedContent, 'assistant');
+                }
+
                 // Then display the assistant's final message
                 if (data.message) {
                     appendMessage('Sidekick', data.message, 'assistant');

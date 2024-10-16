@@ -1113,6 +1113,54 @@ class ActionsHelper
     }
 
     /**
+     * ### **displayFileContents**
+     *
+     * - **Description:** Display the contents of a Twig template file.
+     *
+     * - **Parameters:**
+     *   - **action**: `"displayFileContents"`
+     *   - **file**: The path to the target Twig file.
+     *
+     * - **User Instruction Example:**
+     *
+     *   "Show the contents of `header.twig`."
+     *
+     * - **Assistant JSON Response:**
+     *
+     * ```json
+     * {
+     *   "actions": [
+     *     {
+     *       "action": "displayFileContents",
+     *       "file": "/templates/header.twig"
+     *     }
+     *   ]
+     * }
+     * ```
+     *
+     * @param array $action
+     * @return array
+     */
+    public static function displayFileContents(array $action): array
+    {
+        $filePath = $action['file'];
+
+        $fileService = Sidekick::$plugin->fileManagement;
+
+        // Read the file content
+        $content = $fileService->readFile($filePath);
+        if ($content === null) {
+            return ['success' => false, 'message' => "File not found: {$filePath}"];
+        }
+
+        return [
+            'success' => true,
+            'message' => "Contents of '{$filePath}':",
+            'content' => $content,
+        ];
+    }
+
+    /**
      * ### **commentBlock**
      *
      * - **Description:** Comment out a block of code within a template.
