@@ -4,6 +4,7 @@ const chatForm = document.getElementById('chat-form');
 const chatMessage = document.getElementById('chat-message');
 const clearButton = document.getElementById('clear-conversation-button');
 const spinner = document.getElementById('chat-spinner');
+const aiModelSelect = document.getElementById('ai-model-select');
 
 // Maximum allowed message length
 const MAX_MESSAGE_LENGTH = 1000; // Adjust this limit as needed
@@ -168,6 +169,35 @@ chatForm.addEventListener('submit', function (event) {
             console.error('Error sending message:', error);
             appendMessage('Error', 'A network error occurred. Please check your connection and try again.', 'error');
         });
+});
+
+// Load the selected model from the server or default
+fetch('/actions/sidekick/chat/get-selected-model', {
+    headers: {
+        'X-CSRF-Token': Craft.csrfTokenValue,
+        'Accept': 'application/json',
+    },
+})
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            aiModelSelect.value = data.selectedModel;
+        }
+    });
+
+// Event listener for model selection change
+aiModelSelect.addEventListener('change', () => {
+    const selectedModel = aiModelSelect.value;
+
+    // Update session on the server
+    fetch('/actions/sidekick/chat/set-selected-model', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': Craft.csrfTokenValue,
+        },
+        body: JSON.stringify({ selectedModel }),
+    });
 });
 
 // Handle Clear Conversation Button Click

@@ -11,10 +11,19 @@ use craft\base\Model;
  */
 class Settings extends Model
 {
-
     /**
      * @var string OpenAI API Key.
      */
     public string $openAiApiKey = '';
 
+    /**
+     * @inheritdoc
+     */
+    public function rules(): array
+    {
+        return [
+            [['openAiApiKey'], 'string'],
+            [['openAiApiKey'], 'required'],
+        ];
+    }
 }

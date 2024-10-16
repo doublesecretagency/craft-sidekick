@@ -3,6 +3,8 @@
 namespace doublesecretagency\sidekick\services;
 
 use Craft;
+use craft\helpers\App;
+use doublesecretagency\sidekick\constants\Constants;
 use doublesecretagency\sidekick\helpers\ActionsHelper;
 use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Exception\GuzzleException;
@@ -63,7 +65,7 @@ class OpenAIService extends Component
         parent::init();
 
         // Retrieve the OpenAI API key from plugin settings or environment variables
-        $this->apiKey = Sidekick::$plugin->getSettings()->openAiApiKey ?? '';
+        $this->apiKey = App::parseEnv(Sidekick::$plugin->getSettings()->openAiApiKey ?? '');
 
         if (empty($this->apiKey)) {
             Craft::error('OpenAI API key is not set.', __METHOD__);
@@ -247,7 +249,10 @@ class OpenAIService extends Component
 
         // Initialize messages with the system prompt
         $messages = [
-            ['role' => 'system', 'content' => $this->systemPrompt],
+            [
+                'role' => 'system',
+                'content' => $this->systemPrompt
+            ],
         ];
 
         // Append conversation messages
@@ -268,7 +273,7 @@ class OpenAIService extends Component
 
         // Prepare the request payload
         $payload = [
-            'model' => $apiRequest['model'] ?? 'gpt-4',
+            'model' => $apiRequest['model'] ?? Constants::DEFAULT_AI_MODEL,
             'messages' => $messages,
             'max_tokens' => 1500,
             'temperature' => 0.2,

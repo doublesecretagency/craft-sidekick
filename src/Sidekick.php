@@ -11,12 +11,14 @@ use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
+use doublesecretagency\sidekick\constants\Constants;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
 use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
+use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -55,12 +57,6 @@ class Sidekick extends Plugin
     public bool $hasCpSettings = true;
 
     /**
-     * @var string The AI model to use.
-     */
-    public static string $aiModel = 'gpt-4o';
-    // public static string $aiModel = 'o1-preview';
-
-    /**
      * Initializes the plugin.
      */
     public function init(): void
@@ -81,6 +77,9 @@ class Sidekick extends Plugin
         if (Craft::$app instanceof ConsoleApplication) {
             $this->controllerNamespace = 'doublesecretagency\sidekick\console';
         }
+
+        // Register the Twig extension
+        Craft::$app->view->registerTwigExtension(new SidekickTwigExtension());
 
         // Register user permissions for plugin features
         Event::on(
@@ -181,9 +180,13 @@ class Sidekick extends Plugin
      */
     protected function settingsHtml(): ?string
     {
-        return Craft::$app->view->renderTemplate(
-            'sidekick/_settings',
-            ['settings' => $this->getSettings()]
-        );
+        // Get data from config file
+        $configFile = Craft::$app->getConfig()->getConfigFromFile('sidekick');
+
+        // Load plugin settings template
+        return Craft::$app->getView()->renderTemplate('sidekick/settings', [
+            'configFile' => $configFile,
+            'settings' => $this->getSettings(),
+        ]);
     }
 }

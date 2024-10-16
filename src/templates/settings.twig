@@ -1,0 +1,29 @@
+{% import '_includes/forms' as forms %}
+
+<h2>Sidekick Settings</h2>
+
+{# Field to be referenced in the settings #}
+{% set key = 'openAiApiKey' %}
+
+{# Determine whether a config value is set #}
+{% set configOverride = (key in configFile|keys) %}
+
+{# Config override warning message #}
+{% set message = "This is being set in the config file. [{file}]"|t('sidekick', {
+    file: '`config/sidekick.php`'
+}) %}
+
+{# Configure the field #}
+{% set config = {
+    label: "OpenAI API Key"|t('sidekick'),
+    id: 'openAiApiKey',
+    name: 'openAiApiKey',
+    instructions: 'Enter your OpenAI API Key here.',
+    value: ((configFile[key] ?? settings[key] ?? null) ?: null),
+    disabled: configOverride,
+    warning: (configOverride ? message),
+    suggestEnvVars: not configOverride
+} %}
+
+{# Render input field #}
+{{ forms.autosuggestField(config) }}
