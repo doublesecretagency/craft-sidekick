@@ -11,6 +11,9 @@ const MAX_MESSAGE_LENGTH = 1000; // Adjust this limit as needed
 // Select buttons
 const sendButton = chatForm.querySelector('button[type="submit"]');
 
+// Initialize the greeting message
+let greeting = null;
+
 // Show the spinner and disable inputs
 function showSpinner() {
     spinner.style.display = 'inline-block';
@@ -37,9 +40,8 @@ function escapeHtml(text) {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        "'": '&#039;',
     };
-    return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+    return text.replace(/[&<>"]/g, function (m) { return map[m]; });
 }
 
 // Append a message to the chat window
@@ -60,6 +62,12 @@ function appendMessage(sender, message, role) {
         messageElement.innerHTML = `<strong>${sender}:</strong> ${escapedMessage}`;
     }
 
+    // If chatWindow is empty
+    if (chatWindow.children.length === 0) {
+        // Set the greeting message to the first message
+        greeting = escapedMessage;
+    }
+
     // Add the message to the chat window
     chatWindow.appendChild(messageElement);
 
@@ -67,26 +75,28 @@ function appendMessage(sender, message, role) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// Load existing conversation when the page loads
-fetch('/actions/sidekick/chat/get-conversation', {
-    headers: {
-        'X-CSRF-Token': Craft.csrfTokenValue,
-        'Accept': 'application/json', // Ensure the request accepts JSON
-    },
-})
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const MAX_MESSAGES_DISPLAYED = 100;
-            const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
-            messagesToDisplay.forEach(message => {
-                appendMessage(message.role === 'user' ? 'You' : 'Sidekick', message.content, message.role);
-            });
-        }
+// Load existing conversation
+function loadConversation() {
+    fetch('/actions/sidekick/chat/get-conversation', {
+        headers: {
+            'X-CSRF-Token': Craft.csrfTokenValue,
+            'Accept': 'application/json', // Ensure the request accepts JSON
+        },
     })
-    .catch(error => {
-        console.error('Error loading conversation:', error);
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const MAX_MESSAGES_DISPLAYED = 100;
+                const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
+                messagesToDisplay.forEach(message => {
+                    appendMessage(message.role === 'user' ? 'You' : 'Sidekick', message.content, message.role);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading conversation:', error);
+        });
+}
 
 // Handle keydown events for Enter and Shift + Enter in the message input
 chatMessage.addEventListener('keydown', function (event) {
@@ -121,7 +131,7 @@ chatForm.addEventListener('submit', function (event) {
             'X-CSRF-Token': Craft.csrfTokenValue,
             'Accept': 'application/json', // Ensure the request accepts JSON
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, greeting }),
     })
         .then(response => response.json())
         .then(data => {
@@ -177,6 +187,8 @@ if (clearButton) {
                     if (data.success) {
                         // Clear the chat window
                         chatWindow.innerHTML = '';
+                        // Load the existing conversation
+                        loadConversation();
                         // Focus the message input
                         chatMessage.focus();
                     } else {
@@ -196,6 +208,9 @@ if (clearButton) {
 
 // Focus the message input when the page loads
 window.addEventListener('DOMContentLoaded', (event) => {
+    // Load the existing conversation
+    loadConversation();
+    // Focus the message input
     if (chatMessage) {
         chatMessage.focus();
     }

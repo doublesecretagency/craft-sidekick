@@ -6,6 +6,7 @@ use Craft;
 use craft\errors\MissingComponentException;
 use craft\web\Controller;
 use doublesecretagency\sidekick\Sidekick;
+use GuzzleHttp\Exception\GuzzleException;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -25,6 +26,44 @@ class ChatController extends Controller
     private array $conversation = [];
 
     /**
+     * @var string|null The initial greeting message.
+     */
+    private ?string $greeting = null;
+
+    /**
+     * @var array List of possible greeting messages.
+     */
+    private array $greetingOptions = [
+        "Bonjour! I'm Sidekick, here to help you manage your template and module files.",
+        "Ciao! I'm Sidekick, ready to assist you with your templates and modules.",
+        "Good day! I'm Sidekick, here to help you manage your template and module files.",
+        "Greetings from Sidekick! How may I assist you with your template or module files?",
+        "Greetings! I'm Sidekick, here to help you with your template and module needs.",
+        "Greetings! Sidekick here, how can I assist you with your templates or modules?",
+        "Hello! I'm Sidekick, here to help you with templates, modules, and more.",
+        "Hello! I'm Sidekick, your assistant for managing templates and modules.",
+        "Hello! Sidekick at your service, how can I assist with your templates or modules today?",
+        "Hello! Sidekick here, how can I support your Craft project today?",
+        "Hello! Sidekick here, ready to support any templates or modules you're working on.",
+        "Hello again! I'm Sidekick, ready to support your Craft projects.",
+        "Hello there! I'm Sidekick, ready to help with your templates and modules.",
+        "Hi! I'm Sidekick, ready to help you with any template or module tasks.",
+        "Hi! I'm Sidekick, here to support your template and module management.",
+        "Hi! I'm Sidekick, your friendly assistant for managing templates and modules.",
+        "Hi! Sidekick here, ready to assist with your Craft project templates and modules.",
+        "Hi there! I'm Sidekick, ready to support your Craft template and module needs.",
+        "Hi there! Sidekick here, how can I assist with your template or module files?",
+        "Hi there! Sidekick here, how can I help you streamline your templates or modules?",
+        "Hey! I'm Sidekick, your go-to assistant for managing templates and modules.",
+        "Hey there! I'm Sidekick, how can I help you today?",
+        "Hey there! I'm Sidekick, ready to assist with your Craft templates and modules.",
+        "Namaste! I'm Sidekick, here to help you manage your templates and modules.",
+        "Salutations! I'm Sidekick, your assistant for all things Craft.",
+        "What's up? I'm Sidekick, here to help you with your templates and modules.",
+        "Welcome, I'm Sidekick! How can I assist you with your templates or modules today?"
+    ];
+
+    /**
      * Renders the chat interface.
      *
      * @return Response
@@ -41,7 +80,6 @@ class ChatController extends Controller
      *
      * @return Response
      * @throws BadRequestHttpException
-     * @throws MissingComponentException
      */
     public function actionGetConversation(): Response
     {
@@ -73,13 +111,43 @@ class ChatController extends Controller
         Craft::$app->getSession()->remove('sidekickConversation');
 
         // Reset the conversation property
-        $this->conversation = [];
+        $this->conversation = $this->_initConversation();
 
         // Return a success message
         return $this->asJson([
             'success' => true,
             'message' => 'Conversation cleared.',
         ]);
+    }
+
+    /**
+     * Initializes a new conversation.
+     *
+     * @return array
+     */
+    private function _initConversation(): array
+    {
+        // If a system greeting already exists
+        if ($this->greeting) {
+            // Return the original greeting
+            return [
+                [
+                    'role' => 'assistant',
+                    'content' => $this->greeting,
+                ]
+            ];
+        }
+
+        // Select a random greeting
+        $greeting = $this->greetingOptions[array_rand($this->greetingOptions)];
+
+        // Return a random greeting
+        return [
+            [
+                'role' => 'assistant',
+                'content' => $greeting,
+            ]
+        ];
     }
 
     // ========================================================================= //
@@ -89,7 +157,7 @@ class ChatController extends Controller
      *
      * @return Response
      * @throws BadRequestHttpException
-     * @throws MissingComponentException
+     * @throws GuzzleException
      */
     public function actionSendMessage(): Response
     {
@@ -98,6 +166,12 @@ class ChatController extends Controller
         // Step 1: Receive the user's message
         $request = Craft::$app->getRequest();
         $message = $request->getRequiredBodyParam('message');
+        $greeting = $request->getBodyParam('greeting');
+
+        // If system greeting was specified, save it for later
+        if ($greeting) {
+            $this->greeting = $greeting;
+        }
 
         // Step 2: Append the user's message to the conversation history
         $this->_appendUserMessage($message);
@@ -125,8 +199,10 @@ class ChatController extends Controller
      */
     private function _loadConversation(): void
     {
-        $session = Craft::$app->getSession();
-        $this->conversation = $session->get('sidekickConversation', []);
+        $this->conversation = Craft::$app->getSession()->get(
+            'sidekickConversation',
+            $this->_initConversation()
+        );
     }
 
     /**
@@ -134,8 +210,10 @@ class ChatController extends Controller
      */
     private function _saveConversation(): void
     {
-        $session = Craft::$app->getSession();
-        $session->set('sidekickConversation', $this->conversation);
+        Craft::$app->getSession()->set(
+            'sidekickConversation',
+            $this->conversation
+        );
     }
 
     /**
@@ -162,6 +240,7 @@ class ChatController extends Controller
      * Prepares and sends the API request to OpenAI.
      *
      * @return array The API response
+     * @throws GuzzleException
      */
     private function _callOpenAiApi(): array
     {
@@ -196,7 +275,6 @@ class ChatController extends Controller
      *
      * @param string $assistantMessage
      * @return Response
-     * @throws MissingComponentException
      */
     private function _processAssistantResponse(string $assistantMessage): Response
     {
@@ -210,18 +288,18 @@ class ChatController extends Controller
         $decodedJson = json_decode($assistantMessageClean, true);
         $isJsonAction = (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions']));
 
+        // Handle JSON actions
         if ($isJsonAction) {
-            // Handle JSON actions
             $actionResponse = $this->_executeActions($decodedJson['actions']);
             return $this->asJson($actionResponse);
-        } else {
-            // Handle conversational message
-            $this->_appendAssistantMessage($assistantMessage);
-            return $this->asJson([
-                'success' => true,
-                'message' => $assistantMessage,
-            ]);
         }
+
+        // Handle conversational messages
+        $this->_appendAssistantMessage($assistantMessage);
+        return $this->asJson([
+            'success' => true,
+            'message' => $assistantMessage,
+        ]);
     }
 
     /**
@@ -250,7 +328,6 @@ class ChatController extends Controller
      *
      * @param array $actions
      * @return array
-     * @throws MissingComponentException
      */
     private function _executeActions(array $actions): array
     {
