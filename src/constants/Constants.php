@@ -5,11 +5,11 @@ namespace doublesecretagency\sidekick\constants;
 class Constants
 {
     /**
-     * Default AI model to use for OpenAI API.
+     * Session key for storing the chat session.
      *
      * @const
      */
-    public const DEFAULT_AI_MODEL = 'gpt-4o';
+    public const CHAT_SESSION = 'sidekickConversation';
 
     /**
      * Session key for storing the selected AI model.
@@ -17,6 +17,13 @@ class Constants
      * @const
      */
     public const AI_MODEL_SESSION = 'sidekickSelectedModel';
+
+    /**
+     * Default AI model to use for OpenAI API.
+     *
+     * @const
+     */
+    public const DEFAULT_AI_MODEL = 'gpt-4o';
 
     /**
      * List of available AI models.

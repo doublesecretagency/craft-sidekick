@@ -95,28 +95,34 @@ const SidekickChat = {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
 
-        // Escape the message content
-        const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
+        let messageContent;
 
-        // If system message
-        if (role === 'system') {
-            // Display stylized system messages
-            messageElement.classList.add('system-message');
-            messageElement.innerHTML = `${escapedMessage}`;
-        } else if (role === 'error') {
-            // Display error messages
-            messageElement.classList.add('error-message');
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${escapedMessage}`;
+        // Check if the message is a code snippet
+        const isCodeSnippet = message.startsWith('<pre>') && message.endsWith('</pre>');
+
+        if (isCodeSnippet) {
+            // For code snippets, do not escape HTML
+            messageElement.classList.add('code-snippet');
+            // Use the message content as-is
+            messageContent = message;
         } else {
-            // Display sender's name in bold
-            messageElement.innerHTML = `<strong>${sender}:</strong> ${escapedMessage}`;
+            // Escape the message content
+            const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
+
+            // Handle different roles
+            if (role === 'system') {
+                messageElement.classList.add('system-message');
+                messageContent = `${escapedMessage}`;
+            } else if (role === 'error') {
+                messageElement.classList.add('error-message');
+                messageContent = `<strong>${sender}:</strong> ${escapedMessage}`;
+            } else {
+                messageContent = `<strong>${sender}:</strong> ${escapedMessage}`;
+            }
         }
 
-        // If chatWindow is empty
-        if (this.chatWindow.children.length === 0) {
-            // Set the greeting message to the first message
-            this.greeting = escapedMessage;
-        }
+        // Set the message content
+        messageElement.innerHTML = messageContent;
 
         // Add the message to the chat window
         this.chatWindow.appendChild(messageElement);
@@ -139,10 +145,12 @@ const SidekickChat = {
                     const MAX_MESSAGES_DISPLAYED = 100;
                     const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
                     messagesToDisplay.forEach((message) => {
+                        // Check if the message is a code snippet
+                        const isCodeSnippet = message.content.startsWith('<pre>') && message.content.endsWith('</pre>');
                         this.appendMessage(
                             message.role === 'user' ? 'You' : 'Sidekick',
                             message.content,
-                            message.role
+                            isCodeSnippet ? 'code-snippet' : message.role
                         );
                     });
                 }

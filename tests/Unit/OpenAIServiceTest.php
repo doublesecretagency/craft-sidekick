@@ -1,10 +1,10 @@
 <?php
 
-use craft\helpers\App;
 use doublesecretagency\sidekick\services\OpenAIService;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use markhuot\craftpest\test\TestCase;
+use yii\web\Request;
 
 uses(TestCase::class);
 
@@ -41,6 +41,22 @@ beforeEach(function () {
 
     // Set the mocked HTTP client
     $this->openAIService->setHttpClient($mockClient);
+
+    // Mock the Request component
+    $request = Mockery::mock(Request::class);
+    $request->shouldReceive('getAbsoluteUrl')
+        ->andReturn('http://localhost/test-url');
+    $request->shouldReceive('getIsConsoleRequest')
+        ->andReturn(false);
+    $request->shouldReceive('getMethod')
+        ->andReturn('GET');
+    $request->shouldReceive('getUserIP')
+        ->andReturn('127.0.0.1');
+    $request->shouldReceive('getIsAjax')
+        ->andReturn(false);
+
+    // Set the mock request component in Craft
+    Craft::$app->set('request', $request);
 });
 
 test('OpenAIService can retrieve the system prompt', function () {

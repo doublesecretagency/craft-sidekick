@@ -24,12 +24,12 @@ class ChatController extends Controller
     /**
      * @var array The conversation history.
      */
-    private array $conversation = [];
+    private array $_conversation = [];
 
     /**
      * @var string|null The initial greeting message.
      */
-    private ?string $greeting = null;
+    private ?string $_greeting = null;
 
     /**
      * Renders the chat interface.
@@ -97,7 +97,7 @@ class ChatController extends Controller
         // Return the conversation
         return $this->asJson([
             'success' => true,
-            'conversation' => $this->conversation,
+            'conversation' => $this->_conversation,
         ]);
     }
 
@@ -114,10 +114,10 @@ class ChatController extends Controller
         $this->requireAcceptsJson();
 
         // Clear the conversation from the session
-        Craft::$app->getSession()->remove('sidekickConversation');
+        Craft::$app->getSession()->remove(Constants::CHAT_SESSION);
 
         // Reset the conversation property
-        $this->conversation = $this->_initConversation();
+        $this->_conversation = $this->_initConversation();
 
         // Return a success message
         return $this->asJson([
@@ -134,12 +134,12 @@ class ChatController extends Controller
     private function _initConversation(): array
     {
         // If a system greeting already exists
-        if ($this->greeting) {
+        if ($this->_greeting) {
             // Return the original greeting
             return [
                 [
                     'role' => 'assistant',
-                    'content' => $this->greeting,
+                    'content' => $this->_greeting,
                 ]
             ];
         }
@@ -167,6 +167,7 @@ class ChatController extends Controller
      * @return Response
      * @throws BadRequestHttpException
      * @throws GuzzleException
+     * @throws MissingComponentException
      */
     public function actionSendMessage(): Response
     {
@@ -179,11 +180,11 @@ class ChatController extends Controller
 
         // If system greeting was specified, save it for later
         if ($greeting) {
-            $this->greeting = $greeting;
+            $this->_greeting = $greeting;
         }
 
         // Step 2: Append the user's message to the conversation history
-        $this->_appendUserMessage($message);
+        $this->_appendMessage('user', $message);
 
         // Step 3: Prepare and send the API request to OpenAI
         $apiResponse = $this->_callOpenAiApi();
@@ -208,10 +209,20 @@ class ChatController extends Controller
      */
     private function _loadConversation(): void
     {
-        $this->conversation = Craft::$app->getSession()->get(
-            'sidekickConversation',
-            $this->_initConversation()
-        );
+        // If the conversation is already loaded, bail
+        if ($this->_conversation) {
+            return;
+        }
+
+        try {
+            // Load the conversation session
+            $this->_conversation = Craft::$app->getSession()->get(
+                Constants::CHAT_SESSION,
+                $this->_initConversation()
+            );
+        } catch (MissingComponentException $e) {
+            // Do nothing
+        }
     }
 
     /**
@@ -219,31 +230,39 @@ class ChatController extends Controller
      */
     private function _saveConversation(): void
     {
-        Craft::$app->getSession()->set(
-            'sidekickConversation',
-            $this->conversation
-        );
+        try {
+            // Save the conversation session
+            Craft::$app->getSession()->set(
+                Constants::CHAT_SESSION,
+                $this->_conversation
+            );
+        } catch (MissingComponentException $e) {
+            // Do nothing
+        }
     }
 
     /**
-     * Appends the user's message to the conversation history.
+     * Appends a message to the conversation history.
      *
+     * @param string $role
      * @param string $message
      */
-    private function _appendUserMessage(string $message): void
+    private function _appendMessage(string $role, string $message): void
     {
         // Load the current conversation
         $this->_loadConversation();
 
-        // Append the user's message
-        $this->conversation[] = [
-            'role' => 'user',
+        // Append the message
+        $this->_conversation[] = [
+            'role'    => $role,
             'content' => $message,
         ];
 
         // Save the updated conversation
         $this->_saveConversation();
     }
+
+    // ========================================================================= //
 
     /**
      * Prepares and sends the API request to OpenAI.
@@ -269,7 +288,7 @@ class ChatController extends Controller
         ];
 
         // Add the conversation history
-        $messages = array_merge($messages, $this->conversation);
+        $messages = array_merge($messages, $this->_conversation);
 
         // Prepare the API request
         $apiRequest = [
@@ -294,12 +313,9 @@ class ChatController extends Controller
         // Load the current conversation
         $this->_loadConversation();
 
-        // Preprocess the assistant's response
-        $assistantMessageClean = $this->_cleanAssistantMessage($assistantMessage);
-
-        // Decode the JSON response
-        $decodedJson = json_decode($assistantMessageClean, true);
-        $isJsonAction = (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['actions']));
+        // Attempt to extract and parse JSON from the assistant's message
+        $decodedJson = $this->_extractJson($assistantMessage);
+        $isJsonAction = ($decodedJson !== null && isset($decodedJson['actions']));
 
         // Handle JSON actions
         if ($isJsonAction) {
@@ -307,8 +323,16 @@ class ChatController extends Controller
             return $this->asJson($actionResponse);
         }
 
+        // If not a JSON action, convert code blocks
+        $assistantMessage = $this->_convertCodeBlocks($assistantMessage);
+
+        // Trim the assistant's message before appending
+        $assistantMessage = trim($assistantMessage);
+
         // Handle conversational messages
-        $this->_appendAssistantMessage($assistantMessage);
+        $this->_appendMessage('assistant', $assistantMessage);
+
+        // Return the assistant's message
         return $this->asJson([
             'success' => true,
             'message' => $assistantMessage,
@@ -316,23 +340,60 @@ class ChatController extends Controller
     }
 
     /**
-     * Cleans the assistant's message by removing code block markers and trimming whitespace.
+     * Attempts to extract JSON from the assistant's message.
+     *
+     * @param string $message
+     * @return array|null
+     */
+    private function _extractJson(string $message): ?array
+    {
+        // Remove code block markers if present
+        if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/m', $message, $matches)) {
+            $jsonString = $matches[1];
+        } else {
+            $jsonString = $message;
+        }
+
+        // Attempt to decode JSON
+        $decodedJson = json_decode($jsonString, true);
+
+        // Check for JSON errors
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decodedJson;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Converts code snippets to HTML <pre><code> blocks.
      *
      * @param string $message
      * @return string
      */
-    private function _cleanAssistantMessage(string $message): string
+    private function _convertCodeBlocks(string $message): string
     {
+        // Trim the message
         $message = trim($message);
 
-        // Remove code block markers
-        if (preg_match('/^```(?:json)?\s*([\s\S]*?)\s*```$/m', $message, $matches)) {
-            $message = $matches[1];
-        }
+        // Convert code snippets to HTML
+        $message = preg_replace_callback('/```(.*?)\n([\s\S]*?)```/s', static function ($matches) {
 
-        // Remove any backticks at the start and end
-        $message = trim($message, "`");
+            // Language specified after the backticks (ie: js, html, php)
+            $language = htmlspecialchars($matches[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
+            // Code content between the backticks
+            $code = trim($matches[2]);
+
+            // Escape the code content
+            $code = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+            // Return the code block
+            return "<pre><code class=\"language-{$language}\">{$code}</code></pre>";
+
+        }, $message);
+
+        // Return the converted message
         return $message;
     }
 
@@ -344,9 +405,6 @@ class ChatController extends Controller
      */
     private function _executeActions(array $actions): array
     {
-        // Load the current conversation
-        $this->_loadConversation();
-
         // Execute the actions
         $executionResults = Sidekick::$plugin->actions->executeActions($actions);
 
@@ -358,7 +416,7 @@ class ChatController extends Controller
 
         // Append each action message as a system message
         foreach ($actionMessages as $systemMessage) {
-            $this->conversation[] = [
+            $this->_conversation[] = [
                 'role'    => 'system',
                 'content' => $systemMessage,
             ];
@@ -368,13 +426,7 @@ class ChatController extends Controller
         $responseMessage = $executionResults['message'];
 
         // Append the final response message as an assistant message
-        $this->conversation[] = [
-            'role'    => 'assistant',
-            'content' => $responseMessage,
-        ];
-
-        // Save the updated conversation
-        $this->_saveConversation();
+        $this->_appendMessage('assistant', $responseMessage);
 
         // Return the response message and action messages
         return [
@@ -383,25 +435,5 @@ class ChatController extends Controller
             'actionMessages' => $actionMessages,
             'content'        => $content,
         ];
-    }
-
-    /**
-     * Appends the assistant's message to the conversation history.
-     *
-     * @param string $assistantMessage
-     */
-    private function _appendAssistantMessage(string $assistantMessage): void
-    {
-        // Load the current conversation
-        $this->_loadConversation();
-
-        // Append the assistant's message
-        $this->conversation[] = [
-            'role'    => 'assistant',
-            'content' => $assistantMessage,
-        ];
-
-        // Save the updated conversation
-        $this->_saveConversation();
     }
 }

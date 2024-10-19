@@ -29,6 +29,14 @@
 .chat-message {
     margin-bottom: 10px;
 }
+.chat-message.code-snippet pre {
+    background-color: #eeeeee;
+    padding: 10px;
+    border-radius: 5px;
+    overflow: auto;
+    white-space: pre-wrap; /* Allow long lines to wrap */
+    font-family: monospace;
+}
 .system-message {
     color: green;
 }
