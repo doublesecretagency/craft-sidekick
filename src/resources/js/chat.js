@@ -10,6 +10,12 @@ const SidekickChat = {
     sendButton: null,
     greeting: null,
     MAX_MESSAGE_LENGTH: 1000, // Adjust this limit as needed
+    MESSAGE_TYPES: {
+        CONVERSATIONAL: 'conversational',
+        SNIPPET: 'snippet',
+        ACTION: 'action',
+        ERROR: 'error',
+    },
 
     // Initialize the object
     init: function () {
@@ -91,34 +97,30 @@ const SidekickChat = {
     },
 
     // Append a message to the chat window
-    appendMessage: function (sender, message, role) {
+    appendMessage: function (sender, message, messageType) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
 
         let messageContent;
 
-        // Check if the message is a code snippet
-        const isCodeSnippet = message.startsWith('<pre>') && message.endsWith('</pre>');
-
-        if (isCodeSnippet) {
-            // For code snippets, do not escape HTML
-            messageElement.classList.add('code-snippet');
-            // Use the message content as-is
-            messageContent = message;
-        } else {
-            // Escape the message content
-            const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
-
-            // Handle different roles
-            if (role === 'system') {
-                messageElement.classList.add('system-message');
-                messageContent = `${escapedMessage}`;
-            } else if (role === 'error') {
+        switch (messageType) {
+            case this.MESSAGE_TYPES.ERROR:
                 messageElement.classList.add('error-message');
+                messageContent = `<strong>${sender}:</strong> ${this.escapeHtml(message).replace(/\n/g, '<br>')}`;
+                break;
+            case this.MESSAGE_TYPES.ACTION:
+                messageElement.classList.add('system-message');
+                messageContent = this.escapeHtml(message).replace(/\n/g, '<br>');
+                break;
+            case this.MESSAGE_TYPES.SNIPPET:
+                messageElement.classList.add('code-snippet');
+                messageContent = message;
+                break;
+            case this.MESSAGE_TYPES.CONVERSATIONAL:
+            default:
+                const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
                 messageContent = `<strong>${sender}:</strong> ${escapedMessage}`;
-            } else {
-                messageContent = `<strong>${sender}:</strong> ${escapedMessage}`;
-            }
+                break;
         }
 
         // Set the message content
@@ -145,12 +147,10 @@ const SidekickChat = {
                     const MAX_MESSAGES_DISPLAYED = 100;
                     const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
                     messagesToDisplay.forEach((message) => {
-                        // Check if the message is a code snippet
-                        const isCodeSnippet = message.content.startsWith('<pre>') && message.content.endsWith('</pre>');
                         this.appendMessage(
                             message.role === 'user' ? 'You' : 'Sidekick',
                             message.content,
-                            isCodeSnippet ? 'code-snippet' : message.role
+                            message.messageType
                         );
                     });
                 }
@@ -190,27 +190,49 @@ const SidekickChat = {
                 // Hide the spinner
                 this.hideSpinner();
 
-                if (data.success) {
-                    // Display action messages if any
-                    if (data.actionMessages && Array.isArray(data.actionMessages)) {
-                        data.actionMessages.forEach((systemMessage) => {
-                            this.appendMessage('Sidekick', systemMessage, 'system');
-                        });
-                    }
+                // If response was unsuccessful
+                if (!data.success) {
+                    console.error('Unable to send message: ', data);
+                    this.appendMessage(
+                        'Error',
+                        'Unable to send the message, something went wrong.',
+                        'error'
+                    );
+                    // Bail
+                    return;
+                }
 
-                    // Display file content if present
-                    if (data.content) {
-                        // Format the content appropriately, e.g., within a code block
-                        const formattedContent = `<pre>${this.escapeHtml(data.content)}</pre>`;
-                        this.appendMessage('Sidekick', formattedContent, 'assistant');
-                    }
+                // If message is one or more action message(s)
+                if (data.actionMessages && Array.isArray(data.actionMessages)) {
+                    // Loop through all action messages
+                    data.actionMessages.forEach((systemMessage) => {
+                        // Display the action message
+                        this.appendMessage(
+                            'Sidekick',
+                            systemMessage,
+                            this.MESSAGE_TYPES.ACTION
+                        );
+                    });
+                }
 
-                    // Then display the assistant's final message
-                    if (data.message) {
-                        this.appendMessage('Sidekick', data.message, 'assistant');
-                    }
-                } else {
-                    this.appendMessage('Error', data.error || 'An error occurred.', 'error');
+                // Display file content if present
+                if (data.content) {
+                    // The content is assumed to be a code snippet
+                    this.appendMessage(
+                        'Sidekick',
+                        `<pre><code>${data.content}</code></pre>`,
+                        this.MESSAGE_TYPES.SNIPPET
+                    );
+                }
+
+                // Then display the assistant's final message
+                if (data.message) {
+                    const messageType = data.messageType || this.MESSAGE_TYPES.CONVERSATIONAL;
+                    this.appendMessage(
+                        'Sidekick',
+                        data.message,
+                        messageType
+                    );
                 }
             })
             .catch((error) => {
@@ -218,7 +240,11 @@ const SidekickChat = {
                 this.hideSpinner();
 
                 console.error('Error sending message:', error);
-                this.appendMessage('Error', 'A network error occurred. Please check your connection and try again.', 'error');
+                this.appendMessage(
+                    'Error',
+                    'A network error occurred. Please check your connection and try again.',
+                    'error'
+                );
             });
     },
 

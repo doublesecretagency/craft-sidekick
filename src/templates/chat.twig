@@ -6,13 +6,13 @@
 
 {% block actionButton %}
     <div class="btngroup">
-        <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
         <select id="ai-model-select" class="btn">
             {% for option in sidekickChat.aiModelOptions %}
                 {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}
                 <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>
             {% endfor %}
         </select>
+        <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
     </div>
 {% endblock %}
 

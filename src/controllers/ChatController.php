@@ -6,7 +6,11 @@ use Craft;
 use craft\errors\MissingComponentException;
 use craft\web\Controller;
 use doublesecretagency\sidekick\constants\Constants;
+use doublesecretagency\sidekick\helpers\MessageFactory;
+use doublesecretagency\sidekick\models\Message;
+use doublesecretagency\sidekick\services\MessageProcessor;
 use doublesecretagency\sidekick\Sidekick;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
@@ -30,6 +34,22 @@ class ChatController extends Controller
      * @var string|null The initial greeting message.
      */
     private ?string $_greeting = null;
+
+    /**
+     * @var MessageProcessor
+     */
+    private MessageProcessor $messageProcessor;
+
+    /**
+     * Initializes the controller.
+     */
+    public function init(): void
+    {
+        parent::init();
+        $this->messageProcessor = new MessageProcessor();
+    }
+
+    // ========================================================================= //
 
     /**
      * Renders the chat interface.
@@ -91,13 +111,12 @@ class ChatController extends Controller
     {
         $this->requireAcceptsJson();
 
-        // Load the conversation from the session
-        $this->_loadConversation();
+        $conversation = $this->messageProcessor->getConversation();
 
         // Return the conversation
         return $this->asJson([
             'success' => true,
-            'conversation' => $this->_conversation,
+            'conversation' => $conversation,
         ]);
     }
 
@@ -112,6 +131,9 @@ class ChatController extends Controller
     {
         $this->requirePostRequest();
         $this->requireAcceptsJson();
+
+        // Log the message
+        Craft::info("Clearing the conversation.", __METHOD__);
 
         // Clear the conversation from the session
         Craft::$app->getSession()->remove(Constants::CHAT_SESSION);
@@ -165,41 +187,51 @@ class ChatController extends Controller
      * Handles sending messages to the AI model and processing responses.
      *
      * @return Response
-     * @throws BadRequestHttpException
      * @throws GuzzleException
-     * @throws MissingComponentException
      */
     public function actionSendMessage(): Response
     {
-        $this->requirePostRequest();
+        try {
+            $this->requirePostRequest();
 
-        // Step 1: Receive the user's message
-        $request = Craft::$app->getRequest();
-        $message = $request->getRequiredBodyParam('message');
-        $greeting = $request->getBodyParam('greeting');
+            // Step 1: Receive the user's message
+            $request = Craft::$app->getRequest();
+            $message = $request->getRequiredBodyParam('message');
+            $greeting = $request->getBodyParam('greeting');
 
-        // If system greeting was specified, save it for later
-        if ($greeting) {
-            $this->_greeting = $greeting;
-        }
+            // If system greeting was specified, save it for later
+            if ($greeting) {
+                $this->_greeting = $greeting;
+            }
 
-        // Step 2: Append the user's message to the conversation history
-        $this->_appendMessage('user', $message);
+            // Step 2: Append the user's message to the conversation history
+            $this->_appendMessage('user', $message);
 
-        // Step 3: Prepare and send the API request to OpenAI
-        $apiResponse = $this->_callOpenAiApi();
+            // Step 3: Prepare and send the API request to OpenAI
+            $apiResponse = $this->_callOpenAiApi();
 
-        // Handle API errors
-        if (!$apiResponse['success']) {
-            Craft::error("AI API Error: " . $apiResponse['error'], __METHOD__);
+            // Handle API errors
+            if (!$apiResponse['success']) {
+                Craft::error("AI API Error: " . $apiResponse['error'], __METHOD__);
+                return $this->asJson([
+                    'success' => false,
+                    'error' => $apiResponse['error'],
+                ]);
+            }
+
+            // Step 4: Process the assistant's response
+            return $this->_processAssistantResponse($apiResponse['results']);
+
+        } catch (Exception $e) {
+
+            // Log the exception
+            Craft::error("Exception in actionSendMessage: " . $e->getMessage(), __METHOD__);
             return $this->asJson([
                 'success' => false,
-                'error' => $apiResponse['error'],
+                'error' => 'An unexpected error occurred.',
             ]);
-        }
 
-        // Step 4: Process the assistant's response
-        return $this->_processAssistantResponse($apiResponse['results']);
+        }
     }
 
     // ========================================================================= //
@@ -245,21 +277,26 @@ class ChatController extends Controller
      * Appends a message to the conversation history.
      *
      * @param string $role
-     * @param string $message
+     * @param string $messageContent
+     * @param string $messageType
      */
-    private function _appendMessage(string $role, string $message): void
+    private function _appendMessage(string $role, string $messageContent, string $messageType = Constants::MESSAGE_TYPE_CONVERSATIONAL): void
     {
-        // Load the current conversation
-        $this->_loadConversation();
+        // Create a new Message instance
+        $message = match ($role) {
+            'user'      => MessageFactory::createUserMessage($messageContent),
+            'assistant' => MessageFactory::createAssistantMessage($messageContent),
+            'system'    => MessageFactory::createSystemMessage($messageContent),
+            default     => new Message($role, $messageContent, $messageType),
+        };
 
-        // Append the message
-        $this->_conversation[] = [
-            'role'    => $role,
-            'content' => $message,
-        ];
+        // If the role is 'assistant', convert code blocks
+        if ($role === 'assistant') {
+            $message->convertCodeBlocks();
+        }
 
-        // Save the updated conversation
-        $this->_saveConversation();
+        // Append the message to the conversation
+        $this->messageProcessor->appendMessage($message);
     }
 
     // ========================================================================= //
@@ -270,25 +307,24 @@ class ChatController extends Controller
      * @return array The API response
      * @throws GuzzleException
      * @throws MissingComponentException
+     * @throws \yii\base\Exception
      */
     private function _callOpenAiApi(): array
     {
         // Get the selected AI model from the session
         $aiModel = Craft::$app->getSession()->get(Constants::AI_MODEL_SESSION, Constants::DEFAULT_AI_MODEL);
 
-        // Load the assistant's system prompt
-        $prompt = Sidekick::$plugin->openAi->getSystemPrompt();
+        // Get the conversation history
+        $conversation = $this->messageProcessor->getConversation();
 
-        // Prepare messages for the API request
-        $messages = [
-            [
-                'role' => 'system',
-                'content' => $prompt,
-            ],
-        ];
-
-        // Add the conversation history
-        $messages = array_merge($messages, $this->_conversation);
+        // Prepare messages for the API request,
+        // ensure only 'role' and 'content' keys are present
+        $messages = array_map(function ($message) {
+            return [
+                'role' => $message['role'],
+                'content' => $message['content'],
+            ];
+        }, $conversation);
 
         // Prepare the API request
         $apiRequest = [
@@ -297,6 +333,8 @@ class ChatController extends Controller
             'max_tokens'  => 1500,
             'temperature' => 0.2,
         ];
+
+        Craft::info('Messages being sent to OpenAI API: ' . json_encode($messages), __METHOD__);
 
         // Call the OpenAI API
         return Sidekick::$plugin->openAi->callChatCompletion($apiRequest);
@@ -310,9 +348,6 @@ class ChatController extends Controller
      */
     private function _processAssistantResponse(string $assistantMessage): Response
     {
-        // Load the current conversation
-        $this->_loadConversation();
-
         // Attempt to extract and parse JSON from the assistant's message
         $decodedJson = $this->_extractJson($assistantMessage);
         $isJsonAction = ($decodedJson !== null && isset($decodedJson['actions']));
@@ -323,19 +358,20 @@ class ChatController extends Controller
             return $this->asJson($actionResponse);
         }
 
-        // If not a JSON action, convert code blocks
-        $assistantMessage = $this->_convertCodeBlocks($assistantMessage);
+        // Create a Message instance for the assistant's response
+        $assistantMessageObj = new Message('assistant', $assistantMessage);
 
-        // Trim the assistant's message before appending
-        $assistantMessage = trim($assistantMessage);
+        // Convert code blocks and determine message type
+        $assistantMessageObj->convertCodeBlocks();
 
-        // Handle conversational messages
-        $this->_appendMessage('assistant', $assistantMessage);
+        // Append the assistant's message
+        $this->messageProcessor->appendMessage($assistantMessageObj);
 
         // Return the assistant's message
         return $this->asJson([
-            'success' => true,
-            'message' => $assistantMessage,
+            'success'     => true,
+            'message'     => $assistantMessageObj->content,
+            'messageType' => $assistantMessageObj->messageType,
         ]);
     }
 
@@ -357,12 +393,13 @@ class ChatController extends Controller
         // Attempt to decode JSON
         $decodedJson = json_decode($jsonString, true);
 
-        // Check for JSON errors
-        if (json_last_error() === JSON_ERROR_NONE) {
-            return $decodedJson;
-        } else {
+        // If JSON errors, bail
+        if (json_last_error() !== JSON_ERROR_NONE) {
             return null;
         }
+
+        // Return decoded JSON
+        return $decodedJson;
     }
 
     /**
@@ -414,19 +451,30 @@ class ChatController extends Controller
         // If there's content to display, include it
         $content = $executionResults['content'] ?? null;
 
-        // Append each action message as a system message
+        // Append each action message as an action message
         foreach ($actionMessages as $systemMessage) {
-            $this->_conversation[] = [
-                'role'    => 'system',
-                'content' => $systemMessage,
-            ];
+            $this->_appendMessage(
+                'system',
+                $systemMessage,
+                Constants::MESSAGE_TYPE_ACTION
+            );
         }
 
         // Prepare the final response message
         $responseMessage = $executionResults['message'];
 
+        // Determine the message type for the assistant's final message
+        $messageType = Constants::MESSAGE_TYPE_CONVERSATIONAL;
+        if (strpos($responseMessage, '<pre>') !== false) {
+            $messageType = Constants::MESSAGE_TYPE_SNIPPET;
+        }
+
         // Append the final response message as an assistant message
-        $this->_appendMessage('assistant', $responseMessage);
+        $this->_appendMessage(
+            'assistant',
+            $responseMessage,
+            $messageType
+        );
 
         // Return the response message and action messages
         return [
@@ -434,6 +482,7 @@ class ChatController extends Controller
             'message'        => $responseMessage,
             'actionMessages' => $actionMessages,
             'content'        => $content,
+            'messageType'    => $messageType,
         ];
     }
 }

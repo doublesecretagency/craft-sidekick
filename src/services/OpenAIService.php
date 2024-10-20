@@ -237,11 +237,16 @@ class OpenAIService extends Component
      *
      * @param array $apiRequest The API request payload.
      * @return array The API response.
+     * @throws Exception
      * @throws GuzzleException
      */
     public function callChatCompletion(array $apiRequest): array
     {
-        $client = $this->httpClient;
+        // If API key is not set, throw an exception
+        if (!$this->apiKey) {
+            Craft::error('OpenAI API key is not set.', __METHOD__);
+            throw new Exception('OpenAI API key is not set.');
+        }
 
         // Extract additional context if available
         $additionalContext = $apiRequest['additionalContext'] ?? null;
@@ -266,7 +271,12 @@ class OpenAIService extends Component
                 $filePath = $contextItem['filePath'];
                 $content = $contextItem['content'];
                 $contextMessage = "The file {$filePath} has the following content:\n\n{$content}";
-                array_splice($messages, 1, 0, [['role' => 'system', 'content' => $contextMessage]]);
+                array_splice($messages, 1, 0, [
+                    [
+                        'role' => 'system',
+                        'content' => $contextMessage
+                    ]
+                ]);
                 Craft::info("Added additional context to messages: {$contextMessage}", __METHOD__);
             }
         }
@@ -282,10 +292,12 @@ class OpenAIService extends Component
         ];
 
         // Log the API request payload
-        Craft::info("Sending API request with payload: " . json_encode($payload), __METHOD__);
+        Craft::info("Sending API request with payload.", __METHOD__);
+//        Craft::info("Sending API request with payload: " . json_encode($payload), __METHOD__);
 
         try {
-            $response = $client->post($this->apiEndpoint, [
+            // Send the API request
+            $response = $this->httpClient->post($this->apiEndpoint, [
                 'headers' => [
                     'Content-Type' => 'application/json',
                     'Authorization' => 'Bearer ' . $this->apiKey,
@@ -296,25 +308,30 @@ class OpenAIService extends Component
             $responseBody = json_decode($response->getBody()->getContents(), true);
             Craft::info("Received API response: " . json_encode($responseBody), __METHOD__);
 
-            if (isset($responseBody['choices'][0]['message']['content'])) {
-                $content = $responseBody['choices'][0]['message']['content'];
-                Craft::info("Assistant's raw response content: {$content}", __METHOD__);
+            // Extract the response content
+            $content = ($responseBody['choices'][0]['message']['content'] ?? null);
 
-                // Validate the response to ensure only allowed commands are present
-                $validatedContent = $this->_validateResponse($content);
-                Craft::info("Validated assistant response content: {$validatedContent}", __METHOD__);
-
-                return [
-                    'success' => true,
-                    'results' => $validatedContent,
-                ];
-            } else {
+            // If no content, log an error and return false
+            if (!$content) {
                 Craft::error('Invalid response structure from OpenAI.', __METHOD__);
                 return [
                     'success' => false,
                     'error' => 'Invalid response structure from OpenAI.',
                 ];
             }
+
+            Craft::info("Assistant's raw response content: {$content}", __METHOD__);
+
+            // Validate the response to ensure only allowed commands are present
+            $validatedContent = $this->_validateResponse($content);
+
+            Craft::info("Validated assistant response content: {$validatedContent}", __METHOD__);
+
+            return [
+                'success' => true,
+                'results' => $validatedContent,
+            ];
+
         } catch (RequestException $e) {
             Craft::error('OpenAI API Request Exception: ' . $e->getMessage(), __METHOD__);
             return [
@@ -356,8 +373,10 @@ class OpenAIService extends Component
         // Validate each action
         $validActions = Sidekick::$plugin->actions->getValidActions();
 
+        // Loop through each action
         foreach ($decodedJson['actions'] as $action) {
-            if (!isset($action['action']) || !in_array($action['action'], $validActions)) {
+            // Ensure the action is valid
+            if (!isset($action['action']) || !in_array($action['action'], $validActions, true)) {
                 Craft::warning("Invalid or unsupported action: " . ($action['action'] ?? 'undefined'), __METHOD__);
                 return "I'm sorry, but one of the actions you requested is not supported.";
             }

@@ -41,6 +41,15 @@ class Constants
     ];
 
     /**
+     * List of message types for the chat interface.
+     *
+     * @const
+     */
+    public const MESSAGE_TYPE_CONVERSATIONAL = 'conversational';
+    public const MESSAGE_TYPE_SNIPPET = 'snippet';
+    public const MESSAGE_TYPE_ACTION = 'action';
+
+    /**
      * List of possible greeting messages for
      * when Sidekick begins a new conversation.
      *

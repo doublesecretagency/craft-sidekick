@@ -37,8 +37,11 @@
     white-space: pre-wrap; /* Allow long lines to wrap */
     font-family: monospace;
 }
-.system-message {
-    color: green;
+.chat-message.system-message {
+    color: #147d64;
+}
+.chat-message.error-message {
+    color: #d81e23;
 }
 
 .instruction-text {

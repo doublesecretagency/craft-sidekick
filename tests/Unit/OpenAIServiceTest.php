@@ -69,7 +69,10 @@ test('OpenAIService handles API response correctly', function () {
     $apiRequest = [
         'model' => 'gpt-4',
         'messages' => [
-            ['role' => 'user', 'content' => 'Hello, assistant!'],
+            [
+                'role' => 'user',
+                'content' => 'Hello, assistant!'
+            ],
         ],
     ];
 
