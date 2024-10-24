@@ -15,7 +15,11 @@ class MessageFactory
      */
     public static function createUserMessage(string $content): Message
     {
-        return new Message('user', $content, Constants::MESSAGE_TYPE_CONVERSATIONAL);
+        return new Message(
+            'user',
+            $content,
+            Message::CONVERSATIONAL
+        );
     }
 
     /**
@@ -26,7 +30,11 @@ class MessageFactory
      */
     public static function createAssistantMessage(string $content): Message
     {
-        return new Message('assistant', $content, Constants::MESSAGE_TYPE_CONVERSATIONAL);
+        return new Message(
+            'assistant',
+            $content,
+            Message::CONVERSATIONAL
+        );
     }
 
     /**
@@ -37,6 +45,10 @@ class MessageFactory
      */
     public static function createSystemMessage(string $content): Message
     {
-        return new Message('system', $content, Constants::MESSAGE_TYPE_ACTION);
+        return new Message(
+            'system',
+            $content,
+            Message::SYSTEM
+        );
     }
 }

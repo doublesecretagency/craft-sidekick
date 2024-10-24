@@ -2,16 +2,48 @@
 
 namespace doublesecretagency\sidekick\models;
 
+use Craft;
 use craft\base\Model;
-use doublesecretagency\sidekick\constants\Constants;
+use doublesecretagency\sidekick\helpers\ChatHistory;
 
 class Message extends Model
 {
+    /**
+     * List of message types for the chat interface.
+     *
+     * @const
+     */
+    public const CONVERSATIONAL = 'conversational';
+    public const ERROR = 'error';
+    public const SNIPPET = 'snippet';
+    public const SYSTEM = 'system';
+
+    // ========================================================================= //
+
+    /**
+     * @var string Role of the message sender.
+     */
     public string $role;
+
+    /**
+     * @var string Content of the message.
+     */
     public string $content;
+
+    /**
+     * @var string Type of message.
+     */
     public string $messageType;
 
-    public function __construct(string $role, string $content, string $messageType = Constants::MESSAGE_TYPE_CONVERSATIONAL, $config = [])
+    /**
+     * Message constructor.
+     *
+     * @param string $role
+     * @param string $content
+     * @param string $messageType
+     * @param array $config
+     */
+    public function __construct(string $role, string $content, string $messageType = self::CONVERSATIONAL, array $config = [])
     {
         $this->role = $role;
         $this->content = $content;
@@ -19,43 +51,29 @@ class Message extends Model
         parent::__construct($config);
     }
 
+    // ========================================================================= //
+
     /**
-     * Convert code blocks in the message content to HTML.
+     * Log the message content.
      */
-    public function convertCodeBlocks(): void
+    public function log(): void
     {
-        if ($this->messageType === Constants::MESSAGE_TYPE_SNIPPET) {
-            // Code blocks are already converted
-            return;
-        }
-
-        // Convert code snippets to HTML
-        $this->content = preg_replace_callback('/```(.*?)\n([\s\S]*?)```/s', static function ($matches) {
-            $language = htmlspecialchars($matches[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $code = trim($matches[2]);
-            $code = htmlspecialchars($code, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            return "<pre><code class=\"language-{$language}\">{$code}</code></pre>";
-        }, $this->content);
-
-        // Update messageType if code blocks are found
-        if (strpos($this->content, '<pre>') !== false) {
-            $this->messageType = Constants::MESSAGE_TYPE_SNIPPET;
+        // If the message is an error
+        if (self::ERROR === $this->messageType) {
+            // Log as an error
+            Craft::error("{$this->role}: {$this->content}", __METHOD__);
+        } else {
+            // Log as info
+            Craft::info("{$this->role}: {$this->content}", __METHOD__);
         }
     }
 
     /**
-     * @inheritdoc
+     * Append message to the chat history.
      */
-    public function rules(): array
+    public function appendToChatHistory(): void
     {
-        return [
-            [['role', 'content', 'messageType'], 'required'],
-            [['role', 'messageType'], 'string'],
-            ['messageType', 'in', 'range' => [
-                Constants::MESSAGE_TYPE_CONVERSATIONAL,
-                Constants::MESSAGE_TYPE_SNIPPET,
-                Constants::MESSAGE_TYPE_ACTION,
-            ]],
-        ];
+        // Add this message to the chat history
+        ChatHistory::addMessage($this);
     }
 }

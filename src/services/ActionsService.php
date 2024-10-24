@@ -3,7 +3,7 @@
 namespace doublesecretagency\sidekick\services;
 
 use craft\base\Component;
-use doublesecretagency\sidekick\helpers\ActionsHelper;
+use doublesecretagency\sidekick\helpers\ApiTools;
 
 /**
  * Class ActionsService
@@ -20,7 +20,7 @@ class ActionsService extends Component
     public function getValidActions(): array
     {
         $validActions = [];
-        $methods = (new \ReflectionClass(ActionsHelper::class))->getMethods();
+        $methods = (new \ReflectionClass(ApiTools::class))->getMethods();
 
         foreach ($methods as $method) {
             $validActions[] = $method->getName();
@@ -92,11 +92,11 @@ class ActionsService extends Component
         }
 
         // Check if the action type is supported
-        if (!method_exists(ActionsHelper::class, $actionType)) {
+        if (!method_exists(ApiTools::class, $actionType)) {
             return ['success' => false, 'message' => "Unsupported action: {$actionType}"];
         }
 
         // Call the static method
-        return ActionsHelper::$actionType($action);
+        return ApiTools::$actionType($action);
     }
 }

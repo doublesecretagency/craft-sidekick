@@ -39,7 +39,7 @@ const SidekickChat = {
 
     // Bind event listeners
     bindEvents: function () {
-        // Handle keydown events for Enter and Shift + Enter in the message input
+        // Handle keydown events for "Enter" and "Shift + Enter" in the message input
         this.chatMessage.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Prevent newline
@@ -144,9 +144,18 @@ const SidekickChat = {
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
+                    // Get the existing greeting message
+                    this.greeting = data.greeting;
+
+                    // Don't display more than 100 messages
                     const MAX_MESSAGES_DISPLAYED = 100;
+
+                    // Display the last 100 messages
                     const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
+
+                    // Loop through all messages
                     messagesToDisplay.forEach((message) => {
+                        // Display message in the chat window
                         this.appendMessage(
                             message.role === 'user' ? 'You' : 'Sidekick',
                             message.content,
@@ -176,6 +185,9 @@ const SidekickChat = {
         // Show the spinner and disable inputs
         this.showSpinner();
 
+        // Get the greeting message
+        const greeting = (this.greeting ? this.greeting.content : null);
+
         fetch('/actions/sidekick/chat/send-message', {
             method: 'POST',
             headers: {
@@ -183,7 +195,7 @@ const SidekickChat = {
                 'X-CSRF-Token': Craft.csrfTokenValue,
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ message, greeting: this.greeting }),
+            body: JSON.stringify({ message, greeting }),
         })
             .then((response) => response.json())
             .then((data) => {
@@ -192,48 +204,83 @@ const SidekickChat = {
 
                 // If response was unsuccessful
                 if (!data.success) {
+                    // Log error
                     console.error('Unable to send message: ', data);
+                    // Display error message
                     this.appendMessage(
                         'Error',
-                        'Unable to send the message, something went wrong.',
+                        `Unable to send the message. ${data.error || ''}`,
                         'error'
                     );
                     // Bail
                     return;
                 }
 
-                // If message is one or more action message(s)
-                if (data.actionMessages && Array.isArray(data.actionMessages)) {
-                    // Loop through all action messages
-                    data.actionMessages.forEach((systemMessage) => {
-                        // Display the action message
-                        this.appendMessage(
-                            'Sidekick',
-                            systemMessage,
-                            this.MESSAGE_TYPES.ACTION
-                        );
-                    });
+                // If messages are not a valid array
+                if (!data.messages || !Array.isArray(data.messages)) {
+                    // Log error
+                    console.error('Invalid response messages: ', data.messages);
+                    // Display error message
+                    this.appendMessage(
+                        'Error',
+                        'Invalid response messages.',
+                        'error'
+                    );
+                    // Bail
+                    return;
                 }
 
-                // Display file content if present
-                if (data.content) {
-                    // The content is assumed to be a code snippet
+                // Loop through all messages
+                for (let i = 0; i < data.messages.length; i++) {
+                    // Get the message
+                    const message = data.messages[i];
+                    // const sender = message.role === 'assistant' ? 'Sidekick' : 'You';
+                    // Display the assistant message
                     this.appendMessage(
                         'Sidekick',
-                        `<pre><code>${data.content}</code></pre>`,
-                        this.MESSAGE_TYPES.SNIPPET
+                        message.content,
+                        message.messageType || this.MESSAGE_TYPES.CONVERSATIONAL
                     );
                 }
 
-                // Then display the assistant's final message
-                if (data.message) {
-                    const messageType = data.messageType || this.MESSAGE_TYPES.CONVERSATIONAL;
-                    this.appendMessage(
-                        'Sidekick',
-                        data.message,
-                        messageType
-                    );
-                }
+                // Reset the greeting
+                this.greeting = null;
+
+
+                // // If message is one or more action message(s)
+                // if (data.actionMessages && Array.isArray(data.actionMessages)) {
+                //     // Loop through all action messages
+                //     data.actionMessages.forEach((systemMessage) => {
+                //         // Display the action message
+                //         this.appendMessage(
+                //             'Sidekick',
+                //             systemMessage,
+                //             this.MESSAGE_TYPES.ACTION
+                //         );
+                //     });
+                // }
+
+                // // Display file content if present
+                // if (data.content) {
+                //     // The content is assumed to be a code snippet
+                //     this.appendMessage(
+                //         'Sidekick',
+                //         `<pre><code>${data.content}</code></pre>`,
+                //         this.MESSAGE_TYPES.SNIPPET
+                //     );
+                // }
+
+                // // Then display the assistant's final message
+                // if (data.message) {
+                //     const messageType = data.messageType || this.MESSAGE_TYPES.CONVERSATIONAL;
+                //     this.appendMessage(
+                //         'Sidekick',
+                //         data.message,
+                //         messageType
+                //     );
+                // }
+
+
             })
             .catch((error) => {
                 // Hide the spinner

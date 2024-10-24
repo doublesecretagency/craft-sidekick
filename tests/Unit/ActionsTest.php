@@ -2,7 +2,7 @@
 
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\Sidekick;
-use doublesecretagency\sidekick\helpers\ActionsHelper;
+use doublesecretagency\sidekick\helpers\ApiTools;
 use markhuot\craftpest\test\TestCase;
 
 uses(TestCase::class);
@@ -41,7 +41,7 @@ test('Executes a valid action successfully', function () {
         'content' => '<h1>Test Template</h1>',
     ];
 
-    $result = ActionsHelper::createFile($action);
+    $result = ApiTools::createFile($action);
 
     expect($result['success'])->toBeTrue();
     expect($result['message'])->toBe("File '/templates/test.twig' created successfully.");
@@ -88,7 +88,7 @@ test('Displays file contents successfully', function () {
     ];
 
     // Execute the action
-    $result = ActionsHelper::displayFileContents($action);
+    $result = ApiTools::displayFileContents($action);
 
     // Assertions
     expect($result['success'])->toBeTrue();

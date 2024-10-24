@@ -5,20 +5,6 @@ namespace doublesecretagency\sidekick\constants;
 class Constants
 {
     /**
-     * Session key for storing the chat session.
-     *
-     * @const
-     */
-    public const CHAT_SESSION = 'sidekickConversation';
-
-    /**
-     * Session key for storing the selected AI model.
-     *
-     * @const
-     */
-    public const AI_MODEL_SESSION = 'sidekickSelectedModel';
-
-    /**
      * Default AI model to use for OpenAI API.
      *
      * @const
@@ -40,14 +26,16 @@ class Constants
         'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
     ];
 
+    // ========================================================================= //
+
     /**
-     * List of message types for the chat interface.
+     * Session key for storing the selected AI model.
      *
      * @const
      */
-    public const MESSAGE_TYPE_CONVERSATIONAL = 'conversational';
-    public const MESSAGE_TYPE_SNIPPET = 'snippet';
-    public const MESSAGE_TYPE_ACTION = 'action';
+    public const AI_MODEL_SESSION = 'sidekickSelectedModel';
+
+    // ========================================================================= //
 
     /**
      * List of possible greeting messages for

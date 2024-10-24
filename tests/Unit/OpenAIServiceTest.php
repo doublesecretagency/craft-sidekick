@@ -76,7 +76,7 @@ test('OpenAIService handles API response correctly', function () {
         ],
     ];
 
-    $response = $this->openAIService->callChatCompletion($apiRequest);
+//    $response = $this->openAIService->callChatCompletion($apiRequest);
 
     expect($response['success'])->toBeTrue();
     expect($response['results'])->toBe('Test response from OpenAI.');

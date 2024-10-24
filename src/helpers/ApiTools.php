@@ -8,7 +8,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use yii\base\Exception;
 use yii\helpers\FileHelper;
 
-class ActionsHelper
+class ApiTools
 {
     /**
      * ### **updateElement**
