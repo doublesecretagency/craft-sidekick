@@ -4,7 +4,8 @@ namespace doublesecretagency\sidekick\helpers;
 
 use Craft;
 use craft\errors\MissingComponentException;
-use doublesecretagency\sidekick\models\Message;
+use doublesecretagency\sidekick\constants\Session;
+use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
 
 class ChatHistory
@@ -22,6 +23,10 @@ class ChatHistory
     public static function clearConversation(): void
     {
         try {
+
+            // Clear the assistant and thread IDs from the session
+            Craft::$app->getSession()->remove(Session::ASSISTANT_ID);
+            Craft::$app->getSession()->remove(Session::THREAD_ID);
 
             // Clear the conversation from the session
             Craft::$app->getSession()->remove(static::SESSION);
@@ -71,9 +76,9 @@ class ChatHistory
     /**
      * Add a message to the conversation history.
      *
-     * @param Message $message
+     * @param ChatMessage $message
      */
-    public static function addMessage(Message $message): void
+    public static function addMessage(ChatMessage $message): void
     {
         // Get the existing conversation from the session
         $conversation = static::getConversation();

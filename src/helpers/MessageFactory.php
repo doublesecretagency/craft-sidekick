@@ -2,8 +2,8 @@
 
 namespace doublesecretagency\sidekick\helpers;
 
-use doublesecretagency\sidekick\models\Message;
-use doublesecretagency\sidekick\constants\Constants;
+use doublesecretagency\sidekick\models\ChatMessage;
+use doublesecretagency\sidekick\constants\Chat;
 
 class MessageFactory
 {
@@ -11,14 +11,14 @@ class MessageFactory
      * Create a user message.
      *
      * @param string $content
-     * @return Message
+     * @return ChatMessage
      */
-    public static function createUserMessage(string $content): Message
+    public static function createUserMessage(string $content): ChatMessage
     {
-        return new Message(
+        return new ChatMessage(
             'user',
             $content,
-            Message::CONVERSATIONAL
+            ChatMessage::CONVERSATIONAL
         );
     }
 
@@ -26,14 +26,14 @@ class MessageFactory
      * Create an assistant message.
      *
      * @param string $content
-     * @return Message
+     * @return ChatMessage
      */
-    public static function createAssistantMessage(string $content): Message
+    public static function createAssistantMessage(string $content): ChatMessage
     {
-        return new Message(
+        return new ChatMessage(
             'assistant',
             $content,
-            Message::CONVERSATIONAL
+            ChatMessage::CONVERSATIONAL
         );
     }
 
@@ -41,14 +41,14 @@ class MessageFactory
      * Create a system message.
      *
      * @param string $content
-     * @return Message
+     * @return ChatMessage
      */
-    public static function createSystemMessage(string $content): Message
+    public static function createSystemMessage(string $content): ChatMessage
     {
-        return new Message(
+        return new ChatMessage(
             'system',
             $content,
-            Message::SYSTEM
+            ChatMessage::SYSTEM
         );
     }
 }

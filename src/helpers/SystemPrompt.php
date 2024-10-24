@@ -6,11 +6,9 @@ use Craft;
 use doublesecretagency\sidekick\Sidekick;
 use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
-use yii\base\Exception;
 
 class SystemPrompt
 {
-
     /**
      * @var array The list of system prompt files to compile.
      */
@@ -23,9 +21,7 @@ class SystemPrompt
     ];
 
     /**
-     * Compiles the system prompt from multiple Markdown files.
-     *
-     * @throws Exception if the system prompt file cannot be read.
+     * Compiles the system prompt from a collection of Markdown files.
      */
     public static function getPrompt(): string
     {
@@ -58,7 +54,6 @@ class SystemPrompt
         if (!$systemPrompt) {
             $error = "Unable to compile the system prompt.";
             Craft::error($error, __METHOD__);
-            throw new Exception($error);
         }
 
         // Append the actions documentation to the system prompt

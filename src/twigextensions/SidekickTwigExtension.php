@@ -4,7 +4,8 @@ namespace doublesecretagency\sidekick\twigextensions;
 
 use Craft;
 use craft\errors\MissingComponentException;
-use doublesecretagency\sidekick\constants\Constants;
+use doublesecretagency\sidekick\constants\AiModel;
+use doublesecretagency\sidekick\constants\Session;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 
@@ -19,7 +20,7 @@ class SidekickTwigExtension extends AbstractExtension implements GlobalsInterfac
     public function getGlobals(): array
     {
         // Get the selected AI model from the session
-        $selectedModel = Craft::$app->getSession()->get(Constants::AI_MODEL_SESSION, Constants::DEFAULT_AI_MODEL);
+        $selectedModel = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
 
         // Return global variables
         return [
@@ -41,7 +42,7 @@ class SidekickTwigExtension extends AbstractExtension implements GlobalsInterfac
         $aiModelOptions = [];
 
         // Loop through available AI models
-        foreach (Constants::AVAILABLE_AI_MODELS as $value => $label) {
+        foreach (AiModel::AVAILABLE as $value => $label) {
             // Add each AI model to the options array
             $aiModelOptions[] = ['label' => $label, 'value' => $value];
         }

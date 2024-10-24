@@ -6,7 +6,7 @@ use Craft;
 use craft\base\Model;
 use doublesecretagency\sidekick\helpers\ChatHistory;
 
-class Message extends Model
+class ChatMessage extends Model
 {
     /**
      * List of message types for the chat interface.
@@ -55,8 +55,10 @@ class Message extends Model
 
     /**
      * Log the message content.
+     *
+     * @return ChatMessage for chaining
      */
-    public function log(): void
+    public function log(): ChatMessage
     {
         // If the message is an error
         if (self::ERROR === $this->messageType) {
@@ -66,14 +68,22 @@ class Message extends Model
             // Log as info
             Craft::info("{$this->role}: {$this->content}", __METHOD__);
         }
+
+        // Return the message for chaining
+        return $this;
     }
 
     /**
      * Append message to the chat history.
+     *
+     * @return ChatMessage for chaining
      */
-    public function appendToChatHistory(): void
+    public function appendToChatHistory(): ChatMessage
     {
         // Add this message to the chat history
         ChatHistory::addMessage($this);
+
+        // Return the message for chaining
+        return $this;
     }
 }

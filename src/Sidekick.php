@@ -11,7 +11,7 @@ use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
-use doublesecretagency\sidekick\constants\Constants;
+use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
 use doublesecretagency\sidekick\services\OpenAIService;
