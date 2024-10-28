@@ -7,7 +7,6 @@ use craft\helpers\App;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
-use doublesecretagency\sidekick\helpers\ChatHistory;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
@@ -58,8 +57,9 @@ class OpenAIService extends Component
 
         // If API key is not set, throw an exception
         if (!$this->_apiKey) {
-            Craft::error('OpenAI API key is not set.', __METHOD__);
-            throw new Exception('OpenAI API key is not set.');
+            $error = "OpenAI API key is not set.";
+            Craft::error($error, __METHOD__);
+            throw new Exception($error);
         }
 
         // If the OpenAI client is not already set
@@ -68,16 +68,6 @@ class OpenAIService extends Component
             $this->_openAiClient = OpenAI::client($this->_apiKey);
         }
     }
-
-//    /**
-//     * Sets the OpenAI client for making API requests.
-//     *
-//     * @param Client $client The OpenAI client.
-//     */
-//    public function setOpenAiClient(Client $client): void
-//    {
-//        $this->_openAiClient = $client;
-//    }
 
     // ========================================================================= //
 
@@ -185,63 +175,49 @@ class OpenAIService extends Component
     // ========================================================================= //
 
     /**
-     * Send a message to the API.
+     * Initialize the thread.
      *
-     * @param ChatMessage $message
-     * @return array
+     * @return void
+     */
+    private function _initThread(): void
+    {
+        // Get the assistant and thread IDs
+        $this->_assistantId = $this->_getAssistantId();
+        $this->_threadId    = $this->_getThreadId();
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Append a message to the current thread.
+     *
+     * @param array $message
+     * @return void
      * @throws Exception
      */
-    public function sendMessage(ChatMessage $message): array
+    public function addMessage(array $message): void
     {
-        // If API key is not set, log and throw an exception
+        // If API key is not set, throw an exception
         if (!$this->_apiKey) {
-            $error = 'OpenAI API key is not set.';
+            $error = "OpenAI API key is not set.";
             Craft::error($error, __METHOD__);
             throw new Exception($error);
         }
 
         try {
-            // Get the assistant and thread IDs
-            $this->_assistantId = $this->_getAssistantId();
-            $this->_threadId    = $this->_getThreadId();
 
-            // Add a message to the thread
-            $this->_openAiClient->threads()->messages()->create($this->_threadId, [
-                'role' => 'user',
-                'content' => $message->content,
-            ]);
+            // Initialize the thread
+            $this->_initThread();
 
-            // Run the thread
-            $this->_runThread();
-
-            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, [
-//                'limit' => 10,
-            ]);
-
-            // Get reply from the assistant
-            $reply = $messages->data[0]->content[0]->text->value;
-
-            // Create the greeting message
-            $r = Sidekick::$plugin->openAi->newAssistantMessage($reply);
-
-            // Append it to the chat history
-            $r->appendToChatHistory();
-
-            // Return the results
-            return [
-                'success' => true,
-                'messages' => [$r],
-            ];
+            // Append message to the existing thread
+            $this->_openAiClient->threads()->messages()->create($this->_threadId, $message);
 
         } catch (RequestException|\Exception $e) {
 
             // Log and return the error
             $error = $e->getMessage();
             Craft::error($error, __METHOD__);
-            return [
-                'success' => false,
-                'error' => $error,
-            ];
+            throw new Exception($error);
 
         }
     }
@@ -252,7 +228,7 @@ class OpenAIService extends Component
      * @return void
      * @throws Exception
      */
-    private function _runThread(): void
+    public function runThread(): void
     {
         // Get the runs service
         $service = $this->_openAiClient->threads()->runs();
@@ -301,9 +277,9 @@ class OpenAIService extends Component
                         break;
                 }
             }
-        } while ($run->status !== 'completed');
 
-        // ...
+        // Until the run is completed
+        } while ($run->status !== 'completed');
     }
 
     // ========================================================================= //
@@ -340,50 +316,14 @@ class OpenAIService extends Component
     // ========================================================================= //
 
     /**
-     * Create a new system message.
+     * Get the entire conversation.
      *
-     * @param string $content
-     * @return ChatMessage
+     * @return array
      */
-    public function newSystemMessage(string $content): ChatMessage
+    public function getConversation(): array
     {
-        return new ChatMessage('system', $content);
+        return Sidekick::$plugin->chat->getConversation();
     }
-
-    /**
-     * Create a new user message.
-     *
-     * @param string $content
-     * @return ChatMessage
-     */
-    public function newUserMessage(string $content): ChatMessage
-    {
-        return new ChatMessage('user', $content);
-    }
-
-    /**
-     * Create a new assistant message.
-     *
-     * @param string $content
-     * @return ChatMessage
-     */
-    public function newAssistantMessage(string $content): ChatMessage
-    {
-        return new ChatMessage('assistant', $content);
-    }
-
-    /**
-     * Create a new tool message.
-     *
-     * @param string $content
-     * @return ChatMessage
-     */
-    public function newToolMessage(string $content): ChatMessage
-    {
-        return new ChatMessage('tool', $content);
-    }
-
-    // ========================================================================= //
 
     /**
      * Generate a greeting message.
@@ -399,16 +339,43 @@ class OpenAIService extends Component
         $greetingText = $options[array_rand($options)];
 
         // Create and return a new assistant message
-        return $this->newAssistantMessage($greetingText);
+        return new ChatMessage([
+            'role' => 'assistant',
+            'content' => $greetingText
+        ]);
     }
 
     /**
-     * Get the entire conversation.
+     * Get the latest assistant message.
      *
      * @return array
+     * @throws Exception
      */
-    public function getConversation(): array
+    public function getLatestAssistantMessage(): array
     {
-        return ChatHistory::getConversation();
+        try {
+
+            // Get the latest messages from the thread
+            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, [
+//                'after' => 'obj_foo',
+            ]);
+
+            // Get reply from the assistant
+            $reply = $messages->data[0]->content[0]->text->value;
+
+            // Return the assistant's reply
+            return [
+                'role' => 'assistant',
+                'content' => $reply,
+            ];
+
+        } catch (RequestException|\Exception $e) {
+
+            // Log and return the error
+            $error = $e->getMessage();
+            Craft::error($error, __METHOD__);
+            throw new Exception($error);
+
+        }
     }
 }

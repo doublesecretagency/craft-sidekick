@@ -24,4 +24,11 @@ class Session
      * @const
      */
     public const THREAD_ID = 'sidekickThreadId';
+
+    /**
+     * Session key for storing the complete conversation.
+     *
+     * @const
+     */
+    public const CHAT_HISTORY = 'sidekickConversation';
 }

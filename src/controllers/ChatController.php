@@ -7,7 +7,7 @@ use craft\errors\MissingComponentException;
 use craft\web\Controller;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
-use doublesecretagency\sidekick\helpers\ChatHistory;
+use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
 use Exception;
 use yii\web\BadRequestHttpException;
@@ -89,55 +89,72 @@ class ChatController extends Controller
      */
     public function actionGetConversation(): Response
     {
-        $this->requireAcceptsJson();
+        try {
+            $this->requireAcceptsJson();
 
-        // Get the existing conversation
-        $conversation = ChatHistory::getConversation();
+            // Get the existing conversation
+            $conversation = Sidekick::$plugin->chat->getConversation();
 
-        // If no conversation exists
-        if (!$conversation) {
-            // Generate a greeting message
-            $greeting = Sidekick::$plugin->openAi->getGreetingMessage();
-            // Start conversation with a greeting
-            $conversation = [$greeting];
+            // If no conversation exists
+            if (!$conversation) {
+                // Generate a greeting message
+                $greeting = Sidekick::$plugin->openAi->getGreetingMessage();
+                // Start conversation with a greeting
+                $conversation = [$greeting];
+            }
+
+            // Return the conversation
+            return $this->asJson([
+                'success' => true,
+                'conversation' => $conversation,
+                'greeting' => $greeting ?? null,
+            ]);
+
+        } catch (Exception $e) {
+
+            // Record and return an error message
+            return $this->_error("Unable to get the conversation. {$e->getMessage()}");
+
         }
-
-        // Return the conversation
-        return $this->asJson([
-            'success' => true,
-            'conversation' => $conversation,
-            'greeting' => $greeting ?? null,
-        ]);
-    }
-
-    /**
-     * Clears the conversation history from the session.
-     *
-     * @return Response
-     * @throws BadRequestHttpException
-     */
-    public function actionClearConversation(): Response
-    {
-        $this->requirePostRequest();
-        $this->requireAcceptsJson();
-
-        // Clear the conversation from the session
-        ChatHistory::clearConversation();
-
-        // Log the message
-        Craft::info("Cleared the conversation.", __METHOD__);
-
-        // Return a success message
-        return $this->asJson([
-            'success' => true,
-            'message' => 'Conversation cleared.',
-        ]);
     }
 
     // ========================================================================= //
 
     /**
-     * Handles sending messages to the AI model and processing responses.
+     * Clears the conversation history from the session.
+     *
+     * @return Response
+     */
+    public function actionClearConversation(): Response
+    {
+        try {
+            $this->requirePostRequest();
+            $this->requireAcceptsJson();
+
+            // Clear the conversation from the session
+            Sidekick::$plugin->chat->clearConversation();
+
+            // Log the message
+            Craft::info("Cleared the conversation.", __METHOD__);
+
+            // Return a success message
+            return $this->asJson([
+                'success' => true,
+                'message' => 'Conversation cleared.',
+            ]);
+
+        } catch (Exception $e) {
+
+            // Record and return an error message
+            return $this->_error("Unable to clear the conversation. {$e->getMessage()}");
+
+        }
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Sends a message to the assistant and receives a reply.
      *
      * @return Response
      */
@@ -146,7 +163,8 @@ class ChatController extends Controller
         try {
             $this->requirePostRequest();
 
-            // Get the OpenAI service
+            // Get services
+            $chat   = Sidekick::$plugin->chat;
             $openAi = Sidekick::$plugin->openAi;
 
             // Receive the user's message
@@ -155,60 +173,76 @@ class ChatController extends Controller
             $greeting = $request->getBodyParam('greeting');
 
             // Get size of chat history
-            $chatHistory = count(ChatHistory::getConversation());
+            $chatHistory = count($chat->getConversation());
 
             // If greeting was specified and no chat history exists
             if ($greeting && !$chatHistory) {
-                // Create the greeting message
-                $g = $openAi->newAssistantMessage($greeting);
-                // Append it to the chat history
-                $g->appendToChatHistory();
+                // Compile the greeting message
+                (new ChatMessage([
+                    'role' => 'assistant',
+                    'content' => $greeting
+                ]))
+                    ->log()
+                    ->addToChatHistory()
+                    ->addToOpenAiThread();
             }
 
-            // Create the user message
-            $m = $openAi->newUserMessage($message);
-            // Log and append to the chat history
-            $m->log()->appendToChatHistory();
+            // Compile the user message
+            (new ChatMessage([
+                'role' => 'user',
+                'content' => $message
+            ]))
+                ->log()
+                ->addToChatHistory()
+                ->addToOpenAiThread();
 
-            // Send the message to the API
-            $results = $openAi->sendMessage($m);
+            // Run the OpenAI thread
+            $openAi->runThread();
+
+            // Get the latest assistant message
+            $reply = $openAi->getLatestAssistantMessage();
+
+            // Append to the chat history
+            (new ChatMessage($reply))
+                ->log()
+                ->addToChatHistory();
 
             // Return the results
-            return $this->asJson($results);
-
-
-
-//            $response = $openAi->sendMessage($m);
-
-//            // Get the API response
-//            $r = new ApiResponse($response);
-//
-//            // If the API response was not successful
-//            if (!$r->success) {
-//                // Return the error message
-//                return $this->asJson([
-//                    'success' => false,
-//                    'error' => $r->error
-//                ]);
-//            }
-//
-//            // Return all messages produced by the API response
-//            return $this->asJson([
-//                'success' => true,
-//                'messages' => $r->getMessages(),
-//            ]);
-
-
+            return $this->asJson([
+                'success' => true,
+                'messages' => [$reply],
+            ]);
 
         } catch (Exception $e) {
 
-            // Log the exception
-            Craft::error("Exception in actionSendMessage: {$e->getMessage()}", __METHOD__);
-            return $this->asJson([
-                'success' => false,
-                'error' => 'An unexpected error occurred.',
-            ]);
+            // Record and return an error message
+            return $this->_error("Unable to send the message. {$e->getMessage()}");
 
         }
+    }
+
+    /**
+     * Record and return an error message.
+     *
+     * @param string $error
+     * @return Response
+     */
+    private function _error(string $error): Response
+    {
+        // Append error to the chat history
+        (new ChatMessage([
+            'role' => ChatMessage::ERROR,
+            'content' => $error
+        ]))
+            ->log()
+            ->addToChatHistory();
+
+        // Log the error
+//        Craft::error($error, __METHOD__);
+
+        return $this->asJson([
+            'success' => false,
+            'error' => $error,
+        ]);
     }
 }

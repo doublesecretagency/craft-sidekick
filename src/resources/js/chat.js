@@ -10,11 +10,12 @@ const SidekickChat = {
     sendButton: null,
     greeting: null,
     MAX_MESSAGE_LENGTH: 1000, // Adjust this limit as needed
-    MESSAGE_TYPES: {
-        CONVERSATIONAL: 'conversational',
-        SNIPPET: 'snippet',
-        ACTION: 'action',
+    ROLE: {
+        ASSISTANT: 'assistant',
+        USER: 'user',
+        SYSTEM: 'system',
         ERROR: 'error',
+        SNIPPET: 'snippet',
     },
 
     // Initialize the object
@@ -97,30 +98,45 @@ const SidekickChat = {
     },
 
     // Append a message to the chat window
-    appendMessage: function (sender, message, messageType) {
+    appendMessage: function (role, message) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
 
-        let messageContent;
+        // Initialize
+        let sender = 'Unknown';
+        let messageClass = null;
 
-        switch (messageType) {
-            case this.MESSAGE_TYPES.ERROR:
-                messageElement.classList.add('error-message');
-                messageContent = `<strong>${sender}:</strong> ${this.escapeHtml(message).replace(/\n/g, '<br>')}`;
+        // Configure based on the role
+        switch (role) {
+            case this.ROLE.ASSISTANT:
+                sender = 'Sidekick';
+                messageClass = 'code-snippet';
                 break;
-            case this.MESSAGE_TYPES.ACTION:
-                messageElement.classList.add('system-message');
-                messageContent = this.escapeHtml(message).replace(/\n/g, '<br>');
+            case this.ROLE.USER:
+                sender = 'You';
+                messageClass = null;
                 break;
-            case this.MESSAGE_TYPES.SNIPPET:
-                messageElement.classList.add('code-snippet');
-                messageContent = message;
+            case this.ROLE.SYSTEM:
+                sender = null;
+                messageClass = 'system-message';
                 break;
-            case this.MESSAGE_TYPES.CONVERSATIONAL:
-            default:
-                const escapedMessage = this.escapeHtml(message).replace(/\n/g, '<br>');
-                messageContent = `<strong>${sender}:</strong> ${escapedMessage}`;
+            case this.ROLE.ERROR:
+                sender = 'Error';
+                messageClass = 'error-message';
                 break;
+        }
+
+        // Escape the message content
+        let messageContent = this.escapeHtml(message).replace(/\n/g, '<br>');
+
+        // If a sender was specified, prepend the sender
+        if (sender) {
+            messageContent = `<strong>${sender}:</strong> ${messageContent}`;
+        }
+
+        // If a message class is provided, add it to the message element
+        if (messageClass) {
+            messageElement.classList.add(messageClass);
         }
 
         // Set the message content
@@ -153,19 +169,31 @@ const SidekickChat = {
                     // Display the last 100 messages
                     const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
 
+                    // Log table of messages
+                    // console.table(messagesToDisplay);
+
                     // Loop through all messages
                     messagesToDisplay.forEach((message) => {
                         // Display message in the chat window
                         this.appendMessage(
-                            message.role === 'user' ? 'You' : 'Sidekick',
-                            message.content,
-                            message.messageType
+                            message.role,
+                            message.content
                         );
                     });
+                } else {
+                    const error = (data.error || 'Unable to load the conversation.');
+                    this.appendMessage(
+                        this.ROLE.ERROR,
+                        error
+                    );
                 }
             })
             .catch((error) => {
                 console.error('Error loading conversation:', error);
+                this.appendMessage(
+                    this.ROLE.ERROR,
+                    error
+                );
             });
     },
 
@@ -179,7 +207,10 @@ const SidekickChat = {
             return;
         }
 
-        this.appendMessage('You', message, 'user');
+        this.appendMessage(
+            this.ROLE.USER,
+            message
+        );
         this.chatMessage.value = '';
 
         // Show the spinner and disable inputs
@@ -206,11 +237,10 @@ const SidekickChat = {
                 if (!data.success) {
                     // Log error
                     console.error('Unable to send message: ', data);
-                    // Display error message
+                    // Display the error message
                     this.appendMessage(
-                        'Error',
-                        `Unable to send the message. ${data.error || ''}`,
-                        'error'
+                        this.ROLE.ERROR,
+                        data.error
                     );
                     // Bail
                     return;
@@ -222,9 +252,8 @@ const SidekickChat = {
                     console.error('Invalid response messages: ', data.messages);
                     // Display error message
                     this.appendMessage(
-                        'Error',
-                        'Invalid response messages.',
-                        'error'
+                        this.ROLE.ERROR,
+                        'Invalid response messages.'
                     );
                     // Bail
                     return;
@@ -237,9 +266,8 @@ const SidekickChat = {
                     // const sender = message.role === 'assistant' ? 'Sidekick' : 'You';
                     // Display the assistant message
                     this.appendMessage(
-                        'Sidekick',
-                        message.content,
-                        message.messageType || this.MESSAGE_TYPES.CONVERSATIONAL
+                        message.role,
+                        message.content
                     );
                 }
 
@@ -253,9 +281,8 @@ const SidekickChat = {
                 //     data.actionMessages.forEach((systemMessage) => {
                 //         // Display the action message
                 //         this.appendMessage(
-                //             'Sidekick',
-                //             systemMessage,
-                //             this.MESSAGE_TYPES.ACTION
+                //             this.ROLE.ACTION,
+                //             systemMessage
                 //         );
                 //     });
                 // }
@@ -264,19 +291,16 @@ const SidekickChat = {
                 // if (data.content) {
                 //     // The content is assumed to be a code snippet
                 //     this.appendMessage(
-                //         'Sidekick',
-                //         `<pre><code>${data.content}</code></pre>`,
-                //         this.MESSAGE_TYPES.SNIPPET
+                //         this.ROLE.SNIPPET,
+                //         `<pre><code>${data.content}</code></pre>`
                 //     );
                 // }
 
                 // // Then display the assistant's final message
                 // if (data.message) {
-                //     const messageType = data.messageType || this.MESSAGE_TYPES.CONVERSATIONAL;
                 //     this.appendMessage(
-                //         'Sidekick',
-                //         data.message,
-                //         messageType
+                //         this.ROLE.ASSISTANT,
+                //         data.message
                 //     );
                 // }
 
@@ -288,9 +312,8 @@ const SidekickChat = {
 
                 console.error('Error sending message:', error);
                 this.appendMessage(
-                    'Error',
-                    'A network error occurred. Please check your connection and try again.',
-                    'error'
+                    this.ROLE.ERROR,
+                    'A network error occurred. Please check your connection and try again.'
                 );
             });
     },
@@ -356,7 +379,15 @@ const SidekickChat = {
                         // Focus the message input
                         this.chatMessage.focus();
                     } else {
-                        alert(data.message || 'Failed to clear the conversation.');
+                        const error = (data.error || 'Failed to clear the conversation.');
+                        this.appendMessage(
+                            this.ROLE.ERROR,
+                            error
+                        );
+                        // Wait for .1 second before alerting the user
+                        setTimeout(() => {
+                            alert(error);
+                        }, 100);
                     }
                 })
                 .catch((error) => {
@@ -364,7 +395,15 @@ const SidekickChat = {
                     this.hideSpinner();
 
                     console.error('Error clearing conversation:', error);
-                    alert('An error occurred while clearing the conversation.');
+                    this.appendMessage(
+                        this.ROLE.ERROR,
+                        error
+                    );
+
+                    // Wait for .1 second before alerting the user
+                    setTimeout(() => {
+                        alert('An error occurred while clearing the conversation.');
+                    }, 100);
                 });
         }
     },

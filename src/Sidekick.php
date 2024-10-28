@@ -11,9 +11,9 @@ use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
-use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
+use doublesecretagency\sidekick\services\ChatService;
 use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
@@ -35,6 +35,7 @@ use craft\console\Application as ConsoleApplication;
  *
  * @property ActionsService $actions
  * @property AltTagService $altTag
+ * @property ChatService $chat
  * @property DummyDataService $dummyData
  * @property FileManagementService $fileManagement
  * @property OpenAIService $openAi
@@ -68,6 +69,7 @@ class Sidekick extends Plugin
         $this->setComponents([
             'actions'        => ActionsService::class,
             'altTag'         => AltTagService::class,
+            'chat'           => ChatService::class,
             'dummyData'      => DummyDataService::class,
             'fileManagement' => FileManagementService::class,
             'openAi'         => OpenAIService::class,

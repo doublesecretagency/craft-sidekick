@@ -1,35 +1,31 @@
 <?php
 
-namespace doublesecretagency\sidekick\helpers;
+namespace doublesecretagency\sidekick\services;
 
 use Craft;
 use craft\errors\MissingComponentException;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
-use doublesecretagency\sidekick\Sidekick;
+use yii\base\Component;
 
-class ChatHistory
+class ChatService extends Component
 {
-    /**
-     * Session key for storing the conversation.
-     *
-     * @const
-     */
-    protected const SESSION = 'sidekickConversation';
-
     /**
      * Clear the existing conversation from the session.
      */
-    public static function clearConversation(): void
+    public function clearConversation(): void
     {
         try {
 
+            // Get the session service
+            $session = Craft::$app->getSession();
+
             // Clear the assistant and thread IDs from the session
-            Craft::$app->getSession()->remove(Session::ASSISTANT_ID);
-            Craft::$app->getSession()->remove(Session::THREAD_ID);
+            $session->remove(Session::ASSISTANT_ID);
+            $session->remove(Session::THREAD_ID);
 
             // Clear the conversation from the session
-            Craft::$app->getSession()->remove(static::SESSION);
+            $session->remove(Session::CHAT_HISTORY);
 
         } catch (MissingComponentException $e) {
 
@@ -44,12 +40,12 @@ class ChatHistory
      *
      * @return array
      */
-    public static function getConversation(): array
+    public function getConversation(): array
     {
         try {
 
             // Get the existing conversation from the session
-            $conversation = Craft::$app->getSession()->get(static::SESSION) ?? [];
+            $conversation = Craft::$app->getSession()->get(Session::CHAT_HISTORY) ?? [];
 
             // If not a valid conversation
             if (!$conversation || !is_array($conversation)) {
@@ -65,9 +61,12 @@ class ChatHistory
             // Log an error message
             Craft::error('Unable to get conversation from the session.', __METHOD__);
 
-            // Return a system message
+            // Return an error message
             return [
-                Sidekick::$plugin->openAi->newSystemMessage('Unable to load the conversation.')
+                new ChatMessage([
+                    'role' => ChatMessage::ERROR,
+                    'content' => 'Unable to load the conversation.'
+                ])
             ];
 
         }
@@ -76,19 +75,19 @@ class ChatHistory
     /**
      * Add a message to the conversation history.
      *
-     * @param ChatMessage $message
+     * @param array $message
      */
-    public static function addMessage(ChatMessage $message): void
+    public function addMessage(array $message): void
     {
         // Get the existing conversation from the session
-        $conversation = static::getConversation();
+        $conversation = $this->getConversation();
 
         // Append the new message to the conversation
-        $conversation[] = $message;
+        $conversation[] = new ChatMessage($message);
 
         try {
             // Save the updated conversation to the session
-            Craft::$app->getSession()->set(static::SESSION, $conversation);
+            Craft::$app->getSession()->set(Session::CHAT_HISTORY, $conversation);
         } catch (MissingComponentException $e) {
             // Log an error message
             Craft::error('Unable to save updated conversation to the session.', __METHOD__);

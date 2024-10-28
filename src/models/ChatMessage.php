@@ -4,7 +4,8 @@ namespace doublesecretagency\sidekick\models;
 
 use Craft;
 use craft\base\Model;
-use doublesecretagency\sidekick\helpers\ChatHistory;
+use doublesecretagency\sidekick\Sidekick;
+use yii\base\Exception;
 
 class ChatMessage extends Model
 {
@@ -38,16 +39,14 @@ class ChatMessage extends Model
     /**
      * Message constructor.
      *
-     * @param string $role
-     * @param string $content
-     * @param string $messageType
+     * @param array $message
      * @param array $config
      */
-    public function __construct(string $role, string $content, string $messageType = self::CONVERSATIONAL, array $config = [])
+    public function __construct(array $message, array $config = [])
     {
-        $this->role = $role;
-        $this->content = $content;
-        $this->messageType = $messageType;
+        $this->role        = $message['role']        ?? '';
+        $this->content     = $message['content']     ?? '';
+        $this->messageType = $message['messageType'] ?? self::CONVERSATIONAL;
         parent::__construct($config);
     }
 
@@ -73,15 +72,39 @@ class ChatMessage extends Model
         return $this;
     }
 
+    // ========================================================================= //
+
     /**
-     * Append message to the chat history.
+     * Add message to the chat history.
      *
      * @return ChatMessage for chaining
      */
-    public function appendToChatHistory(): ChatMessage
+    public function addToChatHistory(): ChatMessage
     {
-        // Add this message to the chat history
-        ChatHistory::addMessage($this);
+        // Add the message to the chat history
+        Sidekick::$plugin->chat->addMessage([
+            'role' => $this->role,
+            'content' => $this->content,
+            'messageType' => $this->messageType,
+        ]);
+
+        // Return the message for chaining
+        return $this;
+    }
+
+    /**
+     * Add message to the OpenAI thread.
+     *
+     * @return ChatMessage for chaining
+     * @throws Exception
+     */
+    public function addToOpenAiThread(): ChatMessage
+    {
+        // Add the message to the OpenAI thread
+        Sidekick::$plugin->openAi->addMessage([
+            'role' => $this->role,
+            'content' => $this->content,
+        ]);
 
         // Return the message for chaining
         return $this;
