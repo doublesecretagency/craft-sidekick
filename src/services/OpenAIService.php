@@ -4,16 +4,16 @@ namespace doublesecretagency\sidekick\services;
 
 use Craft;
 use craft\helpers\App;
+use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\helpers\ChatHistory;
-use doublesecretagency\sidekick\models\api\Message;
-use doublesecretagency\sidekick\models\api\Run;
+use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
+use OpenAI;
+use OpenAI\Client;
 use yii\base\Component;
 use yii\base\Exception;
 
@@ -30,14 +30,9 @@ class OpenAIService extends Component
     private string $_apiKey;
 
     /**
-     * @var string The endpoint URL for OpenAI's Assistants API.
+     * @var Client The OpenAI client for making API requests.
      */
-    private string $_apiUrl = 'https://api.openai.com';
-
-    /**
-     * @var Client The HTTP client for making API requests.
-     */
-    private Client $_httpClient;
+    private Client $_openAiClient;
 
     /**
      * @var string|null The assistant ID.
@@ -67,21 +62,22 @@ class OpenAIService extends Component
             throw new Exception('OpenAI API key is not set.');
         }
 
-        // Initialize the HTTP client if not already set
-        if (!isset($this->_httpClient)) {
-            $this->_httpClient = new Client();
+        // If the OpenAI client is not already set
+        if (!isset($this->_openAiClient)) {
+            // Create a new OpenAI client
+            $this->_openAiClient = OpenAI::client($this->_apiKey);
         }
     }
 
-    /**
-     * Sets the HTTP client for making API requests.
-     *
-     * @param Client $client The HTTP client.
-     */
-    public function setHttpClient(Client $client): void
-    {
-        $this->_httpClient = $client;
-    }
+//    /**
+//     * Sets the OpenAI client for making API requests.
+//     *
+//     * @param Client $client The OpenAI client.
+//     */
+//    public function setOpenAiClient(Client $client): void
+//    {
+//        $this->_openAiClient = $client;
+//    }
 
     // ========================================================================= //
 
@@ -98,122 +94,88 @@ class OpenAIService extends Component
     // ========================================================================= //
 
     /**
-     * Call the OpenAI API.
+     * Get the assistant ID.
      *
-     * @param string $method
-     * @param string $endpoint
-     * @param array $payload
-     * @return array
-     */
-    public function callApi(string $method, string $endpoint, array $payload = []): array
-    {
-        // Configure the API endpoint URL
-        $url = "{$this->_apiUrl}/{$endpoint}";
-
-        try {
-
-            // Set the default options
-            $options = [
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => "Bearer {$this->_apiKey}",
-                    'OpenAI-Beta' => 'assistants=v2',
-                ]
-            ];
-
-            // If the method is POST
-            if ($method === 'post') {
-                // Set the JSON payload
-                $options['json'] = $payload;
-            }
-
-            // Send the API request
-            $response = $this->_httpClient->$method($url, $options);
-
-            // Get the response status code and reason
-            $status = $response->getStatusCode();
-            $reason = $response->getReasonPhrase();
-
-            // If the API request fails
-            if ($status !== 200) {
-                // Log an error and return false
-                $error = "Request failed: [{$status}] {$reason}";
-                Craft::error($error, __METHOD__);
-                return [
-                    'success' => false,
-                    'error' => $error,
-                ];
-            }
-
-            // Extract the actual results from the API response
-            $results = json_decode($response->getBody()->getContents(), true);
-
-            // Make a copy of the results
-            $truncated = $results;
-
-            // Whether the item is a process object
-            $processObject = in_array($truncated['object'], ['assistant','thread.run']);
-
-            // Truncate the assistant instructions
-            if ($processObject) {
-                $truncated['instructions'] = 'You are an assistant that helps manage Twig templates and module files for a Craft CMS website...';
-            }
-
-            // Log the results
-            Craft::info("API response: ".json_encode($truncated), __METHOD__);
-
-            // Return results successfully
-            return [
-                'success' => true,
-                'results' => $results,
-            ];
-
-        } catch (GuzzleException|\Exception $e) {
-
-            // Log and return the error
-//            $error = "OpenAI API Request Exception: {$e->getMessage()}";
-            $error = $e->getMessage();
-            Craft::error($error, __METHOD__);
-            return [
-                'success' => false,
-                'error' => $error,
-            ];
-
-        }
-
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Get the API object ID.
-     *
-     * @param string $class
-     * @param string $sessionId
      * @return string|null
      */
-    private function _getApiObjectId(string $class, string $sessionId): ?string
+    private function _getAssistantId(): ?string
     {
+        // If assistant ID is already set, return it
+        if ($this->_assistantId) {
+            return $this->_assistantId;
+        }
+
         try {
             // Get the session service
             $session = Craft::$app->getSession();
 
-            // If object ID exists in the session, return it
-            if ($objectId = $session->get($sessionId)) {
-                return $objectId;
+            // If assistant ID exists in the session, return it
+            if ($assistantId = $session->get(Session::ASSISTANT_ID)) {
+                return $assistantId;
             }
 
-            // Prepend the namespace
-            $class = "doublesecretagency\\sidekick\\models\\api\\{$class}";
+            // Get the selected AI model from the session
+            $model = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
 
-            // Create the API object
-            $object = new $class();
+            // Create a new assistant
+            $assistant = $this->_openAiClient->assistants()->create([
+                'model' => $model,
+                'name' => 'Sidekick',
+                'instructions' => SystemPrompt::getPrompt(),
+//                'tools' => $this->_getTools()
+//                'tools' => [
+//                    [
+//                        'type' => 'code_interpreter',
+//                    ],
+//                ]
+            ]);
 
-            // Store the object ID in the session
-            $session->set($sessionId, $object->id);
+            // Store the assistant ID
+            $this->_assistantId = $assistant['id'];
 
-            // Return the object ID
-            return $object->id;
+            // Store the assistant ID in the session
+            $session->set(Session::ASSISTANT_ID, $assistant->id);
+
+            // Return the assistant ID
+            return $assistant->id;
+
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get the thread ID.
+     *
+     * @return string|null
+     */
+    private function _getThreadId(): ?string
+    {
+        // If thread ID is already set, return it
+        if ($this->_threadId) {
+            return $this->_threadId;
+        }
+
+        try {
+            // Get the session service
+            $session = Craft::$app->getSession();
+
+            // If thread ID exists in the session, return it
+            if ($threadId = $session->get(Session::THREAD_ID)) {
+                return $threadId;
+            }
+
+            // Create a new thread
+            $thread = $this->_openAiClient->threads()->create([]);
+
+            // Store the thread ID
+            $this->_threadId = $thread['id'];
+
+            // Store the thread ID in the session
+            $session->set(Session::THREAD_ID, $thread->id);
+
+            // Return the thread ID
+            return $thread->id;
 
         } catch (\Exception $e) {
             return null;
@@ -239,41 +201,25 @@ class OpenAIService extends Component
         }
 
         try {
-
             // Get the assistant and thread IDs
-            $this->_assistantId = $this->_assistantId ?? $this->_getApiObjectId('Assistant', Session::ASSISTANT_ID);
-            $this->_threadId    = $this->_threadId    ?? $this->_getApiObjectId('Thread', Session::THREAD_ID);
+            $this->_assistantId = $this->_getAssistantId();
+            $this->_threadId    = $this->_getThreadId();
 
             // Add a message to the thread
-            new Message($this->_threadId, [
+            $this->_openAiClient->threads()->messages()->create($this->_threadId, [
                 'role' => 'user',
                 'content' => $message->content,
             ]);
 
-            // Create a run
-            $run = new Run($this->_threadId, [
-                'assistant_id' => $this->_assistantId,
-//                'additional_instructions' => "Additional information for processing the request.",
+            // Run the thread
+            $this->_runThread();
+
+            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, [
+//                'limit' => 10,
             ]);
 
-            // Poll for run completion
-            $run->waitForCompletion();
-
-            // Get messages
-            $response = $this->callApi('get', "v1/threads/{$this->_threadId}/messages");
-
-            // If the API call was not successful
-            if (!($response['success'] ?? false)) {
-                $error = ($response['error'] ?? "Unknown error.");
-                Craft::error($error, __METHOD__);
-                throw new Exception($error);
-            }
-
-            // Get all messages
-            $messages = ($response['results']['data'] ?? []);
-
-            // Get the first message
-            $reply = ($messages[0]['content'][0]['text']['value'] ?? 'No message found.');
+            // Get reply from the assistant
+            $reply = $messages->data[0]->content[0]->text->value;
 
             // Create the greeting message
             $r = Sidekick::$plugin->openAi->newAssistantMessage($reply);
@@ -290,7 +236,6 @@ class OpenAIService extends Component
         } catch (RequestException|\Exception $e) {
 
             // Log and return the error
-//            $error = "OpenAI API Exception: {$e->getMessage()}";
             $error = $e->getMessage();
             Craft::error($error, __METHOD__);
             return [
@@ -299,6 +244,66 @@ class OpenAIService extends Component
             ];
 
         }
+    }
+
+    /**
+     * Run the thread.
+     *
+     * @return void
+     * @throws Exception
+     */
+    private function _runThread(): void
+    {
+        // Get the runs service
+        $service = $this->_openAiClient->threads()->runs();
+
+        // Create a new streaming run
+        $stream = $service->createStreamed($this->_threadId, [
+            'assistant_id' => $this->_assistantId,
+        ]);
+
+        // While the run is not completed
+        do {
+            // Loop through the stream
+            foreach ($stream as $response) {
+
+//$response->event; // 'thread.run.created' | 'thread.run.in_progress' | .....
+//$response->response; // ThreadResponse | ThreadRunResponse | ThreadRunStepResponse | ThreadRunStepDeltaResponse | ThreadMessageResponse | ThreadMessageDeltaResponse
+
+                // Switch based on the event type
+                switch ($response->event) {
+                    case 'thread.run.created':
+                    case 'thread.run.queued':
+                    case 'thread.run.completed':
+                    case 'thread.run.cancelling':
+                        // Set run and continue looping
+                        $run = $response->response;
+                        break;
+                    case 'thread.run.expired':
+                    case 'thread.run.cancelled':
+                    case 'thread.run.failed':
+                        // Set run and break the loop
+                        $run = $response->response;
+                        break 3;
+                    case 'thread.run.requires_action':
+
+                        throw new Exception('Time to implement tools!');
+
+//                        // Overwrite the stream with the new stream started by submitting the tool outputs
+//                        $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
+//                            'tool_outputs' => [
+//                                [
+//                                    'tool_call_id' => 'call_KSg14X7kZF2WDzlPhpQ168Mj',
+//                                    'output' => '12',
+//                                ]
+//                            ],
+//                        ]);
+                        break;
+                }
+            }
+        } while ($run->status !== 'completed');
+
+        // ...
     }
 
     // ========================================================================= //

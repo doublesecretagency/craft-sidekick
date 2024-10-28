@@ -8,7 +8,6 @@ use craft\web\Controller;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\helpers\ChatHistory;
-//use doublesecretagency\sidekick\models\api\ApiResponse;
 use doublesecretagency\sidekick\Sidekick;
 use Exception;
 use yii\web\BadRequestHttpException;
