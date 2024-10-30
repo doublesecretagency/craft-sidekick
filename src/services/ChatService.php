@@ -30,7 +30,7 @@ class ChatService extends Component
         } catch (MissingComponentException $e) {
 
             // Log an error message
-            Craft::error('Unable to clear conversation from the session.', __METHOD__);
+            Craft::error("Unable to clear conversation from the session.", __METHOD__);
 
         }
     }
@@ -59,13 +59,13 @@ class ChatService extends Component
         } catch (MissingComponentException $e) {
 
             // Log an error message
-            Craft::error('Unable to get conversation from the session.', __METHOD__);
+            Craft::error("Unable to get conversation from the session.", __METHOD__);
 
             // Return an error message
             return [
                 new ChatMessage([
                     'role' => ChatMessage::ERROR,
-                    'content' => 'Unable to load the conversation.'
+                    'content' => "Unable to load the conversation."
                 ])
             ];
 
@@ -79,6 +79,9 @@ class ChatService extends Component
      */
     public function addMessage(array $message): void
     {
+        // Track the message
+        Craft::info("Appending message to the conversation history.", __METHOD__);
+
         // Get the existing conversation from the session
         $conversation = $this->getConversation();
 
@@ -90,7 +93,7 @@ class ChatService extends Component
             Craft::$app->getSession()->set(Session::CHAT_HISTORY, $conversation);
         } catch (MissingComponentException $e) {
             // Log an error message
-            Craft::error('Unable to save updated conversation to the session.', __METHOD__);
+            Craft::error("Unable to save updated conversation to the session.", __METHOD__);
         }
     }
 }

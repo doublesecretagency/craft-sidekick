@@ -197,7 +197,7 @@ class ChatController extends Controller
                 ->addToOpenAiThread();
 
             // Run the OpenAI thread
-            $openAi->runThread();
+            $toolMessages = $openAi->runThread();
 
             // Get the latest assistant message
             $reply = $openAi->getLatestAssistantMessage();
@@ -210,13 +210,13 @@ class ChatController extends Controller
             // Return the results
             return $this->asJson([
                 'success' => true,
-                'messages' => [$reply],
+                'messages' => array_merge($toolMessages, [$reply]),
             ]);
 
         } catch (Exception $e) {
 
             // Record and return an error message
-            return $this->_error("Unable to send the message. {$e->getMessage()}");
+            return $this->_error($e->getMessage());
 
         }
     }

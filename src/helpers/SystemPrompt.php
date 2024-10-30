@@ -15,9 +15,9 @@ class SystemPrompt
     private static array $systemPromptFiles = [
         'introduction.md',
         'general-guidelines.md',
-        'formatting-style.md',
-        'security-compliance.md',
-        'examples.md',
+//        'formatting-style.md',
+//        'security-compliance.md',
+//        'examples.md',
     ];
 
     /**
@@ -30,6 +30,15 @@ class SystemPrompt
 
         // Get the path to the Sidekick plugin
         $path = Craft::getAlias('@doublesecretagency/sidekick');
+
+        /**
+         * IMPORTANT:
+         *
+         * To maximize AI caching,
+         * make sure to put the
+         * STATIC content FIRST, and
+         * the DYNAMIC content LAST.
+         */
 
         // Loop through each prompt file
         foreach (static::$systemPromptFiles as $file) {
@@ -57,7 +66,7 @@ class SystemPrompt
         }
 
         // Append the actions documentation to the system prompt
-        $systemPrompt = static::_appendActionsDocs($systemPrompt);
+//        $systemPrompt = static::_appendActionsDocs($systemPrompt);
 
         // Log that the system prompt has been compiled
         Craft::info("Compiled system prompt.", __METHOD__);

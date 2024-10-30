@@ -14,6 +14,7 @@ const SidekickChat = {
         ASSISTANT: 'assistant',
         USER: 'user',
         SYSTEM: 'system',
+        TOOL: 'tool',
         ERROR: 'error',
         SNIPPET: 'snippet',
     },
@@ -119,6 +120,10 @@ const SidekickChat = {
             case this.ROLE.SYSTEM:
                 sender = null;
                 messageClass = 'system-message';
+                break;
+            case this.ROLE.TOOL:
+                sender = null;
+                messageClass = 'tool-message';
                 break;
             case this.ROLE.ERROR:
                 sender = 'Error';

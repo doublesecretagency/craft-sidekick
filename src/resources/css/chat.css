@@ -40,6 +40,9 @@
 .chat-message.system-message {
     color: #147d64;
 }
+.chat-message.tool-message {
+    color: #127fbf;
+}
 .chat-message.error-message {
     color: #d81e23;
 }

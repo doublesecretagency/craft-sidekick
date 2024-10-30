@@ -59,14 +59,20 @@ class ChatMessage extends Model
      */
     public function log(): ChatMessage
     {
+        // Compile log message
+        $message = strtoupper($this->messageType).": {$this->content}";
+
+        // Default log type
+        $logType = 'info';
+
         // If the message is an error
         if (self::ERROR === $this->messageType) {
             // Log as an error
-            Craft::error("{$this->role}: {$this->content}", __METHOD__);
-        } else {
-            // Log as info
-            Craft::info("{$this->role}: {$this->content}", __METHOD__);
+            $logType = 'error';
         }
+
+        // Log the message
+        Craft::$logType($message, __METHOD__);
 
         // Return the message for chaining
         return $this;
@@ -100,6 +106,14 @@ class ChatMessage extends Model
      */
     public function addToOpenAiThread(): ChatMessage
     {
+        // If not a valid role for an OpenAI message
+        if (!in_array($this->role, ['assistant', 'user', 'system', 'tool'])) {
+            // Log as a warning
+            Craft::warning("Invalid message role for API: {$this->role}", __METHOD__);
+            // Return the message for chaining
+            return $this;
+        }
+
         // Add the message to the OpenAI thread
         Sidekick::$plugin->openAi->addMessage([
             'role' => $this->role,
