@@ -7,6 +7,7 @@ use craft\helpers\App;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
+use doublesecretagency\sidekick\events\DefineExtraToolsEvent;
 use doublesecretagency\sidekick\helpers\ApiTools;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
@@ -17,8 +18,11 @@ use OpenAI\Client;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponse;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredAction;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredActionFunctionToolCall;
+use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
+use ReflectionException;
+use ReflectionMethod;
 use yii\base\Component;
 use yii\base\Exception;
 
@@ -29,6 +33,11 @@ use yii\base\Exception;
  */
 class OpenAIService extends Component
 {
+    /**
+     * @event DefineExtraToolsEvent The event that is triggered when defining extra tools for the AI assistant.
+     */
+    public const EVENT_DEFINE_EXTRA_TOOLS = 'defineExtraTools';
+
     /**
      * @var string The API key for OpenAI.
      */
@@ -359,16 +368,23 @@ class OpenAIService extends Component
     {
         try {
             // Get the function name and arguments
-            $name = $toolCall->function->name; // 'createFile' | 'readFile' | 'updateFile' | 'deleteFile'
+            $fullName = $toolCall->function->name;
             $args = json_decode($toolCall->function->arguments, true);
 
+            // Split the full name into parts
+            $nameParts = explode('-', $fullName);
+
+            // Get the method and class names
+            $method = array_pop($nameParts);
+            $class = implode('\\', $nameParts);
+
             // If the tool function does not exist, throw an exception
-            if (!method_exists(ApiTools::class, $name)) {
-                throw new Exception("Tool method does not exist: {$name}");
+            if (!method_exists($class, $method)) {
+                throw new Exception("Tool method does not exist: {$class}::{$method}");
             }
 
             // Call the tool function
-            $results = ApiTools::$name($args);
+            $results = $class::$method($args);
 
             // Whether the results were successful
             $success = ($results['success'] ?? false);
@@ -425,6 +441,7 @@ class OpenAIService extends Component
      * Available functions for the API to call.
      *
      * @return array[]
+     * @throws ReflectionException
      */
     private function _getTools(): array
     {
@@ -441,46 +458,68 @@ class OpenAIService extends Component
             ]
         ];
 
-        // Get all methods from the ApiTools class
-        $toolFunctions = (new ReflectionClass(ApiTools::class))->getMethods();
+        // Initialize the tool set with native tools
+        $toolSet = [ApiTools::class];
 
-        // Create a new instance of the DocBlockFactory
-        $docFactory = DocBlockFactory::createInstance();
+        // Give plugins/modules a chance to add custom tools
+        if ($this->hasEventHandlers(self::EVENT_DEFINE_EXTRA_TOOLS)) {
+            // Create a new DefineExtraToolsEvent
+            $event = new DefineExtraToolsEvent();
+            // Trigger the event
+            $this->trigger(self::EVENT_DEFINE_EXTRA_TOOLS, $event);
+            // Append any extra tools to the tool set
+            $toolSet = array_merge($toolSet, $event->extraTools);
+        }
 
-        // Loop through each tool function
-        foreach ($toolFunctions as $toolFunction) {
+        // Loop through each tool class
+        foreach ($toolSet as $toolClass) {
 
-            // Get the method's docblock
-            $docBlock = $docFactory->create($toolFunction->getDocComment());
+            // Get all class methods
+            $toolFunctions = (new ReflectionClass($toolClass))->getMethods(ReflectionMethod::IS_PUBLIC);
 
-            // Get the method details
-            $name = $toolFunction->getName();
-            $description = $docBlock->getSummary();
+            // Create a new instance of the DocBlockFactory
+            $docFactory = DocBlockFactory::createInstance();
 
-            // Get the method's parameters
-            $params = $docBlock->getTagsByName('param');
+            // Loop through each tool function
+            foreach ($toolFunctions as $toolFunction) {
 
-            // Initialize the properties array
-            $properties = [];
+                // Get the method's docblock
+                $docBlock = $docFactory->create($toolFunction->getDocComment());
 
-            // Loop through each parameter
-            foreach ($params as $param) {
+                // Get the method details
+                $name = $toolFunction->getName();
+                $description = $docBlock->getSummary();
 
-                // Get the parameter details
-                $paramName = $param->getVariableName();
-                $paramType = (string) $param->getType();
-                $paramDesc = $param->getDescription()->render();
+                // Get the method's parameters
+                $params = $docBlock->getTagsByName('param');
 
-                // Add the parameter to the properties array
-                $properties[$paramName] = [
-                    'type' => $paramType,
-                    'description' => $paramDesc,
-                ];
+                // Initialize the properties array
+                $properties = [];
 
+                // Loop through each parameter
+                foreach ($params as $param) {
+                    /** @var Param $param */
+
+                    // Get the parameter details
+                    $paramName = $param->getVariableName();
+                    $paramType = (string) $param->getType();
+                    $paramDesc = $param->getDescription()?->render();
+
+                    // Add the parameter to the properties array
+                    $properties[$paramName] = [
+                        'type' => $paramType,
+                        'description' => $paramDesc,
+                    ];
+
+                }
+
+                // Generate a unique full name for the tool
+                $fullName = str_replace('\\', '-', $toolClass)."-{$name}";
+
+                // Add the function to the list of tools
+                $tools[] = $this->_toolFunction($fullName, $description, $properties);
             }
 
-            // Add the function to the list of tools
-            $tools[] = $this->_toolFunction($name, $description, $properties);
         }
 
         // Return all available tools
