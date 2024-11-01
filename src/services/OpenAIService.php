@@ -309,6 +309,9 @@ class OpenAIService extends Component
                             throw new Exception("Unknown required action type: {$requiredAction->type}");
                         }
 
+                        // Initialize an array to collect all tool outputs
+                        $allToolOutputs = [];
+
                         // Loop through the tool calls
                         foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
 
@@ -332,17 +335,17 @@ class OpenAIService extends Component
                             // Append the message
                             $toolMessages[] = $results['message'];
 
-                            // Overwrite the stream with the new stream started by submitting the tool outputs
-                            $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
-                                'tool_outputs' => [
-                                    [
-                                        'tool_call_id' => $toolCall->id,
-                                        'output' => $results['output'],
-                                    ]
-                                ],
-                            ]);
-
+                            // Collect the tool output
+                            $allToolOutputs[] = [
+                                'tool_call_id' => $toolCall->id,
+                                'output' => $results['output'],
+                            ];
                         }
+
+                        // Submit all tool outputs at once
+                        $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
+                            'tool_outputs' => $allToolOutputs,
+                        ]);
 
                         break;
                 }
