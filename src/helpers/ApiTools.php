@@ -1,6 +1,5 @@
 <?php
 
-/** @noinspection PhpDocSignatureInspection */
 /** @noinspection PhpDocMissingThrowsInspection */
 
 namespace doublesecretagency\sidekick\helpers;
@@ -15,13 +14,8 @@ class ApiTools
      * @param string $content Content to include in the file.
      * @return array
      */
-    public static function createFile(array $args): array
+    public static function createFile(string $directory, string $file, string $content): array
     {
-        // Get parameters
-        $directory = $args['directory'] ?? null;
-        $file      = $args['file']      ?? null;
-        $content   = $args['content']   ?? null;
-
         // TEMP
         if (random_int(0, 4)) {
             return [
@@ -45,12 +39,8 @@ class ApiTools
      * @param string $file The name of the file to be deleted.
      * @return array
      */
-    public static function deleteFile(array $args): array
+    public static function deleteFile(string $directory, string $file): array
     {
-        // Get parameters
-        $directory = $args['directory'] ?? null;
-        $file      = $args['file']      ?? null;
-
         // TEMP
         if (random_int(0, 4)) {
             return [

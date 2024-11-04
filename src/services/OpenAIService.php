@@ -387,7 +387,7 @@ class OpenAIService extends Component
             }
 
             // Call the tool function
-            $results = $class::$method($args);
+            $results = $class::$method(...$args);
 
             // Whether the results were successful
             $success = ($results['success'] ?? false);

@@ -43,13 +43,8 @@ class MyCustomTools
     * @param string $body Message body for the outgoing email.
     * @return array
     */
-   public static function sendEmailMessage(array $args): array
+   public static function sendEmailMessage(string $user, string $subject, string $body): array
    {
-        // Get parameters
-        $user    = $args['user']    ?? null;
-        $subject = $args['subject'] ?? null;
-        $body    = $args['body']    ?? null;
-
        // Your implementation to send an email message
        // to a specified User with the provided details.
    }
@@ -61,11 +56,8 @@ class MyCustomTools
     * @param string $datetime Datetime of the event.
     * @return array
     */
-   public static function addCalendarEvent(array $args): array
+   public static function addCalendarEvent(string $event, string $datetime): array
    {
-        $event    = $args['event']    ?? null;
-        $datetime = $args['datetime'] ?? null;
-        
        // Your implementation to add an event to the calendar
        // For example, create a new entry in the 'events' section
        // with the provided details.
