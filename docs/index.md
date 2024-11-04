@@ -35,36 +35,16 @@ hero:
     - theme: brand
       text: Get Started →
       link: /getting-started/
-#    - theme: alt
-#      text: Events
-#      link: /events/
-#    - theme: alt
-#      text: Messages
-#      link: /messages/
-#    - theme: alt
-#      text: Recipients
-#      link: /recipients/
 
-#features:
-#  - icon: ⚙️
-#    title: Triggered by System Events
-#    details: Choose which Craft events will send Notifications. Each Notification can be configured independently.
-#  - icon: ％
-#    title: Customized Twig Messages
-#    details: Create custom messages based on your own Twig logic. Messages can use special variables about the recipient and affected element.
-#  - icon: 📭
-#    title: Variety of Recipients
-#    details: When sending a message to multiple users, each recipient will receive their own personalized copy of the Twig message. 
 ---
 
 ## Introduction
 
-Sidekick is a plugin for Craft CMS that integrates AI capabilities directly into your control panel. It provides features like an AI chat interface and automatic alt text generation for images, enhancing your workflow and productivity.
+Sidekick is a powerful plugin for Craft CMS that brings AI capabilities directly into your control panel. Its primary feature is an AI-powered chat interface that assists you in various tasks, enhancing your workflow and productivity.
 
 ---
 
 [Getting Started](getting-started/index.md) |
 [Features](features/index.md) |
-[Usage Examples](usage-examples/index.md) |
-[Guides](guides/index.md) |
-[Logging](logging.md)
+[Usage Examples](examples/index.md) |
+[Guides](guides/index.md)

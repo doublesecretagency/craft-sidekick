@@ -1,11 +1,7 @@
----
-description:
----
-
 # Guides
 
 - [Best Practices for Using AI in Craft CMS](#best-practices-for-using-ai-in-craft-cms)
-- [Optimizing Alt Text for Accessibility](#optimizing-alt-text-for-accessibility)
+- [Using the Clear Conversation Feature](#using-the-clear-conversation-feature)
 
 ## Best Practices for Using AI in Craft CMS
 
@@ -13,8 +9,16 @@ description:
 - **Fine-Tune Prompts**: Be specific with your requests to get more accurate responses.
 - **Stay Updated**: Keep your plugin updated to benefit from the latest features and improvements.
 
-## Optimizing Alt Text for Accessibility
+## Using the Clear Conversation Feature
 
-- **Be Descriptive**: Ensure the alt text provides a clear description of the image content.
-- **Keep It Concise**: Aim for a brief description, typically 125 characters or less.
-- **Avoid Redundancy**: Do not include phrases like "image of" or "picture of."
+- The **Clear Conversation** button resets your chat session.
+- Useful when you want to:
+    - Start a new topic.
+    - Apply changes made in settings (e.g., switch AI models).
+    - Clear clutter from previous interactions.
+
+## Optimizing Your Workflow
+
+- **Leverage Custom Tools**: Utilize the [Define Extra Tools Event](../features/define-extra-tools-event.md) to add functionalities.
+- **Integrate with Other Plugins**: Sidekick can interact with other plugins, enhancing its utility.
+- **Security Considerations**: Ensure that any custom tools or extensions are secure and tested.

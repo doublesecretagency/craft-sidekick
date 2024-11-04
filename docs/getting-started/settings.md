@@ -1,19 +1,43 @@
 ---
-description: As an alternative to using the plugin's PHP config file, you can manage the Twilio API credentials via the plugin's Settings page.
+description: Manage the OpenAI API key and other settings for Sidekick.
 ---
 
 # Settings Page
 
 To access the plugin settings, log into your control panel and visit **Settings > Sidekick**.
 
-### Twilio API Credentials
+## OpenAI API Key
 
-Learn how to manage the [Twilio API credentials](/getting-started/twilio).
+Sidekick requires an OpenAI API key to function. You can obtain one from your [OpenAI account](https://platform.openai.com/account/api-keys).
 
-In order to use Twilio to send SMS messages, properly configured credentials are **required**.
+1. Enter your OpenAI API key in the **API Key** field.
 
-[//]: # (<img src="/images/settings/twilio-settings.png" alt="Screenshot of Twilio API credentials settings" style="width:690px; margin-top:10px">)
+[//]: # (   <img src="/images/settings/openai-api-key.png" alt="OpenAI API Key Settings" style="width:650px; margin-top:10px">)
 
-Each field can be set directly using an [environment variable](https://craftcms.com/docs/4.x/config/#control-panel-settings) to provide an additional layer of security and portability.
+2. **Save** the settings.
 
-[//]: # (<img src="/images/settings/twilio-env.png" alt="Screenshot of Twilio API credentials provided via environment variables" style="width:690px; margin-top:10px">)
+### Using Environment Variables
+
+It's recommended to use an [environment variable](https://craftcms.com/docs/4.x/config/#control-panel-settings) for your API key to enhance security and portability.
+
+1. Add the following to your `.env` file:
+
+```dotenv
+OPENAI_API_KEY="your-openai-api-key"
+```
+
+2. Reference the environment variable in the settings field using `$` syntax:
+
+```
+$OPENAI_API_KEY
+```
+
+## AI Model Selection
+
+- Choose between different AI models depending on your requirements.
+- **Note**: Changing the model will take effect **only after starting a new conversation**.
+
+## Additional Settings
+
+- **Timeouts**: Configure request timeouts as needed.
+- **Logging**: While Sidekick does not maintain a separate logging system, it utilizes Craft’s native logging.

@@ -2,7 +2,6 @@
 description: TBD
 ---
 
-# Examples
+# Usage Examples
 
-- [Using the Chat Interface](using-the-chat-interface.md)
-- [Generating Alt Text for Images](generating-alt-text-for-images.md)
+- [Using the Chat Window](using-the-chat-window.md)

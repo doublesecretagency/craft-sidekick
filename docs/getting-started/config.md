@@ -4,7 +4,7 @@ description: Using a PHP config file, you can override several of the plugin's s
 
 # PHP Config File
 
-Everything on the plugin's [Settings](/getting-started/settings) page can also be managed via PHP in a config file. By setting these values in `config/sidekick.php`, they take precedence over whatever may be set in the control panel.
+Everything on the plugin's [Settings](settings.md) page can also be managed via PHP in a config file. By setting these values in `config/sidekick.php`, they take precedence over whatever may be set in the control panel.
 
 ```shell
 # Copy this file...
@@ -18,48 +18,21 @@ Much like the `db.php` and `general.php` files, `sidekick.php` is [environmental
 
 ```php
 return [
-
-    // Twilio (only needed if using Twilio to send SMS messages)
-    'twilioAccountSid'  => getenv('TWILIO_ACCOUNT_SID'),
-    'twilioAuthToken'   => getenv('TWILIO_AUTH_TOKEN'),
-    'twilioPhoneNumber' => getenv('TWILIO_PHONE_NUMBER'),
-
-    // Phone number to use for SMS testing purposes
-    'testToPhoneNumber' => getenv('TEST_TO_PHONE_NUMBER'),
-
-    // Adjust the default Twig sandbox configuration
-    'twigSandbox' => []
-
+    // OpenAI API Key
+    'openAiApiKey' => getenv('OPENAI_API_KEY')
 ];
 ```
 
-## Settings available via Control Panel
+## Settings Available via Control Panel
 
-Twilio API credentials can also be managed on the [Settings](/getting-started/settings) page (preferably using `env` values).
+The OpenAI API key and other settings can also be managed on the [Settings](/getting-started/settings) page (preferably using `env` values).
 
-Learn more about managing your [Twilio API credentials](/getting-started/twilio).
+## Settings Available Only via PHP File
 
-## Settings available only via PHP file
+Some advanced configurations may only be available through the PHP config file. Refer to the plugin documentation or source code for more details.
 
-### `testToPhoneNumber`
+### `openAiApiKey`
 
-_string_|_null_ - Defaults to `null`.
+_string_ - Defaults to `null`.
 
-Recipient phone number to intercept all outbound SMS messages. Similar to [`testToEmailAddress`](https://craftcms.com/docs/4.x/config/general.html#testtoemailaddress).
-
-Set the testing phone number in your local `.env` file, then load it via the PHP config file:
-
-```dotenv
-# Testing phone number in local environment
-TEST_TO_PHONE_NUMBER="888-555-4444"
-```
-
-### `twigSandbox`
-
-_array_ - Defaults to `[]` (changes none of the defaults).
-
-Optionally adjust the default Twig sandbox configuration.
-
-:::warning Configuration Instructions
-For more details on how to use this powerful feature, please consult the [Twig Sandbox](/messages/twig-sandbox) page.
-:::
+The OpenAI API key to use for all requests.

@@ -30,7 +30,7 @@ To install the Sidekick plugin via the plugin store, follow these steps:
     </div>
     <div>
         <strong style="font-size:17px">Sidekick</strong>
-        <div style="font-size:15px; margin-top:9px;">Send custom Twig messages when Craft events are triggered.</div>
+        <div style="font-size:15px; margin-top:9px;">Build complex Craft sites in the blink of an eye.</div>
         <p style="color:#8f98a3 !important; font-weight:normal;">$99</p>
     </div>
 </div>

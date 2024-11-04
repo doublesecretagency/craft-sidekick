@@ -40,8 +40,8 @@ export default defineConfig({
         items: [
           {
             items: [
-              {text: 'AI Chat Interface', link: '/features/ai-chat-interface'},
-              {text: 'Automatic Alt Text Generation', link: '/features/automatic-alt-text-generation'}
+              {text: 'Chat Window', link: '/features/chat-window'},
+              {text: 'Define Extra Tools Event', link: '/features/define-extra-tools-event'}
             ]
           }
         ]
@@ -51,8 +51,7 @@ export default defineConfig({
         items: [
           {
             items: [
-              {text: 'Using the Chat Interface', link: '/examples/using-the-chat-interface'},
-              {text: 'Generating Alt Text for Images', link: '/examples/generating-alt-text-for-images'}
+              {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'}
             ]
           }
         ]
@@ -63,15 +62,9 @@ export default defineConfig({
           {
             items: [
               {text: 'Best Practices for Using AI in Craft CMS', link: '/guides/#best-practices-for-using-ai-in-craft-cms'},
-              {text: 'Optimizing Alt Text for Accessibility', link: '/guides/#optimizing-alt-text-for-accessibility'}
+              {text: 'Using the Clear Conversation Feature', link: '/guides/#using-the-clear-conversation-feature'}
             ]
           }
-        ]
-      },
-      {
-        text: 'More',
-        items: [
-          {text: 'Logging', link: '/logging'}
         ]
       }
     ],
@@ -86,11 +79,12 @@ export default defineConfig({
               text: 'Overview',
               link: '/getting-started/',
               items: [
-                {text: 'Install via Plugin Store', link: '/getting-started/installation#via-plugin-store'},
-                {text: 'Install via CLI',          link: '/getting-started/installation#via-console-commands'}
+                {text: 'Install via Plugin Store', link: '/getting-started/#installation-via-plugin-store'},
+                {text: 'Install via CLI',          link: '/getting-started/#installation-via-console-commands'}
               ]
             },
-            {text: 'Configuration', link: '/getting-started/configuration'}
+            {text: 'Settings Page', link: '/getting-started/settings'},
+            {text: 'PHP Config File', link: '/getting-started/config'}
           ]
         }
       ],
@@ -101,8 +95,8 @@ export default defineConfig({
           text: 'Features',
           items: [
             {text: 'Overview', link: '/features/'},
-            {text: 'AI Chat Interface', link: '/features/ai-chat-interface'},
-            {text: 'Automatic Alt Text Generation', link: '/features/automatic-alt-text-generation'}
+            {text: 'Chat Window', link: '/features/chat-window'},
+            {text: 'Define Extra Tools Event', link: '/features/define-extra-tools-event'}
           ]
         }
       ],
@@ -113,8 +107,7 @@ export default defineConfig({
           text: 'Examples',
           items: [
             {text: 'Overview', link: '/examples/'},
-            {text: 'Using the Chat Interface', link: '/examples/using-the-chat-interface'},
-            {text: 'Generating Alt Text for Images', link: '/examples/generating-alt-text-for-images'}
+            {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'}
           ]
         }
       ],
@@ -125,17 +118,7 @@ export default defineConfig({
           text: 'Guides',
           items: [
             {text: 'Best Practices for Using AI in Craft CMS', link: '/guides/#best-practices-for-using-ai-in-craft-cms'},
-            {text: 'Optimizing Alt Text for Accessibility', link: '/guides/#optimizing-alt-text-for-accessibility'}
-          ]
-        }
-      ],
-
-      // More
-      '/': [
-        {
-          text: 'More',
-          items: [
-            {text: 'Logging', link: '/logging'}
+            {text: 'Using the Clear Conversation Feature', link: '/guides/#using-the-clear-conversation-feature'}
           ]
         }
       ]
