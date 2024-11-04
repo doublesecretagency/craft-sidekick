@@ -2,9 +2,10 @@
 
 ## Example: Generating a Two-Column Layout
 
-**You:** "Please create a two-column layout for my homepage, with recent blog posts on the left and upcoming events on the right."
-
-**Sidekick:** "Sure! Here's a basic Twig template for a two-column layout:
+<div class="chat-window">
+  <div class="user-message"><strong>You:</strong> Please create a two-column layout for my homepage, with recent blog posts on the left and upcoming events on the right.</div>
+  <div class="assistant-message"><strong>Sidekick:</strong> Sure! Here's a basic Twig template for a two-column layout:</div>
+</div>
 
 ```twig
 <div class="container">
@@ -31,9 +32,10 @@
 
 ## Example: Adding a Navigation Menu
 
-**You:** "Can you help me create a navigation menu that lists all the sections in my site?"
-
-**Sidekick:** "Absolutely! Here’s a Twig snippet to generate a navigation menu:"
+<div class="chat-window">
+  <div class="user-message"><strong>You:</strong> Can you help me create a navigation menu that lists all the sections in my site?</div>
+  <div class="assistant-message"><strong>Sidekick:</strong> Absolutely! Here’s a Twig snippet to generate a navigation menu:</div>
+</div>
 
 ```twig
 <nav>

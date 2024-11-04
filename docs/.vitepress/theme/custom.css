@@ -14,3 +14,37 @@ img.dropshadow {
     border-radius: 0.30rem;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
+
+/* Mimic chat window format */
+.chat-window {
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+    border: 1px solid #bfbfbf;
+    border-left: 2px solid #127fbf;
+    border-radius: 2px;
+    max-width: 80%;
+    margin: 1.2em 0.75em 1.5em;
+    padding: 1.2em 1.6em 0.75em;
+    box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.1);
+}
+.chat-window > div {
+    margin-bottom: 0.5em;
+}
+.chat-window .user-message {
+    color: #333333;
+}
+.chat-window .assistant-message {
+    color: #333333;
+}
+.chat-window .system-message {
+    color: #127fbf;
+}
+.chat-window .error-message {
+    color: #d81e23;
+}
+.chat-window ul,
+.chat-window ol {
+    margin-top: 0.7em;
+    margin-bottom: 0.2em;
+    padding-left: 1.7em;
+}

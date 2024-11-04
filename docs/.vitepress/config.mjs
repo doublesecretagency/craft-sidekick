@@ -49,9 +49,12 @@ export default defineConfig({
       {
         text: 'Examples',
         items: [
+          {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'},
           {
+            text: 'Custom Tools',
             items: [
-              {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'}
+              {text: 'Send An Email',   link: '/examples/send-an-email'},
+              {text: 'Add To Calendar', link: '/examples/add-to-calendar'}
             ]
           }
         ]
@@ -101,13 +104,24 @@ export default defineConfig({
         }
       ],
 
+      // Custom Tools
+      '/custom-tools/': [
+      ],
+
       // Examples
       '/examples/': [
         {
           text: 'Examples',
           items: [
             {text: 'Overview', link: '/examples/'},
-            {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'}
+            {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'},
+            {
+              text: 'Custom Tools',
+              items: [
+                {text: 'Send An Email', link: '/examples/send-an-email'},
+                {text: 'Add To Calendar', link: '/examples/add-to-calendar'}
+              ]
+            }
           ]
         }
       ],

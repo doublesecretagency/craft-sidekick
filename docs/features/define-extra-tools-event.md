@@ -8,6 +8,12 @@ One of Sidekick's most powerful features is the ability to extend its functional
 - These tools can be defined in your plugins or modules and made available to the AI assistant.
 - This opens up endless possibilities for integrating Sidekick with your custom workflows.
 
+## Benefits
+
+- **Customization**: Tailor Sidekick to fit your specific needs.
+- **Integration**: Seamlessly integrate with other plugins or custom code.
+- **Extendability**: Add as many tools as you require, enhancing Sidekick's capabilities.
+
 ## How to Use It
 
 1. **Listen to the Event**: In your plugin or module, listen for the `EVENT_DEFINE_EXTRA_TOOLS` event.
@@ -30,49 +36,54 @@ Event::on(
 
 2. **Define Your Tools**: Create a class with static methods for each of the tools you want to add.
 
+::: warning The docblock is critical!
+Make sure to include a thorough docblock for each method, providing a description of the tool, its parameters, and its return value. **This documentation teaches Sidekick how to use your tool.**
+:::
+
 ```php
-namespace mynamespace;
+namespace modules\mymodule\tools;
 
 class MyCustomTools
 {
    /**
-    * Send an email message to a specified User.
+    * A custom tool function to be triggered via the Sidekick chat window.
     *
-    * @param string $user Name of the user to send the email to.
-    * @param string $subject Subject line for the outgoing email.
-    * @param string $body Message body for the outgoing email.
-    * @return array
+    * @param string $foo A parameter for the custom tool function.
+    * @param string $bar Another parameter for the custom tool function.
+    * @return array A success or error message.
     */
-   public static function sendEmailMessage(string $user, string $subject, string $body): array
+   public static function myToolFunction(string $foo, string $bar): array
    {
-       // Your implementation to send an email message
-       // to a specified User with the provided details.
-   }
+       /**
+        * Your custom tool function can do whatever you want.
+        * It should return an array with a success message if the operation was successful,
+        * or an error message if the operation failed.
+        */
+       
+        // If validation fails
+        if (!$valid) {
+            // Return error message
+            return [
+                'success' => false,
+                'message' => "Unable to {$foo} with {$bar}."
+            ];
+        }
 
-   /**
-    * Adds an event to the calendar.
-    *
-    * @param string $event Description of the event.
-    * @param string $datetime Datetime of the event.
-    * @return array
-    */
-   public static function addCalendarEvent(string $event, string $datetime): array
-   {
-       // Your implementation to add an event to the calendar
-       // For example, create a new entry in the 'events' section
-       // with the provided details.
+        // Return success message
+        return [
+            'success' => true,
+            'message' => "Successfully performed {$foo} with {$bar}."
+        ];
    }
 }
 ```
 
-3. **Utilize in Chat**: You can now instruct Sidekick to perform actions using your custom tool.
+The method must return an array with two keys:
+- `success`: A boolean indicating whether the operation was successful.
+- `message`: A string containing a message to either:
+  - **On error:** Display in the chat window. 
+  - **On success:** Send back to the API for further processing.
 
-**You:** "Add an event titled 'Team Meeting' to the calendar on October 15th at 10 AM."
+To see what's possible, check out some of the [Custom Tools](/examples/) examples.
 
-**Sidekick:** "I've added the event 'Team Meeting' to your calendar on October 15th at 10 AM."
-
-## Benefits
-
-- **Customization**: Tailor Sidekick to fit your specific needs.
-- **Integration**: Seamlessly integrate with other plugins or custom code.
-- **Extendability**: Add as many tools as you require, enhancing Sidekick's capabilities.
+**There is virtually no limit to what you can trigger with custom tools!** As long as it can be wrapped in PHP, it can be triggered via the Sidekick chat window.
