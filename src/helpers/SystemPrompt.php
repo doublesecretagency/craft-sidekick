@@ -13,11 +13,7 @@ class SystemPrompt
      * @var array The list of system prompt files to compile.
      */
     private static array $systemPromptFiles = [
-        'introduction.md',
-        'general-guidelines.md',
-//        'formatting-style.md',
-//        'security-compliance.md',
-//        'examples.md',
+        'updated.md',
     ];
 
     /**
