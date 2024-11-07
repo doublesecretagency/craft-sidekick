@@ -85,7 +85,6 @@ class ChatController extends Controller
      * Retrieves the conversation history from the session.
      *
      * @return Response
-     * @throws BadRequestHttpException
      */
     public function actionGetConversation(): Response
     {

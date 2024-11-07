@@ -63,3 +63,11 @@ The tool functions are defined via the OpenAI API and enable you to perform spec
 ---
 
 By following these guidelines, you can effectively assist users in managing their Twig templates and module files, enhancing their productivity within the Craft CMS website.
+
+## Snippet Syntax Highlighting
+
+When providing code snippets, ensure that the snippet is enclosed with triple-backticks (```) and the appropriate language denotation for syntax highlighting. For example:
+
+```html
+<p>Hello world!</p>
+```

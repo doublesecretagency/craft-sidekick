@@ -3,7 +3,7 @@ const SidekickChat = {
     // Properties
     chatWindow: document.getElementById('chat-window'),
     chatForm: document.getElementById('chat-form'),
-    chatMessage: document.getElementById('chat-message'),
+    chatInput: document.getElementById('chat-input'),
     clearButton: document.getElementById('clear-conversation-button'),
     spinner: document.getElementById('chat-spinner'),
     aiModelSelect: document.getElementById('ai-model-select'),
@@ -31,18 +31,26 @@ const SidekickChat = {
         this.loadConversation();
 
         // Focus the message input
-        if (this.chatMessage) {
-            this.chatMessage.focus();
+        if (this.chatInput) {
+            this.chatInput.focus();
         }
 
         // Load selected AI model
         this.loadSelectedModel();
+
+        // Configure marked to use highlight.js
+        marked.setOptions({
+            highlight: function (code, language) {
+                const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+                return hljs.highlight(code, { language: validLanguage }).value;
+            },
+        });
     },
 
     // Bind event listeners
     bindEvents: function () {
         // Handle keydown events for "Enter" and "Shift + Enter" in the message input
-        this.chatMessage.addEventListener('keydown', (event) => {
+        this.chatInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Prevent newline
                 this.chatForm.dispatchEvent(new Event('submit')); // Submit form
@@ -74,7 +82,7 @@ const SidekickChat = {
         this.spinner.setAttribute('aria-hidden', 'false');
         this.sendButton.disabled = true;
         this.clearButton.disabled = true;
-        this.chatMessage.disabled = true;
+        this.chatInput.disabled = true;
     },
 
     // Hide the spinner and refocus the message input
@@ -83,19 +91,8 @@ const SidekickChat = {
         this.spinner.setAttribute('aria-hidden', 'true');
         this.sendButton.disabled = false;
         this.clearButton.disabled = false;
-        this.chatMessage.disabled = false;
-        this.chatMessage.focus(); // Refocus the message input
-    },
-
-    // Escape HTML characters to prevent XSS attacks
-    escapeHtml: function (text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-        };
-        return text.replace(/[&<>"]/g, (m) => map[m]);
+        this.chatInput.disabled = false;
+        this.chatInput.focus(); // Refocus the message input
     },
 
     // Append a message to the chat window
@@ -111,11 +108,11 @@ const SidekickChat = {
         switch (role) {
             case this.ROLE.ASSISTANT:
                 sender = 'Sidekick';
-                messageClass = 'code-snippet';
+                messageClass = 'assistant-message';
                 break;
             case this.ROLE.USER:
                 sender = 'You';
-                messageClass = null;
+                messageClass = 'user-message';
                 break;
             case this.ROLE.SYSTEM:
                 sender = null;
@@ -131,21 +128,37 @@ const SidekickChat = {
                 break;
         }
 
-        // Escape the message content
-        let messageContent = this.escapeHtml(message).replace(/\n/g, '<br>');
+        // Parse Markdown content
+        let messageContent = marked.parse(message);
 
-        // If a sender was specified, prepend the sender
-        if (sender) {
-            messageContent = `<strong>${sender}:</strong> ${messageContent}`;
-        }
+        // Sanitize the message content
+        messageContent = DOMPurify.sanitize(messageContent);
 
-        // If a message class is provided, add it to the message element
+        // Create sender div
+        const senderElement = document.createElement('div');
+        senderElement.classList.add('sender-column');
+        senderElement.textContent = sender ? `${sender}:` : '';
+
+        // Create content div
+        const contentElement = document.createElement('div');
+        contentElement.classList.add('content-column');
+        contentElement.innerHTML = messageContent;
+
+        // Loop through all code snippets
+        contentElement.querySelectorAll('pre code').forEach((snippet) => {
+            // Apply highlighting to the snippet
+            hljs.highlightElement(snippet);
+        });
+
+        // If a message class is provided
         if (messageClass) {
+            // Add class to the message element
             messageElement.classList.add(messageClass);
         }
 
-        // Set the message content
-        messageElement.innerHTML = messageContent;
+        // Append sender and content to the message element
+        messageElement.appendChild(senderElement);
+        messageElement.appendChild(contentElement);
 
         // Add the message to the chat window
         this.chatWindow.appendChild(messageElement);
@@ -204,7 +217,7 @@ const SidekickChat = {
 
     // Send message to the server
     sendMessage: function () {
-        const message = this.chatMessage.value.trim();
+        const message = this.chatInput.value.trim();
         if (!message) return;
 
         if (message.length > this.MAX_MESSAGE_LENGTH) {
@@ -216,7 +229,7 @@ const SidekickChat = {
             this.ROLE.USER,
             message
         );
-        this.chatMessage.value = '';
+        this.chatInput.value = '';
 
         // Show the spinner and disable inputs
         this.showSpinner();
@@ -382,7 +395,7 @@ const SidekickChat = {
                         // Load the existing conversation
                         this.loadConversation();
                         // Focus the message input
-                        this.chatMessage.focus();
+                        this.chatInput.focus();
                     } else {
                         const error = (data.error || 'Failed to clear the conversation.');
                         this.appendMessage(
