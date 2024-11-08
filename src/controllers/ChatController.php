@@ -9,7 +9,7 @@ use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
-use Exception;
+use yii\base\Exception;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -109,7 +109,7 @@ class ChatController extends Controller
                 'greeting' => $greeting ?? null,
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             // Record and return an error message
             return $this->_error("Unable to get the conversation. {$e->getMessage()}");
@@ -142,7 +142,7 @@ class ChatController extends Controller
                 'message' => 'Conversation cleared.',
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             // Record and return an error message
             return $this->_error("Unable to clear the conversation. {$e->getMessage()}");
@@ -178,7 +178,7 @@ class ChatController extends Controller
             if ($greeting && !$chatHistory) {
                 // Compile the greeting message
                 (new ChatMessage([
-                    'role' => 'assistant',
+                    'role' => ChatMessage::ASSISTANT,
                     'content' => $greeting
                 ]))
                     ->log()
@@ -188,7 +188,7 @@ class ChatController extends Controller
 
             // Compile the user message
             (new ChatMessage([
-                'role' => 'user',
+                'role' => ChatMessage::USER,
                 'content' => $message
             ]))
                 ->log()
@@ -196,23 +196,29 @@ class ChatController extends Controller
                 ->addToOpenAiThread();
 
             // Run the OpenAI thread
-            $toolMessages = $openAi->runThread();
+            $toolReplies = $openAi->runThread();
 
             // Get the latest assistant message
             $reply = $openAi->getLatestAssistantMessage();
 
-            // Append to the chat history
-            (new ChatMessage($reply))
-                ->log()
-                ->addToChatHistory();
+            // Combine all messages
+            $allMessages = array_merge([$reply], $toolReplies);
+
+            // Loop through all messages
+            foreach ($allMessages as $message) {
+                // Append to the chat history
+                (new ChatMessage($message))
+                    ->log()
+                    ->addToChatHistory();
+            }
 
             // Return the results
             return $this->asJson([
                 'success' => true,
-                'messages' => array_merge($toolMessages, [$reply]),
+                'messages' => $allMessages,
             ]);
 
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
 
             // Record and return an error message
             return $this->_error($e->getMessage());
@@ -225,23 +231,59 @@ class ChatController extends Controller
      *
      * @param string $error
      * @return Response
+     * @throws Exception
      */
     private function _error(string $error): Response
     {
-        // Append error to the chat history
-        (new ChatMessage([
+        // Compile the error message
+        $errorMessage = [
             'role' => ChatMessage::ERROR,
             'content' => $error
-        ]))
+        ];
+
+        // Append error to the chat history
+        (new ChatMessage($errorMessage))
             ->log()
-            ->addToChatHistory();
+            ->addToChatHistory()
+            ->addToOpenAiThread();
 
-        // Log the error
-//        Craft::error($error, __METHOD__);
+        // Attempt to handle the error
+        try {
 
-        return $this->asJson([
-            'success' => false,
-            'error' => $error,
-        ]);
+            // Get OpenAI service
+            $openAi = Sidekick::$plugin->openAi;
+
+            // Run the OpenAI thread
+            $toolReplies = $openAi->runThread();
+
+            // Get the latest assistant message
+            $reply = $openAi->getLatestAssistantMessage();
+
+            // Append to the chat history
+            (new ChatMessage($reply))
+                ->log()
+                ->addToChatHistory();
+
+            // Return the results
+            return $this->asJson([
+                'success' => true,
+                'messages' => array_merge([$errorMessage], $toolReplies, [$reply]),
+            ]);
+
+        } catch (\Exception $e) {
+
+            // Return multiple errors
+            return $this->asJson([
+                'success' => false,
+                'messages' => [
+                    $errorMessage,
+                    [
+                        'role' => ChatMessage::ERROR,
+                        'content' => $e->getMessage(),
+                    ]
+                ],
+            ]);
+
+        }
     }
 }

@@ -97,6 +97,14 @@ const SidekickChat = {
 
     // Append a message to the chat window
     appendMessage: function (role, message) {
+
+        // If message is empty
+        if (!message) {
+            console.warn(`Cannot append an empty message from role: ${role}`);
+            return;
+        }
+
+        // Create a new message element
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message');
 
@@ -281,7 +289,11 @@ const SidekickChat = {
                 for (let i = 0; i < data.messages.length; i++) {
                     // Get the message
                     const message = data.messages[i];
-                    // const sender = message.role === 'assistant' ? 'Sidekick' : 'You';
+                    // Log invalid message
+                    if (!message.role || !message.content) {
+                        console.warn('Invalid message:', message);
+                        continue;
+                    }
                     // Display the assistant message
                     this.appendMessage(
                         message.role,

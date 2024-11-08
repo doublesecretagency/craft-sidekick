@@ -17,17 +17,17 @@ class ApiTools
     public static function createFile(string $directory, string $file, string $content): array
     {
         // TEMP
-        if (random_int(0, 4)) {
-            return [
-                'success' => true,
-                'message' => "Successfully created {$directory}/{$file}"
-            ];
-        } else {
+//        if (random_int(0, 4)) {
+//            return [
+//                'success' => true,
+//                'message' => "Successfully created {$directory}/{$file}"
+//            ];
+//        } else {
             return [
                 'success' => false,
                 'message' => "Unable to create file {$directory}/{$file}."
             ];
-        }
+//        }
         // ENDTEMP
 
     }

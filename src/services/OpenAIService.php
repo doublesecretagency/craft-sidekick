@@ -206,6 +206,7 @@ class OpenAIService extends Component
      * Initialize the thread.
      *
      * @return void
+     * @throws Exception
      */
     private function _initThread(): void
     {
@@ -261,6 +262,8 @@ class OpenAIService extends Component
      */
     public function runThread(): array
     {
+        /** @var ThreadRunResponse $run */
+
         // Get the runs service
         $service = $this->_openAiClient->threads()->runs();
 
@@ -272,87 +275,121 @@ class OpenAIService extends Component
         // Initialize any tool messages
         $toolMessages = [];
 
-        /** @var ThreadRunResponse $run */
+        // Attempt to run the thread
+        try {
 
-        // While the run is not completed
-        do {
-            // Loop through the stream
-            foreach ($stream as $response) {
+            // While the run is not completed
+            do {
 
-//$response->event; // 'thread.run.created' | 'thread.run.in_progress' | .....
-//$response->response; // ThreadResponse | ThreadRunResponse | ThreadRunStepResponse | ThreadRunStepDeltaResponse | ThreadMessageResponse | ThreadMessageDeltaResponse
+                // Loop through the stream
+                foreach ($stream as $response) {
 
-                // Switch based on the event type
-                switch ($response->event) {
-                    case 'thread.run.created':
-                    case 'thread.run.queued':
-                    case 'thread.run.completed':
-                    case 'thread.run.cancelling':
-                        // Set run and continue looping
-                        $run = $response->response;
-                        break;
-                    case 'thread.run.expired':
-                    case 'thread.run.cancelled':
-                    case 'thread.run.failed':
-                        // Set run and break the loop
-                        $run = $response->response;
-                        break 3;
-                    case 'thread.run.requires_action':
+                    // Switch based on the event type
+                    switch ($response->event) {
+                        case 'thread.run.created':
+                        case 'thread.run.queued':
+                        case 'thread.run.completed':
+                        case 'thread.run.cancelling':
+                            // Set run and continue looping
+                            $run = $response->response;
+                            break;
+                        case 'thread.run.expired':
+                        case 'thread.run.cancelled':
+                        case 'thread.run.failed':
+                            // Break the whole loop
+                            break 3;
+                        case 'thread.run.requires_action':
 
-                        /** @var ThreadRunResponseRequiredAction $requiredAction */
-                        $requiredAction = $response->response->requiredAction;
+                            /** @var ThreadRunResponseRequiredAction $requiredAction */
+                            $requiredAction = $response->response->requiredAction;
 
-                        // If the required action is not to submit tool outputs
-                        if ('submit_tool_outputs' !== $requiredAction->type) {
-                            // Cancel the run and throw an exception
-                            $service->cancel($run->threadId, $run->id);
-                            throw new Exception("Unknown required action type: {$requiredAction->type}");
-                        }
-
-                        // Initialize an array to collect all tool outputs
-                        $allToolOutputs = [];
-
-                        // Loop through the tool calls
-                        foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
-
-                            // If the tool type is not a function
-                            if ('function' !== $toolCall->type) {
+                            // If the required action is not to submit tool outputs
+                            if ('submit_tool_outputs' !== $requiredAction->type) {
                                 // Cancel the run and throw an exception
                                 $service->cancel($run->threadId, $run->id);
-                                throw new Exception("Unknown tool type: {$toolCall->type}");
+                                throw new Exception("Unknown required action type: {$requiredAction->type}");
                             }
 
-                            // Run the tool
-                            $results = $this->_runTool($toolCall);
+                            // Initialize an array to collect all tool outputs
+                            $allToolOutputs = [];
 
-                            // If the tool results were not successful
-                            if (!$results['success']) {
-                                // Cancel the run and throw an exception
-                                $service->cancel($run->threadId, $run->id);
-                                throw new Exception($results['output']);
+                            // Loop through the tool calls
+                            foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
+
+                                // If the tool type is not a function
+                                if ('function' !== $toolCall->type) {
+                                    // Cancel the run and throw an exception
+                                    $service->cancel($run->threadId, $run->id);
+                                    throw new Exception("Unknown tool type: {$toolCall->type}");
+                                }
+
+                                // Run the tool
+                                $results = $this->_runTool($toolCall);
+
+                                // If the tool results were not successful
+                                if (!$results['success']) {
+                                    // Cancel the run and throw an exception
+                                    $service->cancel($run->threadId, $run->id);
+                                    throw new Exception($results['output']);
+                                }
+
+                                // Append the message
+                                $toolMessages[] = $results['message'];
+
+                                // Collect the tool output
+                                $allToolOutputs[] = [
+                                    'tool_call_id' => $toolCall->id,
+                                    'output' => $results['output'],
+                                ];
                             }
 
-                            // Append the message
-                            $toolMessages[] = $results['message'];
+                            // Submit all tool outputs at once
+                            $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
+                                'tool_outputs' => $allToolOutputs,
+                            ]);
 
-                            // Collect the tool output
-                            $allToolOutputs[] = [
-                                'tool_call_id' => $toolCall->id,
-                                'output' => $results['output'],
-                            ];
-                        }
-
-                        // Submit all tool outputs at once
-                        $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
-                            'tool_outputs' => $allToolOutputs,
-                        ]);
-
-                        break;
+                            // Break the loop
+                            break;
+                    }
                 }
-            }
 
-        // Until the run is completed
-        } while ($run->status !== 'completed');
+            // Until the run is completed
+            } while ($run->status !== 'completed');
+
+        } catch (\Exception $e) {
+
+            // Compile error message
+            $message = [
+                'role' => ChatMessage::ERROR,
+                'content' => $e->getMessage(),
+            ];
+
+            // Send back to the OpenAI thread
+            (new ChatMessage($message))
+                ->addToOpenAiThread();
+
+            // Append error message
+            $toolMessages[] = $message;
+
+        }
+
+
+        /**
+         * If the $toolMessages array contains ANY ERROR messages,
+         * we will need to re-run the thread (perhaps recursively?)
+         * to get the follow-up response.
+         *
+         * We may need to return all messages together (from both runs).
+         *
+         * We may need to include a counter to prevent infinite loops.
+         */
+
+
+
+
+
+
+
 
         // Return all tool messages
         return $toolMessages;
@@ -397,7 +434,7 @@ class OpenAIService extends Component
 
             // Compile the tool message
             $message = [
-                'role' => ($success ? 'tool' : 'error'),
+                'role' => ($success ? ChatMessage::TOOL : ChatMessage::ERROR),
                 'content' => $output,
             ];
 
@@ -411,23 +448,10 @@ class OpenAIService extends Component
 
             // Compile the error message
             $message = [
-                'role' => 'error',
+                'role' => ChatMessage::ERROR,
                 'content' => $output,
             ];
 
-        }
-
-        // If not an error message
-        if ('error' !== $message['role']) {
-            /**
-             * Error messages get logged and
-             * added to the chat history
-             * later, when the error is thrown.
-             */
-            // Append the message to the chat history
-            (new ChatMessage($message))
-                ->log()
-                ->addToChatHistory();
         }
 
         // Return the message and output
@@ -582,7 +606,7 @@ class OpenAIService extends Component
 
         // Create and return a new assistant message
         return new ChatMessage([
-            'role' => 'assistant',
+            'role' => ChatMessage::ASSISTANT,
             'content' => $greetingText
         ]);
     }
@@ -591,32 +615,39 @@ class OpenAIService extends Component
      * Get the latest assistant message.
      *
      * @return array
-     * @throws Exception
      */
     public function getLatestAssistantMessage(): array
     {
         try {
 
-            // Get the latest messages from the thread
-            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, [
-//                'after' => 'obj_foo',
-            ]);
+            // Get the last message from the thread
+            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, ['limit' => 1]);
+
+            // Get the last message from the thread
+            $lastMessage = $messages->data[0];
+
+            // If the last message was not from the assistant
+            if (ChatMessage::ASSISTANT !== $lastMessage->role) {
+                // Return an empty array
+                return [];
+            }
 
             // Get reply from the assistant
-            $reply = $messages->data[0]->content[0]->text->value;
+            $reply = $lastMessage->content[0]->text->value;
 
             // Return the assistant's reply
             return [
-                'role' => 'assistant',
+                'role' => ChatMessage::ASSISTANT,
                 'content' => $reply,
             ];
 
         } catch (RequestException|\Exception $e) {
 
-            // Log and throw the error
-            $error = $e->getMessage();
-            Craft::error($error, __METHOD__);
-            throw new Exception($error);
+            // Return the error message
+            return [
+                'role' => ChatMessage::ERROR,
+                'content' => $e->getMessage(),
+            ];
 
         }
     }

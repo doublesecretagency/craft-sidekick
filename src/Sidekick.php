@@ -93,8 +93,8 @@ class Sidekick extends Plugin
                     'permissions' => [
                         'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
                         'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
-                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
-                        'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
+//                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
+//                        'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
                         'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
                     ],
                 ];
@@ -113,6 +113,7 @@ class Sidekick extends Plugin
             }
         );
 
+        // Register all routing for the control panel
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,

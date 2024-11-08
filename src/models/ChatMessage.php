@@ -10,14 +10,22 @@ use yii\base\Exception;
 class ChatMessage extends Model
 {
     /**
-     * List of message types for the chat interface.
+     * Compatible message roles for OpenAI.
      *
      * @const
      */
-    public const CONVERSATIONAL = 'conversational';
-    public const ERROR = 'error';
-    public const SNIPPET = 'snippet';
+    public const ASSISTANT = 'assistant';
+    public const USER = 'user';
     public const SYSTEM = 'system';
+    public const TOOL = 'tool';
+
+    /**
+     * Additional message types.
+     *
+     * @const
+     */
+//    public const CONVERSATIONAL = 'conversational';
+    public const ERROR = 'error';
 
     // ========================================================================= //
 
@@ -31,10 +39,10 @@ class ChatMessage extends Model
      */
     public string $content;
 
-    /**
-     * @var string Type of message.
-     */
-    public string $messageType;
+//    /**
+//     * @var string Type of message.
+//     */
+//    public string $messageType;
 
     /**
      * Message constructor.
@@ -46,7 +54,7 @@ class ChatMessage extends Model
     {
         $this->role        = $message['role']        ?? '';
         $this->content     = $message['content']     ?? '';
-        $this->messageType = $message['messageType'] ?? self::CONVERSATIONAL;
+//        $this->messageType = $message['messageType'] ?? self::CONVERSATIONAL;
         parent::__construct($config);
     }
 
@@ -60,13 +68,13 @@ class ChatMessage extends Model
     public function log(): ChatMessage
     {
         // Compile log message
-        $message = strtoupper($this->messageType).": {$this->content}";
+        $message = strtoupper($this->role).": {$this->content}";
 
         // Default log type
         $logType = 'info';
 
         // If the message is an error
-        if (self::ERROR === $this->messageType) {
+        if (self::ERROR === $this->role) {
             // Log as an error
             $logType = 'error';
         }
@@ -91,7 +99,7 @@ class ChatMessage extends Model
         Sidekick::$plugin->chat->addMessage([
             'role' => $this->role,
             'content' => $this->content,
-            'messageType' => $this->messageType,
+//            'messageType' => $this->messageType,
         ]);
 
         // Return the message for chaining
@@ -106,18 +114,32 @@ class ChatMessage extends Model
      */
     public function addToOpenAiThread(): ChatMessage
     {
-        // If not a valid role for an OpenAI message
-        if (!in_array($this->role, ['assistant', 'user', 'system', 'tool'])) {
-            // Log as a warning
-            Craft::warning("Invalid message role for API: {$this->role}", __METHOD__);
-            // Return the message for chaining
-            return $this;
+        // Set the content
+        $content = $this->content;
+
+        // Switch on the message role
+        switch ($this->role) {
+            case self::ASSISTANT:
+            case self::USER:
+                // Valid role for an OpenAI message
+                $role = $this->role;
+                break;
+            case self::ERROR:
+                // Consider error to be a user message
+                $role = self::USER;
+                $content = "SYSTEM ERROR: {$content}";
+                break;
+            default:
+                // Log a warning
+                Craft::warning("Invalid message role for API: {$this->role}", __METHOD__);
+                // Return the message for chaining
+                return $this;
         }
 
         // Add the message to the OpenAI thread
         Sidekick::$plugin->openAi->addMessage([
-            'role' => $this->role,
-            'content' => $this->content,
+            'role' => $role,
+            'content' => $content,
         ]);
 
         // Return the message for chaining
