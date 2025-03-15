@@ -83,7 +83,7 @@ class SystemPrompt
         $actionsService = Sidekick::$plugin->actions;
 
         // Get all methods from the ActionsHelper class
-        $methods = (new ReflectionClass(ApiTools::class))->getMethods();
+        $methods = (new ReflectionClass(Templates::class))->getMethods();
 
         // Create a new instance of the DocBlockFactory
         $docFactory = DocBlockFactory::createInstance();

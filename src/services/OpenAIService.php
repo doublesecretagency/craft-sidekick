@@ -8,7 +8,7 @@ use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\events\DefineExtraToolsEvent;
-use doublesecretagency\sidekick\helpers\ApiTools;
+use doublesecretagency\sidekick\helpers\Templates;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
@@ -330,7 +330,7 @@ class OpenAIService extends Component
                                 if (!$results['success']) {
                                     // Cancel the run and throw an exception
                                     $service->cancel($run->threadId, $run->id);
-                                    throw new Exception($results['output']);
+                                    throw new Exception($results['error'] ?? 'An unknown error occurred.');
                                 }
 
                                 // Append the message
@@ -486,7 +486,7 @@ class OpenAIService extends Component
         ];
 
         // Initialize the tool set with native tools
-        $toolSet = [ApiTools::class];
+        $toolSet = [Templates::class];
 
         // Give plugins/modules a chance to add custom tools
         if ($this->hasEventHandlers(self::EVENT_DEFINE_EXTRA_TOOLS)) {
@@ -558,11 +558,15 @@ class OpenAIService extends Component
      *
      * @param string $name
      * @param string $description
-     * @param array $properties
+     * @param array $parameters
      * @return array
      */
-    private function _toolFunction(string $name, string $description, array $properties = []): array
+    private function _toolFunction(string $name, string $description, array $parameters = []): array
     {
+        // If no parameters, set properties to an empty object
+        $properties = ($parameters ?: new \stdClass());
+
+        // Return the tool function
         return [
             'type' => 'function',
             'function' => [
@@ -573,7 +577,7 @@ class OpenAIService extends Component
                     'type' => 'object',
                     'properties' => $properties,
                     'additionalProperties' => false, // For strict mode
-                    'required' => array_keys($properties), // All properties required
+                    'required' => array_keys($parameters), // All parameters required
                 ],
             ]
         ];
