@@ -257,10 +257,9 @@ class OpenAIService extends Component
     /**
      * Run the thread.
      *
-     * @return array
      * @throws Exception
      */
-    public function runThread(): array
+    public function runThread(): void
     {
         /** @var ThreadRunResponse $run */
 
@@ -271,9 +270,6 @@ class OpenAIService extends Component
         $stream = $service->createStreamed($this->_getThreadId(), [
             'assistant_id' => $this->_getAssistantId(),
         ]);
-
-        // Initialize any tool messages
-        $toolMessages = [];
 
         // Attempt to run the thread
         try {
@@ -334,7 +330,15 @@ class OpenAIService extends Component
                                 }
 
                                 // Append the message
-                                $toolMessages[] = $results['message'];
+                                (new ChatMessage([
+                                    'role' => ChatMessage::TOOL,
+                                    'message' => ($results['message'] ?? '[missing tool message]')
+                                ]))
+//                                    ->toChatHistory()
+                                    ->toChatWindow()
+//                                    ->toOpenAiThread()
+                                ;
+
 
                                 // Collect the tool output
                                 $allToolOutputs[] = [
@@ -359,40 +363,14 @@ class OpenAIService extends Component
         } catch (\Exception $e) {
 
             // Compile error message
-            $message = [
+            (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'content' => $e->getMessage(),
-            ];
-
-            // Send back to the OpenAI thread
-            (new ChatMessage($message))
-                ->addToOpenAiThread();
-
-            // Append error message
-            $toolMessages[] = $message;
-
+                'message' => $e->getMessage(),
+            ]))
+                ->toChatHistory()
+                ->toChatWindow()
+                ->toOpenAiThread();
         }
-
-
-        /**
-         * If the $toolMessages array contains ANY ERROR messages,
-         * we will need to re-run the thread (perhaps recursively?)
-         * to get the follow-up response.
-         *
-         * We may need to return all messages together (from both runs).
-         *
-         * We may need to include a counter to prevent infinite loops.
-         */
-
-
-
-
-
-
-
-
-        // Return all tool messages
-        return $toolMessages;
     }
 
     // ========================================================================= //
@@ -428,6 +406,31 @@ class OpenAIService extends Component
 
             // Whether the results were successful
             $success = ($results['success'] ?? false);
+
+            // If the results were successful
+            if ($results['success'] ?? false) {
+
+                // Add the message to the chat
+                (new ChatMessage([
+                    'role' => ChatMessage::TOOL,
+                    'message' => ($results['message'] ?? '[missing tool message]')
+                ]))
+                    ->log()
+                    ->toChatHistory()
+                    ->toChatWindow();
+
+            } else {
+
+                // Add the error to the chat
+                (new ChatMessage([
+                    'role' => ChatMessage::ERROR,
+                    'message' => ($results['error'] ?? "An unknown error occurred.")
+                ]))
+                    ->log()
+                    ->toChatHistory()
+                    ->toChatWindow();
+
+            }
 
             // Set output to the success or error message
             $output = ($results['message'] ?? "An unknown error occurred.");
@@ -611,7 +614,7 @@ class OpenAIService extends Component
         // Create and return a new assistant message
         return new ChatMessage([
             'role' => ChatMessage::ASSISTANT,
-            'content' => $greetingText
+            'message' => $greetingText
         ]);
     }
 
@@ -642,7 +645,7 @@ class OpenAIService extends Component
             // Return the assistant's reply
             return [
                 'role' => ChatMessage::ASSISTANT,
-                'content' => $reply,
+                'message' => $reply,
             ];
 
         } catch (RequestException|\Exception $e) {
@@ -650,7 +653,7 @@ class OpenAIService extends Component
             // Return the error message
             return [
                 'role' => ChatMessage::ERROR,
-                'content' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
 
         }

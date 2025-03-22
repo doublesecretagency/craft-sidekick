@@ -203,7 +203,7 @@ const SidekickChat = {
                         // Display message in the chat window
                         this.appendMessage(
                             message.role,
-                            message.content
+                            message.message
                         );
                     });
                 } else {
@@ -225,127 +225,97 @@ const SidekickChat = {
 
     // Send message to the server
     sendMessage: function () {
-        const message = this.chatInput.value.trim();
-        if (!message) return;
 
+        // Get the message from the input
+        const message = this.chatInput.value.trim();
+
+        // If the message is empty, do nothing
+        if (!message) {
+            return;
+        }
+
+        // If the message is too long, alert the user
         if (message.length > this.MAX_MESSAGE_LENGTH) {
             alert('Your message is too long. Please shorten it.');
             return;
         }
 
+        // Append the user's message to the chat window
         this.appendMessage(
             this.ROLE.USER,
             message
         );
-        this.chatInput.value = '';
+
+        // Pass this object into the event listeners
+        const that = this;
 
         // Show the spinner and disable inputs
         this.showSpinner();
 
+        // Clear the input
+        this.chatInput.value = '';
+
         // Get the greeting message
-        const greeting = (this.greeting ? this.greeting.content : null);
+        const greeting = (this.greeting ? this.greeting.message : null);
 
-        fetch('/actions/sidekick/chat/send-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': Craft.csrfTokenValue,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ message, greeting }),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                // Hide the spinner
-                this.hideSpinner();
+        // Convert parameters to a query string
+        const params = new URLSearchParams({message, greeting});
 
-                // If response was unsuccessful
-                if (!data.success) {
-                    // Log error
-                    console.error('Unable to send message: ', data);
-                    // Display the error message
-                    this.appendMessage(
-                        this.ROLE.ERROR,
-                        data.error
-                    );
-                    // Bail
-                    return;
-                }
+        console.log('Opening the connection.');
 
-                // If messages are not a valid array
-                if (!data.messages || !Array.isArray(data.messages)) {
-                    // Log error
-                    console.error('Invalid response messages: ', data.messages);
-                    // Display error message
-                    this.appendMessage(
-                        this.ROLE.ERROR,
-                        'Invalid response messages.'
-                    );
-                    // Bail
-                    return;
-                }
+        // Create an event source
+        const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${params.toString()}`);
 
-                // Loop through all messages
-                for (let i = 0; i < data.messages.length; i++) {
-                    // Get the message
-                    const message = data.messages[i];
-                    // Log invalid message
-                    if (!message.role || !message.content) {
-                        console.warn('Invalid message:', message);
-                        continue;
-                    }
-                    // Display the assistant message
-                    this.appendMessage(
-                        message.role,
-                        message.content
-                    );
-                }
+        // Close the connection when instructed
+        eventSource.addEventListener('close', function(event) {
+            console.log('Closing the connection.');
+            eventSource.close();
+            // Hide the spinner
+            that.hideSpinner();
+        });
 
-                // Reset the greeting
-                this.greeting = null;
+        // Listen for messages from the server
+        eventSource.onmessage = function(event) {
 
+            // Get the data from the event
+            const data = JSON.parse(event.data);
 
-                // // If message is one or more action message(s)
-                // if (data.actionMessages && Array.isArray(data.actionMessages)) {
-                //     // Loop through all action messages
-                //     data.actionMessages.forEach((systemMessage) => {
-                //         // Display the action message
-                //         this.appendMessage(
-                //             this.ROLE.ACTION,
-                //             systemMessage
-                //         );
-                //     });
-                // }
-
-                // // Display file content if present
-                // if (data.content) {
-                //     // The content is assumed to be a code snippet
-                //     this.appendMessage(
-                //         this.ROLE.SNIPPET,
-                //         `<pre><code>${data.content}</code></pre>`
-                //     );
-                // }
-
-                // // Then display the assistant's final message
-                // if (data.message) {
-                //     this.appendMessage(
-                //         this.ROLE.ASSISTANT,
-                //         data.message
-                //     );
-                // }
-
-
-            })
-            .catch((error) => {
-                // Hide the spinner
-                this.hideSpinner();
-
-                console.error('Error sending message:', error);
-                this.appendMessage(
-                    this.ROLE.ERROR,
-                    'A network error occurred. Please check your connection and try again.'
+            // If role or message are missing
+            if (!data.role || !data.message) {
+                // Log warning
+                console.warn('Invalid message:', data);
+                // Display the error message
+                that.appendMessage(
+                    that.ROLE.ERROR,
+                    'Invalid message format.'
                 );
-            });
+                // Bail
+                return;
+            }
+
+            // Display the message
+            that.appendMessage(
+                data.role,
+                data.message
+            );
+
+            // Reset the greeting
+            that.greeting = null;
+        };
+
+        // If there's an error
+        eventSource.onerror = function(error) {
+            // Log error
+            console.error('Unable to send message: ', error);
+            // Display the error message
+            that.appendMessage(
+                that.ROLE.ERROR,
+                error
+            );
+            // Hide the spinner
+            that.hideSpinner();
+        };
+
     },
 
     // Load the selected model from the server

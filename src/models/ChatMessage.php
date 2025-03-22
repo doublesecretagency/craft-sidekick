@@ -26,6 +26,7 @@ class ChatMessage extends Model
      */
 //    public const CONVERSATIONAL = 'conversational';
     public const ERROR = 'error';
+    public const SUCCESS = 'success';
 
     // ========================================================================= //
 
@@ -35,14 +36,9 @@ class ChatMessage extends Model
     public string $role;
 
     /**
-     * @var string Content of the message.
+     * @var string Body of the message.
      */
-    public string $content;
-
-//    /**
-//     * @var string Type of message.
-//     */
-//    public string $messageType;
+    public string $message;
 
     /**
      * Message constructor.
@@ -52,23 +48,22 @@ class ChatMessage extends Model
      */
     public function __construct(array $message, array $config = [])
     {
-        $this->role        = $message['role']        ?? '';
-        $this->content     = $message['content']     ?? '';
-//        $this->messageType = $message['messageType'] ?? self::CONVERSATIONAL;
+        $this->role    = $message['role']    ?? '';
+        $this->message = $message['message'] ?? '';
         parent::__construct($config);
     }
 
     // ========================================================================= //
 
     /**
-     * Log the message content.
+     * Log the message.
      *
      * @return ChatMessage for chaining
      */
     public function log(): ChatMessage
     {
         // Compile log message
-        $message = strtoupper($this->role).": {$this->content}";
+        $message = strtoupper($this->role).": {$this->message}";
 
         // Default log type
         $logType = 'info';
@@ -93,14 +88,24 @@ class ChatMessage extends Model
      *
      * @return ChatMessage for chaining
      */
-    public function addToChatHistory(): ChatMessage
+    public function toChatHistory(): ChatMessage
     {
         // Add the message to the chat history
-        Sidekick::$plugin->chat->addMessage([
-            'role' => $this->role,
-            'content' => $this->content,
-//            'messageType' => $this->messageType,
-        ]);
+        Sidekick::$plugin->chat->addMessage($this);
+
+        // Return the message for chaining
+        return $this;
+    }
+
+    /**
+     * Send message to the chat window.
+     *
+     * @return ChatMessage for chaining
+     */
+    public function toChatWindow(): ChatMessage
+    {
+        // Send the message to the chat window
+        Sidekick::$plugin->sse->sendMessage($this);
 
         // Return the message for chaining
         return $this;
@@ -112,10 +117,10 @@ class ChatMessage extends Model
      * @return ChatMessage for chaining
      * @throws Exception
      */
-    public function addToOpenAiThread(): ChatMessage
+    public function toOpenAiThread(): ChatMessage
     {
-        // Set the content
-        $content = $this->content;
+        // Set the message
+        $message = $this->message;
 
         // Switch on the message role
         switch ($this->role) {
@@ -127,7 +132,7 @@ class ChatMessage extends Model
             case self::ERROR:
                 // Consider error to be a user message
                 $role = self::USER;
-                $content = "SYSTEM ERROR: {$content}";
+                $message = "SYSTEM ERROR: {$message}";
                 break;
             default:
                 // Log a warning
@@ -139,7 +144,7 @@ class ChatMessage extends Model
         // Add the message to the OpenAI thread
         Sidekick::$plugin->openAi->addMessage([
             'role' => $role,
-            'content' => $content,
+            'content' => $message,
         ]);
 
         // Return the message for chaining

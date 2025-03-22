@@ -18,6 +18,7 @@ use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
+use doublesecretagency\sidekick\services\SseService;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -39,6 +40,7 @@ use craft\console\Application as ConsoleApplication;
  * @property DummyDataService $dummyData
  * @property FileManagementService $fileManagement
  * @property OpenAIService $openAi
+ * @property SseService $sse
  */
 class Sidekick extends Plugin
 {
@@ -73,6 +75,7 @@ class Sidekick extends Plugin
             'dummyData'      => DummyDataService::class,
             'fileManagement' => FileManagementService::class,
             'openAi'         => OpenAIService::class,
+            'sse'            => SseService::class,
         ]);
 
         // Register console commands

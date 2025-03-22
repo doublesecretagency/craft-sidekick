@@ -154,22 +154,24 @@ class ChatController extends Controller
 
     /**
      * Sends a message to the assistant and receives a reply.
-     *
-     * @return Response
      */
-    public function actionSendMessage(): Response
+    public function actionSendMessage(): void
     {
-        try {
-            $this->requirePostRequest();
+        // Start the SSE connection
+        $sse = Sidekick::$plugin->sse;
 
+        // Start the SSE connection
+        $sse->startConnection();
+
+        try {
             // Get services
             $chat   = Sidekick::$plugin->chat;
             $openAi = Sidekick::$plugin->openAi;
 
             // Receive the user's message
             $request = Craft::$app->getRequest();
-            $message = $request->getRequiredBodyParam('message');
-            $greeting = $request->getBodyParam('greeting');
+            $message = $request->getQueryParam('message');
+            $greeting = $request->getQueryParam('greeting');
 
             // Get size of chat history
             $chatHistory = count($chat->getConversation());
@@ -179,51 +181,44 @@ class ChatController extends Controller
                 // Compile the greeting message
                 (new ChatMessage([
                     'role' => ChatMessage::ASSISTANT,
-                    'content' => $greeting
+                    'message' => $greeting
                 ]))
                     ->log()
-                    ->addToChatHistory()
-                    ->addToOpenAiThread();
+                    ->toChatHistory()
+                    ->toOpenAiThread();
             }
 
             // Compile the user message
             (new ChatMessage([
                 'role' => ChatMessage::USER,
-                'content' => $message
+                'message' => $message
             ]))
                 ->log()
-                ->addToChatHistory()
-                ->addToOpenAiThread();
+                ->toChatHistory()
+                ->toOpenAiThread();
 
             // Run the OpenAI thread
-            $toolReplies = $openAi->runThread();
+            $openAi->runThread();
 
             // Get the latest assistant message
             $reply = $openAi->getLatestAssistantMessage();
 
-            // Combine all messages
-            $allMessages = array_merge([$reply], $toolReplies);
-
-            // Loop through all messages
-            foreach ($allMessages as $message) {
-                // Append to the chat history
-                (new ChatMessage($message))
-                    ->log()
-                    ->addToChatHistory();
-            }
-
-            // Return the results
-            return $this->asJson([
-                'success' => true,
-                'messages' => $allMessages,
-            ]);
+            // Append reply to the chat history
+            (new ChatMessage($reply))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
 
         } catch (\Exception $e) {
 
+            // TODO: Don't return, use SSE
             // Record and return an error message
-            return $this->_error($e->getMessage());
+//            return $this->_error($e->getMessage());
 
         }
+
+        // Close the connection
+        $sse->closeConnection();
     }
 
     /**
@@ -238,14 +233,15 @@ class ChatController extends Controller
         // Compile the error message
         $errorMessage = [
             'role' => ChatMessage::ERROR,
-            'content' => $error
+            'message' => $error
         ];
 
         // Append error to the chat history
         (new ChatMessage($errorMessage))
             ->log()
-            ->addToChatHistory()
-            ->addToOpenAiThread();
+            ->toChatHistory()
+            ->toChatWindow()
+            ->toOpenAiThread();
 
         // Attempt to handle the error
         try {
@@ -254,7 +250,7 @@ class ChatController extends Controller
             $openAi = Sidekick::$plugin->openAi;
 
             // Run the OpenAI thread
-            $toolReplies = $openAi->runThread();
+            $openAi->runThread();
 
             // Get the latest assistant message
             $reply = $openAi->getLatestAssistantMessage();
@@ -262,12 +258,13 @@ class ChatController extends Controller
             // Append to the chat history
             (new ChatMessage($reply))
                 ->log()
-                ->addToChatHistory();
+                ->toChatHistory()
+                ->toChatWindow();
 
             // Return the results
             return $this->asJson([
                 'success' => true,
-                'messages' => array_merge([$errorMessage], $toolReplies, [$reply]),
+                'messages' => array_merge([$errorMessage], [$reply]),
             ]);
 
         } catch (\Exception $e) {
@@ -279,7 +276,7 @@ class ChatController extends Controller
                     $errorMessage,
                     [
                         'role' => ChatMessage::ERROR,
-                        'content' => $e->getMessage(),
+                        'message' => $e->getMessage(),
                     ]
                 ],
             ]);

@@ -65,7 +65,7 @@ class ChatService extends Component
             return [
                 new ChatMessage([
                     'role' => ChatMessage::ERROR,
-                    'content' => "Unable to load the conversation."
+                    'message' => "Unable to load the conversation."
                 ])
             ];
 
@@ -75,9 +75,9 @@ class ChatService extends Component
     /**
      * Add a message to the conversation history.
      *
-     * @param array $message
+     * @param ChatMessage $message
      */
-    public function addMessage(array $message): void
+    public function addMessage(ChatMessage $message): void
     {
         // Track the message
         Craft::info("Appending message to the conversation history.", __METHOD__);
@@ -86,7 +86,7 @@ class ChatService extends Component
         $conversation = $this->getConversation();
 
         // Append the new message to the conversation
-        $conversation[] = new ChatMessage($message);
+        $conversation[] = $message;
 
         try {
             // Save the updated conversation to the session
