@@ -4,6 +4,7 @@ namespace doublesecretagency\sidekick\helpers;
 
 use Craft;
 use doublesecretagency\sidekick\Sidekick;
+use doublesecretagency\sidekick\skills\Templates;
 use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
 
@@ -82,7 +83,7 @@ class SystemPrompt
         // Get the actions service
         $actionsService = Sidekick::$plugin->actions;
 
-        // Get all methods from the ActionsHelper class
+        // Get all skill methods
         $methods = (new ReflectionClass(Templates::class))->getMethods();
 
         // Create a new instance of the DocBlockFactory

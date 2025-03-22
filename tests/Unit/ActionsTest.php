@@ -2,7 +2,7 @@
 
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\Sidekick;
-use doublesecretagency\sidekick\helpers\Templates;
+use doublesecretagency\sidekick\skills\Templates;
 use markhuot\craftpest\test\TestCase;
 
 uses(TestCase::class);

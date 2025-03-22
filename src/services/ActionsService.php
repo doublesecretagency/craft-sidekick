@@ -3,7 +3,7 @@
 namespace doublesecretagency\sidekick\services;
 
 use craft\base\Component;
-use doublesecretagency\sidekick\helpers\Templates;
+use doublesecretagency\sidekick\skills\Templates;
 
 /**
  * Class ActionsService

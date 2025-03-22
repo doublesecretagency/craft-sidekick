@@ -1,6 +1,6 @@
 <?php
 
-namespace doublesecretagency\sidekick\helpers;
+namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use RecursiveDirectoryIterator;
