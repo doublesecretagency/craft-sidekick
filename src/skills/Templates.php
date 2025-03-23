@@ -10,9 +10,9 @@ use RecursiveIteratorIterator;
 class Templates
 {
     /**
-     * Read the directory and file structure of the templates folder.
+     * Read the directory and file structure of the templates folder. Eagerly call this if an understanding of the templates directory is required.
      *
-     * Directory should always begin with `templates`.
+     * Directory MUST ALWAYS begin with `templates`.
      *
      * Use the following tabbed format when displaying the file structure:
      *
@@ -45,19 +45,16 @@ class Templates
 
         // Loop through the files and directories
         foreach ($iterator as $file) {
-            // Only consider files (ignore directories)
-            if ($file->isFile()) {
-                // Replace the templates path with just the top directory
-                $relativePath = preg_replace($pattern, $topDirectory, $file->getPathname());
-                // Add the relative path to the structure array
-                $structure[] = $relativePath;
-            }
+            // Replace the templates path with just the top directory
+            $relativePath = preg_replace($pattern, $topDirectory, $file->getPathname());
+            // Add the relative path to the structure array
+            $structure[] = $relativePath;
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Inspected the structure of the templates directory.",
+            'message' => "Reviewed the structure of the templates directory.",
             'response' => implode("\n", $structure)
         ]);
     }
@@ -65,9 +62,48 @@ class Templates
     // ========================================================================= //
 
     /**
+     * Create a new directory.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
+     *
+     * @param string $directory Directory to create the file in.
+     * @return SkillResponse
+     */
+    public static function createDirectory(string $directory): SkillResponse
+    {
+        // Parse the templates path
+        $path = self::_parseTemplatesPath($directory);
+
+        // Get the directory path
+        $directoryPath = dirname($path);
+
+        // If the required directory already exists
+        if (is_dir($directoryPath)) {
+            return new SkillResponse([
+                'success' => true,
+                'message' => "The directory {$directory} already exists."
+            ]);
+        }
+
+        // Attempt to create the directory (with check to ensure that it worked)
+        if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to create the directory {$directory}."
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Created the directory {$directory}."
+        ]);
+    }
+
+    /**
      * Create a new file with specified content.
      *
-     * Directory should always begin with `templates`.
+     * Directory MUST ALWAYS begin with `templates`.
      *
      * @param string $directory Directory to create the file in.
      * @param string $file Name of the file to create.
@@ -87,12 +123,25 @@ class Templates
             ]);
         }
 
+        // Get the directory path
+        $directoryPath = dirname($filePath);
+
+        // If the required directory does not exist
+        if (!is_dir($directoryPath)) {
+            // Attempt to create the directory (with check to ensure that it worked)
+            if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to create the directory {$directory}."
+                ]);
+            }
+        }
+
         // Create the file and write the content
         $bytesWritten = file_put_contents($filePath, $content);
 
         // If the file was successfully created
         if ($bytesWritten !== false) {
-            // Return success message
             return new SkillResponse([
                 'success' => true,
                 'message' => "Created {$directory}/{$file}",
@@ -110,7 +159,7 @@ class Templates
     /**
      * Read an existing file.
      *
-     * Directory should always begin with `templates`.
+     * Directory MUST ALWAYS begin with `templates`.
      *
      * @param string $directory Directory to look in.
      * @param string $file Name of the file to read.
@@ -121,28 +170,27 @@ class Templates
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
 
-        // Check if the file exists
-        if (file_exists($filePath)) {
-            // Read the file content
-            $content = file_get_contents($filePath);
+        // If file doesn't exist, return an error
+        if (!file_exists($filePath)) {
             return new SkillResponse([
-                'success' => true,
-                'message' => "Read {$directory}/{$file}",
-                'response' => $content
+                'success' => false,
+                'message' => "Unable to read file, {$directory}/{$file} does not exist."
             ]);
         }
 
-        // Something went wrong
+        // Read the file content
+        $content = file_get_contents($filePath);
         return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to read file {$directory}/{$file}."
+            'success' => true,
+            'message' => "Read {$directory}/{$file}",
+            'response' => $content
         ]);
     }
 
     /**
      * Update an existing file with specified content.
      *
-     * Directory should always begin with `templates`.
+     * Directory MUST ALWAYS begin with `templates`.
      *
      * For large updates, ask for confirmation before proceeding.
      *
@@ -156,36 +204,47 @@ class Templates
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
 
-        // Check if the file exists
-        if (file_exists($filePath)) {
-            // Write the new content to the file
-            $bytesWritten = file_put_contents($filePath, $content);
-            // If the file was successfully updated
-            if ($bytesWritten === false) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to write to file {$directory}/{$file}."
-                ]);
-            }
-            // Return success message
+        // If the file doesn't exist, return an error
+        if (!file_exists($filePath)) {
             return new SkillResponse([
-                'success' => true,
-                'message' => "Updated {$directory}/{$file}",
-                'response' => $content
+                'success' => false,
+                'message' => "Unable to update file, {$directory}/{$file} does not exist."
             ]);
         }
 
-        // Something went wrong
+        // If not a file, return an error
+        if (!is_file($filePath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to update, {$directory}/{$file} is not a file."
+            ]);
+        }
+
+        // Write the new content to the file
+        $bytesWritten = file_put_contents($filePath, $content);
+
+        // If the file was successfully updated
+        if ($bytesWritten === false) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to write to file {$directory}/{$file}."
+            ]);
+        }
+
+        // Return success message
         return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to update file {$directory}/{$file}."
+            'success' => true,
+            'message' => "Updated {$directory}/{$file}",
+            'response' => $content
         ]);
     }
 
     /**
      * Delete the specified file.
      *
-     * Directory should always begin with `templates`.
+     * Empty directories cannot be deleted. When deleting both files and directories, the files must be deleted first.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
      *
      * If the user doesn't explicitly say "delete", ask for confirmation before proceeding.
      *
@@ -198,23 +257,94 @@ class Templates
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
 
-        // Check if the file exists
-        if (file_exists($filePath)) {
-            // Attempt to delete the file
-            $deleted = unlink($filePath);
-            // If the file was successfully deleted
-            if ($deleted) {
-                return new SkillResponse([
-                    'success' => true,
-                    'message' => "Deleted {$directory}/{$file}"
-                ]);
-            }
+        // If file does not exist, return an error
+        if (!file_exists($filePath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete, no existing file {$directory}/{$file}"
+            ]);
         }
 
-        // Something went wrong
+        // If not a file, return an error
+        if (!is_file($filePath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete, {$directory}/{$file} is not a file."
+            ]);
+        }
+
+        // If unable to delete the file, return an error
+        if (!unlink($filePath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Failed to delete file {$directory}/{$file}"
+            ]);
+        }
+
+        // Return success message
         return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to delete file {$directory}/{$file}."
+            'success' => true,
+            'message' => "Deleted {$directory}/{$file}"
+        ]);
+    }
+
+    /**
+     * Delete the specified directory.
+     *
+     * Empty directories cannot be deleted. When deleting both files and directories, the files must be deleted first.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
+     *
+     * If the user doesn't explicitly say "delete", ask for confirmation before proceeding.
+     *
+     * @param string $directory The directory to be deleted.
+     * @return SkillResponse
+     */
+    public static function deleteDirectory(string $directory): SkillResponse
+    {
+        // Parse the templates path
+        $path = self::_parseTemplatesPath($directory);
+
+        // If directory does not exist, return an error
+        if (!file_exists($path)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete, no existing directory {$directory}"
+            ]);
+        }
+
+        // If not a directory, return an error
+        if (!is_dir($path)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete, {$directory} is not a directory."
+            ]);
+        }
+
+        // Check if the directory is empty
+        $contents = scandir($path); // Returns '.' and '..' even for an empty directory
+        $isEmpty = count($contents) === 2; // Only '.' and '..' are present
+
+        // If the directory is not empty, return an error
+        if (!$isEmpty) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Cannot delete, directory {$directory} is not empty."
+            ]);
+        }
+
+        // If unable to delete the directory, return an error
+        if (!rmdir($path)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Failed to delete directory {$directory}"
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Deleted {$directory}"
         ]);
     }
 

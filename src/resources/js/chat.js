@@ -280,12 +280,12 @@ const SidekickChat = {
             // If role or message are missing
             if (!data.role || !data.message) {
                 // Log warning
-                console.warn('Invalid message:', data, event);
-                // // Display the error message
-                // that.appendMessage(
-                //     that.ROLE.ERROR,
-                //     'Invalid message format.'
-                // );
+                console.warn('Incomplete message:', data, event);
+                // Display the error message
+                that.appendMessage(
+                    that.ROLE.ERROR,
+                    'Sorry, an unexpected error occurred.'
+                );
                 // Bail
                 return;
             }

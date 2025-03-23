@@ -183,7 +183,7 @@ class ChatController extends Controller
 
             // If greeting was specified and no chat history exists
             if ($greeting && !$chatHistory) {
-                // Compile the greeting message
+                // Start conversation with the greeting message
                 (new ChatMessage([
                     'role' => ChatMessage::ASSISTANT,
                     'message' => $greeting
@@ -193,7 +193,7 @@ class ChatController extends Controller
                     ->toOpenAiThread();
             }
 
-            // Compile the user message
+            // Append user message to conversation
             (new ChatMessage([
                 'role' => ChatMessage::USER,
                 'message' => $message
@@ -204,15 +204,6 @@ class ChatController extends Controller
 
             // Run the OpenAI thread
             $openAi->runThread();
-
-            // Get the latest assistant message
-            $reply = $openAi->getLatestAssistantMessage();
-
-            // Append reply to the chat history
-            (new ChatMessage($reply))
-                ->log()
-                ->toChatHistory()
-                ->toChatWindow();
 
         } catch (\Exception $e) {
 

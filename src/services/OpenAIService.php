@@ -281,18 +281,53 @@ class OpenAIService extends Component
                 // Loop through the stream
                 foreach ($stream as $response) {
 
+                    // If not a delta event
+                    if ('thread.message.delta' !== $response->event) {
+                        // Log the response event
+                        (new ChatMessage([
+                            'role' => ChatMessage::TOOL,
+                            'message' => "[{$response->event}]",
+                        ]))
+                            ->log();
+                    }
+
                     // Switch based on the event type
                     switch ($response->event) {
                         case 'thread.run.created':
                         case 'thread.run.queued':
                         case 'thread.run.completed':
-                        case 'thread.run.cancelling':
                             // Set run and continue looping
                             $run = $response->response;
+                            break;
+                        case 'thread.run.cancelling':
+                            // Set run
+                            $run = $response->response;
+                            // Output error message
+                            (new ChatMessage([
+                                'role' => ChatMessage::ERROR,
+                                'message' => 'Run is being cancelled for some reason.'
+                            ]))
+                                ->log()
+                                ->toChatHistory()
+                                ->toChatWindow();
+                            // Continue
                             break;
                         case 'thread.run.expired':
                         case 'thread.run.cancelled':
                         case 'thread.run.failed':
+                            // Get the error message
+                            $error = (
+                                $response->response->lastError->message ??
+                                "An unknown error occurred. [{$response->event}]"
+                            );
+                            // Output error message
+                            (new ChatMessage([
+                                'role' => ChatMessage::ERROR,
+                                'message' => "Run unsuccessful. {$error}"
+                            ]))
+                                ->log()
+                                ->toChatHistory()
+                                ->toChatWindow();
                             // Break the whole loop
                             break 3;
                         case 'thread.run.requires_action':
@@ -361,6 +396,15 @@ class OpenAIService extends Component
 
             // Until the run is completed
             } while ($run->status !== 'completed');
+
+            // Get the latest assistant message
+            $reply = $this->_getLatestAssistantMessage();
+
+            // Append reply to the chat history
+            (new ChatMessage($reply))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
 
         } catch (\Exception $e) {
 
@@ -576,7 +620,7 @@ class OpenAIService extends Component
      *
      * @return array
      */
-    public function getLatestAssistantMessage(): array
+    private function _getLatestAssistantMessage(): array
     {
         try {
 
@@ -588,8 +632,11 @@ class OpenAIService extends Component
 
             // If the last message was not from the assistant
             if (ChatMessage::ASSISTANT !== $lastMessage->role) {
-                // Return an empty array
-                return [];
+                // Return an error message
+                return [
+                    'role' => ChatMessage::ERROR,
+                    'message' => 'Unable to load last assistant message.'
+                ];
             }
 
             // Get reply from the assistant
