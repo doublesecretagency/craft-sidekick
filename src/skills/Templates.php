@@ -3,6 +3,7 @@
 namespace doublesecretagency\sidekick\skills;
 
 use Craft;
+use doublesecretagency\sidekick\models\SkillResponse;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
@@ -23,9 +24,9 @@ class Templates
      * └── index.twig
      * ```
      *
-     * @return array
+     * @return SkillResponse
      */
-    public static function templatesStructure(): array
+    public static function templatesStructure(): SkillResponse
     {
         // Get the templates path
         $templatesPath = Craft::getAlias('@templates');
@@ -54,12 +55,11 @@ class Templates
         }
 
         // Return success message
-        return [
+        return new SkillResponse([
             'success' => true,
-//            'message' => implode("\n", $structure)
             'message' => "Understanding the structure of the templates directory.",
-            'content' => implode("\n", $structure)
-        ];
+            'response' => implode("\n", $structure)
+        ]);
     }
 
     // ========================================================================= //
@@ -72,19 +72,19 @@ class Templates
      * @param string $directory Directory to create the file in.
      * @param string $file Name of the file to create.
      * @param string $content Content to include in the file.
-     * @return array
+     * @return SkillResponse
      */
-    public static function createFile(string $directory, string $file, string $content): array
+    public static function createFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
 
         // If file already exists, return an error
         if (file_exists($filePath)) {
-            return [
+            return new SkillResponse([
                 'success' => false,
                 'error' => "Unable to create file {$directory}/{$file} (already exists)."
-            ];
+            ]);
         }
 
         // Create the file and write the content
@@ -93,20 +93,18 @@ class Templates
         // If the file was successfully created
         if ($bytesWritten !== false) {
             // Return success message
-            return [
+            return new SkillResponse([
                 'success' => true,
-//                'message' => $content
                 'message' => "Successfully created {$directory}/{$file}",
-                'content' => $content
-            ];
+                'response' => $content
+            ]);
         }
 
         // Something went wrong
-        return [
+        return new SkillResponse([
             'success' => false,
             'error' => "Unable to create file {$directory}/{$file}."
-        ];
-
+        ]);
     }
 
     /**
@@ -116,9 +114,9 @@ class Templates
      *
      * @param string $directory Directory to look in.
      * @param string $file Name of the file to read.
-     * @return array
+     * @return SkillResponse
      */
-    public static function readFile(string $directory, string $file): array
+    public static function readFile(string $directory, string $file): SkillResponse
     {
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
@@ -127,20 +125,18 @@ class Templates
         if (file_exists($filePath)) {
             // Read the file content
             $content = file_get_contents($filePath);
-            return [
+            return new SkillResponse([
                 'success' => true,
-//                'message' => $content
                 'message' => "Successfully read {$directory}/{$file}",
-                'content' => $content
-            ];
+                'response' => $content
+            ]);
         }
 
         // Something went wrong
-        return [
+        return new SkillResponse([
             'success' => false,
             'error' => "Unable to read file {$directory}/{$file}."
-        ];
-
+        ]);
     }
 
     /**
@@ -151,9 +147,9 @@ class Templates
      * @param string $directory Directory where file currently exists.
      * @param string $file Name of the file to edit.
      * @param string $content Content to include in the file.
-     * @return array
+     * @return SkillResponse
      */
-    public static function updateFile(string $directory, string $file, string $content): array
+    public static function updateFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
@@ -164,26 +160,24 @@ class Templates
             $bytesWritten = file_put_contents($filePath, $content);
             // If the file was successfully updated
             if ($bytesWritten === false) {
-                return [
+                return new SkillResponse([
                     'success' => false,
                     'error' => "Unable to write to file {$directory}/{$file}."
-                ];
+                ]);
             }
             // Return success message
-            return [
+            return new SkillResponse([
                 'success' => true,
-//                'message' => $content
                 'message' => "Successfully read {$directory}/{$file}",
-                'content' => $content
-            ];
+                'response' => $content
+            ]);
         }
 
         // Something went wrong
-        return [
+        return new SkillResponse([
             'success' => false,
             'error' => "Unable to edit file {$directory}/{$file}."
-        ];
-
+        ]);
     }
 
     /**
@@ -193,9 +187,9 @@ class Templates
      *
      * @param string $directory The directory of the file to be deleted.
      * @param string $file The name of the file to be deleted.
-     * @return array
+     * @return SkillResponse
      */
-    public static function deleteFile(string $directory, string $file): array
+    public static function deleteFile(string $directory, string $file): SkillResponse
     {
         // Parse the templates path
         $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
@@ -206,19 +200,18 @@ class Templates
             $deleted = unlink($filePath);
             // If the file was successfully deleted
             if ($deleted) {
-                return [
+                return new SkillResponse([
                     'success' => true,
                     'message' => "Successfully deleted {$directory}/{$file}"
-                ];
+                ]);
             }
         }
 
         // Something went wrong
-        return [
+        return new SkillResponse([
             'success' => false,
             'error' => "Unable to delete file {$directory}/{$file}."
-        ];
-
+        ]);
     }
 
     // ========================================================================= //
