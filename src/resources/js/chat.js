@@ -195,9 +195,6 @@ const SidekickChat = {
                     // Display the last 100 messages
                     const messagesToDisplay = data.conversation.slice(-MAX_MESSAGES_DISPLAYED);
 
-                    // Log table of messages
-                    // console.table(messagesToDisplay);
-
                     // Loop through all messages
                     messagesToDisplay.forEach((message) => {
                         // Display message in the chat window
@@ -207,10 +204,10 @@ const SidekickChat = {
                         );
                     });
                 } else {
-                    const error = (data.error || 'Unable to load the conversation.');
+                    const message = (data.message || 'Unable to load the conversation.');
                     this.appendMessage(
                         this.ROLE.ERROR,
-                        error
+                        message
                     );
                 }
             })
@@ -283,12 +280,12 @@ const SidekickChat = {
             // If role or message are missing
             if (!data.role || !data.message) {
                 // Log warning
-                console.warn('Invalid message:', data);
-                // Display the error message
-                that.appendMessage(
-                    that.ROLE.ERROR,
-                    'Invalid message format.'
-                );
+                console.warn('Invalid message:', data, event);
+                // // Display the error message
+                // that.appendMessage(
+                //     that.ROLE.ERROR,
+                //     'Invalid message format.'
+                // );
                 // Bail
                 return;
             }
@@ -305,12 +302,38 @@ const SidekickChat = {
 
         // If there's an error
         eventSource.onerror = function(error) {
-            // Log error
-            console.error('Unable to send message: ', error);
+
+
+            console.error('SSE encountered an error:', error);
+
+            // Log the connection state (0: CONNECTING, 1: OPEN, 2: CLOSED)
+            const readyState = error.target.readyState;
+            if (readyState === EventSource.CONNECTING) {
+                console.warn('EventSource is reconnecting (readyState = CONNECTING)...');
+            } else if (readyState === EventSource.CLOSED) {
+                console.error('EventSource connection closed. ' +
+                    'This might be due to a server-side error, network issues, or PHP misconfiguration.');
+            } else {
+                console.error('Unexpected EventSource state:', readyState);
+            }
+
+            // // Log the URL for further inspection
+            // console.log('EventSource URL:', error.target.url);
+
+            // // OPTIONAL: Attempt a HEAD request to the same URL to check HTTP status.
+            // // This may provide hints about server-side issues (e.g., 500, 404, CORS issues).
+            // fetch(error.target.url, { method: 'HEAD' })
+            //     .then(response => {
+            //         console.log('Fetch status for SSE endpoint:', response.status, response.statusText);
+            //     })
+            //     .catch(fetchError => {
+            //         console.error('Fetch error while checking SSE endpoint:', fetchError);
+            //     });
+
             // Display the error message
             that.appendMessage(
                 that.ROLE.ERROR,
-                error
+                'An unknown connection error occurred.'
             );
             // Hide the spinner
             that.hideSpinner();
@@ -379,14 +402,14 @@ const SidekickChat = {
                         // Focus the message input
                         this.chatInput.focus();
                     } else {
-                        const error = (data.error || 'Failed to clear the conversation.');
+                        const message = (data.message || 'Failed to clear the conversation.');
                         this.appendMessage(
                             this.ROLE.ERROR,
-                            error
+                            message
                         );
                         // Wait for .1 second before alerting the user
                         setTimeout(() => {
-                            alert(error);
+                            alert(message);
                         }, 100);
                     }
                 })

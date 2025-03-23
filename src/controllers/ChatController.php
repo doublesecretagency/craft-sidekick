@@ -9,7 +9,6 @@ use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
-use yii\base\Exception;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -111,8 +110,11 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
 
-            // Record and return an error message
-            return $this->_error("Unable to get the conversation. {$e->getMessage()}");
+            // Return an error message
+            return $this->asJson([
+                'success' => false,
+                'message' => "Unable to get the conversation. {$e->getMessage()}"
+            ]);
 
         }
     }
@@ -134,7 +136,7 @@ class ChatController extends Controller
             Sidekick::$plugin->chat->clearConversation();
 
             // Log the message
-            Craft::info("Cleared the conversation.", __METHOD__);
+            Craft::info('Cleared the conversation.', __METHOD__);
 
             // Return a success message
             return $this->asJson([
@@ -144,8 +146,11 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
 
-            // Record and return an error message
-            return $this->_error("Unable to clear the conversation. {$e->getMessage()}");
+            // Return an error message
+            return $this->asJson([
+                'success' => false,
+                'message' => "Unable to clear the conversation. {$e->getMessage()}",
+            ]);
 
         }
     }
@@ -211,76 +216,18 @@ class ChatController extends Controller
 
         } catch (\Exception $e) {
 
-            // TODO: Don't return, use SSE
-            // Record and return an error message
-//            return $this->_error($e->getMessage());
+            // Append error to the chat history
+            (new ChatMessage([
+                'role' => ChatMessage::ERROR,
+                'message' => $e->getMessage()
+            ]))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
 
         }
 
         // Close the connection
         $sse->closeConnection();
-    }
-
-    /**
-     * Record and return an error message.
-     *
-     * @param string $error
-     * @return Response
-     * @throws Exception
-     */
-    private function _error(string $error): Response
-    {
-        // Compile the error message
-        $errorMessage = [
-            'role' => ChatMessage::ERROR,
-            'message' => $error
-        ];
-
-        // Append error to the chat history
-        (new ChatMessage($errorMessage))
-            ->log()
-            ->toChatHistory()
-            ->toChatWindow()
-            ->toOpenAiThread();
-
-        // Attempt to handle the error
-        try {
-
-            // Get OpenAI service
-            $openAi = Sidekick::$plugin->openAi;
-
-            // Run the OpenAI thread
-            $openAi->runThread();
-
-            // Get the latest assistant message
-            $reply = $openAi->getLatestAssistantMessage();
-
-            // Append to the chat history
-            (new ChatMessage($reply))
-                ->log()
-                ->toChatHistory()
-                ->toChatWindow();
-
-            // Return the results
-            return $this->asJson([
-                'success' => true,
-                'messages' => array_merge([$errorMessage], [$reply]),
-            ]);
-
-        } catch (\Exception $e) {
-
-            // Return multiple errors
-            return $this->asJson([
-                'success' => false,
-                'messages' => [
-                    $errorMessage,
-                    [
-                        'role' => ChatMessage::ERROR,
-                        'message' => $e->getMessage(),
-                    ]
-                ],
-            ]);
-
-        }
     }
 }

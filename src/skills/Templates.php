@@ -57,7 +57,7 @@ class Templates
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Understanding the structure of the templates directory.",
+            'message' => "Inspected the structure of the templates directory.",
             'response' => implode("\n", $structure)
         ]);
     }
@@ -83,7 +83,7 @@ class Templates
         if (file_exists($filePath)) {
             return new SkillResponse([
                 'success' => false,
-                'error' => "Unable to create file {$directory}/{$file} (already exists)."
+                'message' => "Unable to create file {$directory}/{$file} (already exists)."
             ]);
         }
 
@@ -95,7 +95,7 @@ class Templates
             // Return success message
             return new SkillResponse([
                 'success' => true,
-                'message' => "Successfully created {$directory}/{$file}",
+                'message' => "Created {$directory}/{$file}",
                 'response' => $content
             ]);
         }
@@ -103,7 +103,7 @@ class Templates
         // Something went wrong
         return new SkillResponse([
             'success' => false,
-            'error' => "Unable to create file {$directory}/{$file}."
+            'message' => "Unable to create file {$directory}/{$file}."
         ]);
     }
 
@@ -127,7 +127,7 @@ class Templates
             $content = file_get_contents($filePath);
             return new SkillResponse([
                 'success' => true,
-                'message' => "Successfully read {$directory}/{$file}",
+                'message' => "Read {$directory}/{$file}",
                 'response' => $content
             ]);
         }
@@ -135,7 +135,7 @@ class Templates
         // Something went wrong
         return new SkillResponse([
             'success' => false,
-            'error' => "Unable to read file {$directory}/{$file}."
+            'message' => "Unable to read file {$directory}/{$file}."
         ]);
     }
 
@@ -143,6 +143,8 @@ class Templates
      * Update an existing file with specified content.
      *
      * Directory should always begin with `templates`.
+     *
+     * For large updates, ask for confirmation before proceeding.
      *
      * @param string $directory Directory where file currently exists.
      * @param string $file Name of the file to edit.
@@ -162,13 +164,13 @@ class Templates
             if ($bytesWritten === false) {
                 return new SkillResponse([
                     'success' => false,
-                    'error' => "Unable to write to file {$directory}/{$file}."
+                    'message' => "Unable to write to file {$directory}/{$file}."
                 ]);
             }
             // Return success message
             return new SkillResponse([
                 'success' => true,
-                'message' => "Successfully read {$directory}/{$file}",
+                'message' => "Updated {$directory}/{$file}",
                 'response' => $content
             ]);
         }
@@ -176,7 +178,7 @@ class Templates
         // Something went wrong
         return new SkillResponse([
             'success' => false,
-            'error' => "Unable to edit file {$directory}/{$file}."
+            'message' => "Unable to update file {$directory}/{$file}."
         ]);
     }
 
@@ -184,6 +186,8 @@ class Templates
      * Delete the specified file.
      *
      * Directory should always begin with `templates`.
+     *
+     * If the user doesn't explicitly say "delete", ask for confirmation before proceeding.
      *
      * @param string $directory The directory of the file to be deleted.
      * @param string $file The name of the file to be deleted.
@@ -202,7 +206,7 @@ class Templates
             if ($deleted) {
                 return new SkillResponse([
                     'success' => true,
-                    'message' => "Successfully deleted {$directory}/{$file}"
+                    'message' => "Deleted {$directory}/{$file}"
                 ]);
             }
         }
@@ -210,7 +214,7 @@ class Templates
         // Something went wrong
         return new SkillResponse([
             'success' => false,
-            'error' => "Unable to delete file {$directory}/{$file}."
+            'message' => "Unable to delete file {$directory}/{$file}."
         ]);
     }
 
@@ -224,6 +228,9 @@ class Templates
      */
     private static function _parseTemplatesPath(string $path): string
     {
+        // Trim leading slashes from the path
+        $path = ltrim($path, '/');
+
         // Replace the `templates` prefix with the actual path
         return preg_replace(
             '/^templates/',

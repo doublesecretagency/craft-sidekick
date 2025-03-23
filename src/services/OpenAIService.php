@@ -10,6 +10,7 @@ use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\events\DefineExtraToolsEvent;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
+use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
 use doublesecretagency\sidekick\skills\Templates;
 use GuzzleHttp\Exception\RequestException;
@@ -320,30 +321,31 @@ class OpenAIService extends Component
                                 }
 
                                 // Run the tool
-                                $results = $this->_runTool($toolCall);
+                                $skillResponse = $this->_runTool($toolCall);
 
                                 // If the tool results were not successful
-                                if (!$results['success']) {
-                                    // Cancel the run and throw an exception
+                                if (!$skillResponse->success) {
+
+                                    // Cancel the run
                                     $service->cancel($run->threadId, $run->id);
-                                    throw new Exception($results['error'] ?? 'An unknown error occurred.');
+
+                                    // Throw an exception
+                                    throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
                                 }
 
-                                // Append the message
+                                // Add the message to the chat
                                 (new ChatMessage([
                                     'role' => ChatMessage::TOOL,
-                                    'message' => ($results['message'] ?? '[missing tool message]')
+                                    'message' => ($skillResponse->message ?? '[missing tool message]')
                                 ]))
-//                                    ->toChatHistory()
-                                    ->toChatWindow()
-//                                    ->toOpenAiThread()
-                                ;
-
+                                    ->log()
+                                    ->toChatHistory()
+                                    ->toChatWindow();
 
                                 // Collect the tool output
                                 $allToolOutputs[] = [
                                     'tool_call_id' => $toolCall->id,
-                                    'output' => $results['output'],
+                                    'output' => ($skillResponse->response ?? $skillResponse->message),
                                 ];
                             }
 
@@ -367,6 +369,7 @@ class OpenAIService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => $e->getMessage(),
             ]))
+                ->log()
                 ->toChatHistory()
                 ->toChatWindow()
                 ->toOpenAiThread();
@@ -379,10 +382,10 @@ class OpenAIService extends Component
      * Run the specified tool call.
      *
      * @param ThreadRunResponseRequiredActionFunctionToolCall $toolCall
-     * @return array
+     * @return SkillResponse
      * @throws Exception
      */
-    private function _runTool(ThreadRunResponseRequiredActionFunctionToolCall $toolCall): array
+    private function _runTool(ThreadRunResponseRequiredActionFunctionToolCall $toolCall): SkillResponse
     {
         try {
             // Get the function name and arguments
@@ -402,67 +405,17 @@ class OpenAIService extends Component
             }
 
             // Call the tool function
-            $results = $class::$method(...$args);
-
-            // Whether the results were successful
-            $success = ($results['success'] ?? false);
-
-            // If the results were successful
-            if ($results['success'] ?? false) {
-
-                // Add the message to the chat
-                (new ChatMessage([
-                    'role' => ChatMessage::TOOL,
-                    'message' => ($results['message'] ?? '[missing tool message]')
-                ]))
-                    ->log()
-                    ->toChatHistory()
-                    ->toChatWindow();
-
-            } else {
-
-                // Add the error to the chat
-                (new ChatMessage([
-                    'role' => ChatMessage::ERROR,
-                    'message' => ($results['error'] ?? "An unknown error occurred.")
-                ]))
-                    ->log()
-                    ->toChatHistory()
-                    ->toChatWindow();
-
-            }
-
-            // Set output to the success or error message
-            $output = ($results['message'] ?? "An unknown error occurred.");
-
-            // Compile the tool message
-            $message = [
-                'role' => ($success ? ChatMessage::TOOL : ChatMessage::ERROR),
-                'content' => $output,
-            ];
+            return $class::$method(...$args);
 
         } catch (\Exception $e) {
 
-            // The results were not successful
-            $success = false;
-
-            // Set output to the exception message
-            $output = $e->getMessage();
-
-            // Compile the error message
-            $message = [
-                'role' => ChatMessage::ERROR,
-                'content' => $output,
-            ];
+            // Return error message
+            return new SkillResponse([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
 
         }
-
-        // Return the message and output
-        return [
-            'success' => $success,
-            'message' => $message,
-            'output' => $output,
-        ];
     }
 
     // ========================================================================= //
