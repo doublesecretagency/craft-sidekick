@@ -14,7 +14,7 @@ class SystemPrompt
      * @var array The list of system prompt files to compile.
      */
     private static array $systemPromptFiles = [
-        'updated.md',
+        'instructions.md',
     ];
 
     /**
