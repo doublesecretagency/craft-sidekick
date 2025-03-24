@@ -7,7 +7,7 @@ use craft\helpers\App;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
-use doublesecretagency\sidekick\events\DefineExtraToolsEvent;
+use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
@@ -35,9 +35,9 @@ use yii\base\Exception;
 class OpenAIService extends Component
 {
     /**
-     * @event DefineExtraToolsEvent The event that is triggered when defining extra tools for the AI assistant.
+     * @event AddSkillsEvent The event that is triggered when defining extra tools for the AI assistant.
      */
-    public const EVENT_DEFINE_EXTRA_TOOLS = 'defineExtraTools';
+    public const EVENT_ADD_SKILLS = 'addSkills';
 
     /**
      * @var string The API key for OpenAI.
@@ -488,14 +488,14 @@ class OpenAIService extends Component
         // Initialize the tool set with native tools
         $toolSet = [Templates::class];
 
-        // Give plugins/modules a chance to add custom tools
-        if ($this->hasEventHandlers(self::EVENT_DEFINE_EXTRA_TOOLS)) {
-            // Create a new DefineExtraToolsEvent
-            $event = new DefineExtraToolsEvent();
+        // Give plugins/modules a chance to add custom skills
+        if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
+            // Create a new AddSkillsEvent
+            $event = new AddSkillsEvent();
             // Trigger the event
-            $this->trigger(self::EVENT_DEFINE_EXTRA_TOOLS, $event);
+            $this->trigger(self::EVENT_ADD_SKILLS, $event);
             // Append any extra tools to the tool set
-            $toolSet = array_merge($toolSet, $event->extraTools);
+            $toolSet = array_merge($toolSet, $event->skills);
         }
 
         // Loop through each tool class

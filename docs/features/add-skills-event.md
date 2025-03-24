@@ -1,11 +1,11 @@
-# Define Extra Tools Event
+# Add Skills Event
 
-One of Sidekick's most powerful features is the ability to extend its functionality through the **Define Extra Tools** event.
+One of Sidekick's most powerful features is the ability to extend its functionality through the **Add Skills** event.
 
-## What Is the Define Extra Tools Event?
+## What Is the Add Skills Event?
 
-- It allows developers to **add custom tools** that Sidekick can use to perform actions.
-- These tools can be defined in your plugins or modules and made available to the AI assistant.
+- It allows developers to **add custom functions** which Sidekick can then use to perform actions.
+- These functions can be defined in your plugins or modules and made available to the AI assistant.
 - This opens up endless possibilities for integrating Sidekick with your custom workflows.
 
 ## Benefits
@@ -16,43 +16,43 @@ One of Sidekick's most powerful features is the ability to extend its functional
 
 ## How to Use It
 
-1. **Listen to the Event**: In your plugin or module, listen for the `EVENT_DEFINE_EXTRA_TOOLS` event.
+1. **Listen to the Event**: In your plugin or module, listen for the `EVENT_ADD_SKILLS` event.
 
 ```php
-use doublesecretagency\sidekick\events\DefineExtraToolsEvent;
+use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\services\OpenAIService;
 use yii\base\Event;
 
 // Define extra tools for the Sidekick AI
 Event::on(
     OpenAIService::class,
-    OpenAIService::EVENT_DEFINE_EXTRA_TOOLS,
-    function(DefineExtraToolsEvent $event) {
+    OpenAIService::EVENT_ADD_SKILLS,
+    function(AddSkillsEvent $event) {
         // Add your custom tools to the Sidekick AI
-        $event->extraTools[] = MyCustomTools::class;
+        $event->skills[] = MyCustomSkills::class;
     }
 );
 ```
 
-2. **Define Your Tools**: Create a class with static methods for each of the tools you want to add.
+2. **Define Your Tools**: Create a class with static methods for each of the skill sets you want to add.
 
 ::: warning The docblock is critical!
-Make sure to include a thorough docblock for each method, providing a description of the tool, its parameters, and its return value. **This documentation teaches Sidekick how to use your tool.**
+Make sure to include a thorough docblock for each method, providing a description of the function, its parameters, and its return value. **This documentation teaches Sidekick how to use your function!**
 :::
 
 ```php
-namespace modules\mymodule\tools;
+namespace modules\mymodule\skills;
 
-class MyCustomTools
+class MyCustomSkills
 {
    /**
-    * A custom tool function to be triggered via the Sidekick chat window.
+    * A custom function to be triggered via the Sidekick chat window.
     *
-    * @param string $foo A parameter for the custom tool function.
-    * @param string $bar Another parameter for the custom tool function.
+    * @param string $foo A parameter for the custom function.
+    * @param string $bar Another parameter for the custom function.
     * @return array A success or error message.
     */
-   public static function myToolFunction(string $foo, string $bar): array
+   public static function mySkillFunction(string $foo, string $bar): array
    {
        /**
         * Your custom tool function can do whatever you want.
@@ -84,6 +84,6 @@ The method must return an array with two keys:
   - **On error:** Display in the chat window. 
   - **On success:** Send back to the API for further processing.
 
-To see what's possible, check out some of the [Custom Tools](/examples/) examples.
+To see what's possible, check out some of the [Custom Skills](/examples/) examples.
 
 **There is virtually no limit to what you can trigger with custom tools!** As long as it can be wrapped in PHP, it can be triggered via the Sidekick chat window.
