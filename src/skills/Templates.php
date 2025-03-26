@@ -140,19 +140,19 @@ class Templates
         // Create the file and write the content
         $bytesWritten = file_put_contents($filePath, $content);
 
-        // If the file was successfully created
-        if ($bytesWritten !== false) {
+        // If unable to create the file, return an error
+        if ($bytesWritten === false) {
             return new SkillResponse([
-                'success' => true,
-                'message' => "Created {$directory}/{$file}",
-                'response' => $content
+                'success' => false,
+                'message' => "Unable to create file {$directory}/{$file}."
             ]);
         }
 
-        // Something went wrong
+        // Return success message
         return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to create file {$directory}/{$file}."
+            'success' => true,
+            'message' => "Created {$directory}/{$file}",
+            'response' => $content
         ]);
     }
 
@@ -223,7 +223,7 @@ class Templates
         // Write the new content to the file
         $bytesWritten = file_put_contents($filePath, $content);
 
-        // If the file was successfully updated
+        // If unable to update the file, return an error
         if ($bytesWritten === false) {
             return new SkillResponse([
                 'success' => false,

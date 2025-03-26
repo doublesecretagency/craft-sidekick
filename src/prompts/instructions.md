@@ -36,6 +36,8 @@ You should:
 
 - If the user uses the word **"modules"**, assume they are referencing the **modules folder**.
 
+- If the user uses the word **"skills"**, assume they are referencing the **available tool methods**.
+
 ### Formatting and Style Guidelines
 
 - **Formatting Tool Functions:**

@@ -12,6 +12,8 @@ use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
+use doublesecretagency\sidekick\skills\Entries;
+use doublesecretagency\sidekick\skills\SettingsSections;
 use doublesecretagency\sidekick\skills\Templates;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
@@ -486,7 +488,11 @@ class OpenAIService extends Component
         ];
 
         // Initialize the tool set with native tools
-        $toolSet = [Templates::class];
+        $toolSet = [
+            Templates::class,
+            Entries::class,
+            SettingsSections::class,
+        ];
 
         // Give plugins/modules a chance to add custom skills
         if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
@@ -515,7 +521,11 @@ class OpenAIService extends Component
 
                 // Get the method details
                 $name = $toolFunction->getName();
-                $description = $docBlock->getSummary();
+                $summary = $docBlock->getSummary();
+                $description = $docBlock->getDescription();
+
+                // Merge summary into description
+                $description = "{$summary}\n\n{$description}";
 
                 // Get the method's parameters
                 $params = $docBlock->getTagsByName('param');
