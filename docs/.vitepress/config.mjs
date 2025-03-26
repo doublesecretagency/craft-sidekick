@@ -41,7 +41,7 @@ export default defineConfig({
           {
             items: [
               {text: 'Chat Window', link: '/features/chat-window'},
-              {text: 'Add Skills', link: '/features/add-skills-event'}
+              {text: 'Add Skills', link: '/features/add-skills'}
             ]
           }
         ]
@@ -99,7 +99,7 @@ export default defineConfig({
           items: [
             {text: 'Overview', link: '/features/'},
             {text: 'Chat Window', link: '/features/chat-window'},
-            {text: 'Add Skills', link: '/features/add-skills-event'}
+            {text: 'Add Skills', link: '/features/add-skills'}
           ]
         }
       ],

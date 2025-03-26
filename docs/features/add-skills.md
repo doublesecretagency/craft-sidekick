@@ -1,4 +1,4 @@
-# Add Skills Event
+# Add Skills
 
 One of Sidekick's most powerful features is the ability to extend its functionality through the **Add Skills** event.
 
@@ -43,6 +43,8 @@ Make sure to include a thorough docblock for each method, providing a descriptio
 ```php
 namespace modules\mymodule\skills;
 
+use doublesecretagency\sidekick\models\SkillResponse;
+
 class MyCustomSkills
 {
    /**
@@ -63,27 +65,30 @@ class MyCustomSkills
         // If validation fails
         if (!$valid) {
             // Return error message
-            return [
+            return new SkillResponse([
                 'success' => false,
                 'message' => "Unable to {$foo} with {$bar}."
-            ];
+            ]);
         }
 
         // Return success message
-        return [
+        return new SkillResponse([
             'success' => true,
-            'message' => "Successfully performed {$foo} with {$bar}."
-        ];
+            'message' => "Successfully performed {$foo} with {$bar}.",
+//            'response' => '(any data you want to send back to the API for further processing)'
+        ]);
    }
 }
 ```
 
+Regardless of whether the method succeeds or fails, it must return an instance of `SkillResponse`. Pass an array to the constructor with the following keys to indicate the outcome of the operation:
+
 The method must return an array with two keys:
-- `success`: A boolean indicating whether the operation was successful.
-- `message`: A string containing a message to either:
-  - **On error:** Display in the chat window. 
-  - **On success:** Send back to the API for further processing.
+- _bool_ `success`: A boolean indicating whether the operation was successful.
+- _string_ `message`: A string containing the success or error message.
+- _string_ `response`: (optional) Any additional information you want to send back to the API for further processing. For complex data, you may send a JSON stringified array.
 
 To see what's possible, check out some of the [Custom Skills](/examples/) examples.
 
 **There is virtually no limit to what you can trigger with custom tools!** As long as it can be wrapped in PHP, it can be triggered via the Sidekick chat window.
+
