@@ -7,14 +7,10 @@ use craft\helpers\App;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
-use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
-use doublesecretagency\sidekick\skills\Entries;
-use doublesecretagency\sidekick\skills\SettingsSections;
-use doublesecretagency\sidekick\skills\Templates;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
 use OpenAI\Client;
@@ -37,9 +33,14 @@ use yii\base\Exception;
 class OpenAIService extends Component
 {
     /**
-     * @event AddSkillsEvent The event that is triggered when defining extra tools for the AI assistant.
+     * @const Maximum length of the name for tool functions.
      */
-    public const EVENT_ADD_SKILLS = 'addSkills';
+    private const MAX_NAME_LENGTH = 64;
+
+    /**
+     * @const Length of the hash for tool functions.
+     */
+    private const HASH_LENGTH = 6;
 
     /**
      * @var string The API key for OpenAI.
@@ -60,6 +61,11 @@ class OpenAIService extends Component
      * @var string|null The thread ID.
      */
     private ?string $_threadId = null;
+
+    /**
+     * @var array List of skills hashes.
+     */
+    private array $_skillsHash = [];
 
     /**
      * Initializes the service.
@@ -85,6 +91,32 @@ class OpenAIService extends Component
             // Create a new OpenAI client
             $this->_openAiClient = OpenAI::client($this->_apiKey);
         }
+
+        // If skills hash has not yet been generated
+        if (!$this->_skillsHash) {
+
+            // Loop through each tool class
+            foreach (Sidekick::$skills as $toolClass) {
+
+                // Split the tool class into parts
+                $nameParts = explode('\\', $toolClass);
+
+                // Remove the last part of the class name
+                array_pop($nameParts);
+
+                // Recombine the namespace
+                $namespace = implode('\\', $nameParts);
+
+                // Generate a truncated hash of the namespace
+                $hash = $this->_generateHash($namespace);
+
+                // Store the hash and namespace
+                $this->_skillsHash[$hash] = $namespace;
+
+            }
+
+        }
+
     }
 
     // ========================================================================= //
@@ -441,6 +473,9 @@ class OpenAIService extends Component
             // Split the full name into parts
             $nameParts = explode('-', $fullName);
 
+            // Convert hash to namespace
+            $nameParts[0] = ($this->_skillsHash[$nameParts[0]] ?? $nameParts[0]);
+
             // Get the method and class names
             $method = array_pop($nameParts);
             $class = implode('\\', $nameParts);
@@ -471,6 +506,7 @@ class OpenAIService extends Component
      *
      * @return array[]
      * @throws ReflectionException
+     * @throws Exception
      */
     private function _getTools(): array
     {
@@ -487,25 +523,8 @@ class OpenAIService extends Component
             ]
         ];
 
-        // Initialize the tool set with native tools
-        $toolSet = [
-            Templates::class,
-            Entries::class,
-            SettingsSections::class,
-        ];
-
-        // Give plugins/modules a chance to add custom skills
-        if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
-            // Create a new AddSkillsEvent
-            $event = new AddSkillsEvent();
-            // Trigger the event
-            $this->trigger(self::EVENT_ADD_SKILLS, $event);
-            // Append any extra tools to the tool set
-            $toolSet = array_merge($toolSet, $event->skills);
-        }
-
         // Loop through each tool class
-        foreach ($toolSet as $toolClass) {
+        foreach (Sidekick::$skills as $toolClass) {
 
             // Get all class methods
             $toolFunctions = (new ReflectionClass($toolClass))->getMethods(ReflectionMethod::IS_PUBLIC);
@@ -520,7 +539,7 @@ class OpenAIService extends Component
                 $docBlock = $docFactory->create($toolFunction->getDocComment());
 
                 // Get the method details
-                $name = $toolFunction->getName();
+                $functionName = $toolFunction->getName();
                 $summary = $docBlock->getSummary();
                 $description = $docBlock->getDescription();
 
@@ -550,8 +569,28 @@ class OpenAIService extends Component
 
                 }
 
+                // Split the tool class into parts
+                $nameParts = explode('\\', $toolClass);
+
+                // Get the last part of the class name
+                $className = array_pop($nameParts);
+
+                // Recombine the namespace
+                $namespace = implode('\\', $nameParts);
+
+                // Generate a truncated hash of the namespace
+                $hash = $this->_generateHash($namespace);
+
                 // Generate a unique full name for the tool
-                $fullName = str_replace('\\', '-', $toolClass)."-{$name}";
+                $fullName = "{$hash}-{$className}-{$functionName}";
+
+                // Calculate the maximum length for the tool name
+                $maxLength = (self::MAX_NAME_LENGTH - self::HASH_LENGTH - 2); // Includes 2 dashes
+
+                // If the name is too long, throw an exception
+                if (self::MAX_NAME_LENGTH < strlen($fullName)) {
+                    throw new Exception("The tool name (class + method) of `{$className}::{$functionName}` exceeds the maximum length of {$maxLength} total characters.");
+                }
 
                 // Add the function to the list of tools
                 $tools[] = $this->_toolFunction($fullName, $description, $properties);
@@ -561,6 +600,18 @@ class OpenAIService extends Component
 
         // Return all available tools
         return $tools;
+    }
+
+    /**
+     * Generate a hash from the given namespace.
+     *
+     * @param string $namespace
+     * @return string
+     */
+    private function _generateHash(string $namespace): string
+    {
+        // Return a truncated hash of the namespace
+        return substr(md5($namespace), 0, self::HASH_LENGTH);
     }
 
     /**

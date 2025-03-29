@@ -20,13 +20,13 @@ One of Sidekick's most powerful features is the ability to extend its functional
 
 ```php
 use doublesecretagency\sidekick\events\AddSkillsEvent;
-use doublesecretagency\sidekick\services\OpenAIService;
+use doublesecretagency\sidekick\Sidekick;
 use yii\base\Event;
 
 // Define extra tools for the Sidekick AI
 Event::on(
-    OpenAIService::class,
-    OpenAIService::EVENT_ADD_SKILLS,
+    Sidekick::class,
+    Sidekick::EVENT_ADD_SKILLS,
     function(AddSkillsEvent $event) {
         // Add your custom tools to the Sidekick AI
         $event->skills[] = MyCustomSkills::class;
@@ -35,6 +35,8 @@ Event::on(
 ```
 
 2. **Define Your Tools**: Create a class with static methods for each of the skill sets you want to add.
+
+Each method has a maximum name length. The total length of the **class name** plus the **method name** may not exceed 56 characters.
 
 ::: warning The docblock is critical!
 Make sure to include a thorough docblock for each method, providing a description of the function, its parameters, and its return value. **This documentation teaches Sidekick how to use your function!**

@@ -11,6 +11,7 @@ use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
+use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
 use doublesecretagency\sidekick\services\ChatService;
@@ -19,6 +20,9 @@ use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
 use doublesecretagency\sidekick\services\SseService;
+use doublesecretagency\sidekick\skills\Entries;
+use doublesecretagency\sidekick\skills\SettingsSections;
+use doublesecretagency\sidekick\skills\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
@@ -45,9 +49,23 @@ use craft\console\Application as ConsoleApplication;
 class Sidekick extends Plugin
 {
     /**
-     * @var Sidekick|null $plugin The plugin instance.
+     * @event AddSkillsEvent The event that is triggered when defining extra tools for the AI assistant.
+     */
+    public const EVENT_ADD_SKILLS = 'addSkills';
+
+    /**
+     * @var Sidekick|null The plugin instance.
      */
     public static ?Sidekick $plugin = null;
+
+    /**
+     * @var array List of available skills.
+     */
+    public static array $skills = [
+        Templates::class,
+        Entries::class,
+        SettingsSections::class,
+    ];
 
     /**
      * @var bool $hasCpSection The plugin has a section with subpages.
@@ -103,6 +121,16 @@ class Sidekick extends Plugin
                 ];
             }
         );
+
+        // Give plugins/modules a chance to add custom skills
+        if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
+            // Create a new AddSkillsEvent
+            $event = new AddSkillsEvent();
+            // Trigger the event
+            $this->trigger(self::EVENT_ADD_SKILLS, $event);
+            // Append any additional skills
+            self::$skills = array_merge(self::$skills, $event->skills);
+        }
 
         // Register the asset bundle for loading JS/CSS
         Event::on(
