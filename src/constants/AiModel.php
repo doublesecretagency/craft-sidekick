@@ -9,7 +9,7 @@ class AiModel
      *
      * @const
      */
-    public const DEFAULT = 'gpt-4o';
+    public const DEFAULT = 'gpt-4.5-preview';
 
     /**
      * List of available AI models.
@@ -17,12 +17,11 @@ class AiModel
      * @const
      */
     public const AVAILABLE = [
-//        'o1-preview'    => 'o1 preview',
-//        'o1-mini'       => 'o1 mini',
-        'gpt-4o'        => 'GPT-4o',
-        'gpt-4o-mini'   => 'GPT-4o mini',
-        'gpt-4'         => 'GPT-4',
-        'gpt-4-turbo'   => 'GPT-4 Turbo',
-        'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
+        'gpt-4.5-preview' => 'GPT-4.5 preview',
+        'gpt-4o'          => 'GPT-4o',
+        'gpt-4o-mini'     => 'GPT-4o mini',
+        'gpt-4'           => 'GPT-4',
+        'gpt-4-turbo'     => 'GPT-4 Turbo',
+        'gpt-3.5-turbo'   => 'GPT-3.5 Turbo',
     ];
 }

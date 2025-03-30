@@ -258,14 +258,14 @@ const SidekickChat = {
         // Convert parameters to a query string
         const params = new URLSearchParams({message, greeting});
 
-        console.log('Opening the connection.');
+        // console.log('Opening the connection.');
 
         // Create an event source
         const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${params.toString()}`);
 
         // Close the connection when instructed
         eventSource.addEventListener('close', function(event) {
-            console.log('Closing the connection.');
+            // console.log('Closing the connection.');
             eventSource.close();
             // Hide the spinner
             that.hideSpinner();
