@@ -306,6 +306,9 @@ class OpenAIService extends Component
             'assistant_id' => $this->_getAssistantId(),
         ]);
 
+        // The thread is running
+        $running = true;
+
         // Attempt to run the thread
         try {
 
@@ -349,6 +352,8 @@ class OpenAIService extends Component
                         case 'thread.run.expired':
                         case 'thread.run.cancelled':
                         case 'thread.run.failed':
+                            // The thread is no longer running
+                            $running = false;
                             // Get the error message
                             $error = (
                                 $response->response->lastError->message ??
@@ -431,6 +436,9 @@ class OpenAIService extends Component
             // Until the run is completed
             } while ($run->status !== 'completed');
 
+            // The thread is no longer running
+            $running = false;
+
             // Get the latest assistant message
             $reply = $this->_getLatestAssistantMessage();
 
@@ -443,14 +451,22 @@ class OpenAIService extends Component
         } catch (\Exception $e) {
 
             // Compile error message
-            (new ChatMessage([
+            $error = new ChatMessage([
                 'role' => ChatMessage::ERROR,
                 'message' => $e->getMessage(),
-            ]))
+            ]);
+
+            // Log error and append to chat
+            $error
                 ->log()
                 ->toChatHistory()
-                ->toChatWindow()
-                ->toOpenAiThread();
+                ->toChatWindow();
+
+            // If the thread is not running
+            if (!$running) {
+                // Append the error to the OpenAI thread
+                $error->toOpenAiThread();
+            }
         }
     }
 
