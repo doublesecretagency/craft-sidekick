@@ -12,6 +12,7 @@ use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
 use doublesecretagency\sidekick\events\AddSkillsEvent;
+use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
 use doublesecretagency\sidekick\services\ChatService;
@@ -29,7 +30,6 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use yii\base\Event;
 use yii\base\Exception;
-use yii\log\FileTarget;
 use craft\console\Application as ConsoleApplication;
 
 /**
@@ -169,11 +169,11 @@ class Sidekick extends Plugin
         $logFilePath = Craft::getAlias('@storage/logs/sidekick.log');
 
         // Create a new FileTarget instance
-        $sidekickLogTarget = new FileTarget([
-            'levels' => ['error', 'warning', 'info'],
-            'categories' => ['doublesecretagency\sidekick\*'],
-            'logFile' => $logFilePath,
-            'logVars' => [], // Disable logging of global variables like $_SERVER
+        $sidekickLogTarget = new RetryFileTarget([
+            'levels'      => ['error', 'warning', 'info'],
+            'categories'  => ['doublesecretagency\sidekick\*'],
+            'logFile'     => $logFilePath,
+            'logVars'     => [],
             'maxFileSize' => 10240, // 10MB
             'maxLogFiles' => 5,
         ]);
