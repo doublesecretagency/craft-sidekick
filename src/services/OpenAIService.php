@@ -14,9 +14,12 @@ use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
 use OpenAI\Client;
+use OpenAI\Contracts\Resources\ThreadsRunsContract;
+use OpenAI\Responses\StreamResponse;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponse;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredAction;
 use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredActionFunctionToolCall;
+use OpenAI\Responses\Threads\Runs\ThreadRunStreamResponse;
 use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionClass;
@@ -318,6 +321,8 @@ class OpenAIService extends Component
                 // Loop through the stream
                 foreach ($stream as $response) {
 
+                    /** @var ThreadRunStreamResponse $response */
+
                     // If not a delta event
                     if ('thread.message.delta' !== $response->event) {
                         // Log the response event
@@ -370,64 +375,8 @@ class OpenAIService extends Component
                             // Break the whole loop
                             break 3;
                         case 'thread.run.requires_action':
-
-                            /** @var ThreadRunResponseRequiredAction $requiredAction */
-                            $requiredAction = $response->response->requiredAction;
-
-                            // If the required action is not to submit tool outputs
-                            if ('submit_tool_outputs' !== $requiredAction->type) {
-                                // Cancel the run and throw an exception
-                                $service->cancel($run->threadId, $run->id);
-                                throw new Exception("Unknown required action type: {$requiredAction->type}");
-                            }
-
-                            // Initialize an array to collect all tool outputs
-                            $allToolOutputs = [];
-
-                            // Loop through the tool calls
-                            foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
-
-                                // If the tool type is not a function
-                                if ('function' !== $toolCall->type) {
-                                    // Cancel the run and throw an exception
-                                    $service->cancel($run->threadId, $run->id);
-                                    throw new Exception("Unknown tool type: {$toolCall->type}");
-                                }
-
-                                // Run the tool
-                                $skillResponse = $this->_runTool($toolCall);
-
-                                // If the tool results were not successful
-                                if (!$skillResponse->success) {
-
-                                    // Cancel the run
-                                    $service->cancel($run->threadId, $run->id);
-
-                                    // Throw an exception
-                                    throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
-                                }
-
-                                // Add the message to the chat
-                                (new ChatMessage([
-                                    'role' => ChatMessage::TOOL,
-                                    'message' => ($skillResponse->message ?? '[missing tool message]')
-                                ]))
-                                    ->log()
-                                    ->toChatHistory()
-                                    ->toChatWindow();
-
-                                // Collect the tool output
-                                $allToolOutputs[] = [
-                                    'tool_call_id' => $toolCall->id,
-                                    'output' => ($skillResponse->response ?? $skillResponse->message),
-                                ];
-                            }
-
-                            // Submit all tool outputs at once
-                            $stream = $service->submitToolOutputsStreamed($run->threadId, $run->id, [
-                                'tool_outputs' => $allToolOutputs,
-                            ]);
-
+                            // Handle the required action
+                            $stream = $this->_handleRequiredAction($run, $response, $service);
                             // Break the loop
                             break;
                     }
@@ -471,6 +420,72 @@ class OpenAIService extends Component
     }
 
     // ========================================================================= //
+
+    /**
+     * Handle the required action for the thread run.
+     *
+     * @param ThreadRunResponse $run
+     * @param ThreadRunStreamResponse $response
+     * @param ThreadsRunsContract $service
+     * @return StreamResponse
+     * @throws Exception
+     */
+    private function _handleRequiredAction(ThreadRunResponse $run, ThreadRunStreamResponse $response, ThreadsRunsContract $service): StreamResponse
+    {
+        /** @var ThreadRunResponseRequiredAction $requiredAction */
+        $requiredAction = $response->response->requiredAction;
+
+        // If the required action is not a tool output submission
+        if ('submit_tool_outputs' !== $requiredAction->type) {
+            // Cancel the run and throw an exception
+            $service->cancel($run->threadId, $run->id);
+            throw new Exception("Unknown required action type: {$requiredAction->type}");
+        }
+
+        // Initialize an array to store all tool outputs
+        $allToolOutputs = [];
+
+        // Loop through each tool call
+        foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
+
+            // If the tool call is not a function
+            if ('function' !== $toolCall->type) {
+                // Cancel the run and throw an exception
+                $service->cancel($run->threadId, $run->id);
+                throw new Exception("Unknown tool type: {$toolCall->type}");
+            }
+
+            // Run the tool
+            $skillResponse = $this->_runTool($toolCall);
+
+            // If the tool response was not successful
+            if (!$skillResponse->success) {
+                // Cancel the run and throw an exception
+                $service->cancel($run->threadId, $run->id);
+                throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
+            }
+
+            // Append the tool output to the chat history
+            (new ChatMessage([
+                'role' => ChatMessage::TOOL,
+                'message' => ($skillResponse->message ?? '[missing tool message]')
+            ]))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
+
+            // Add the tool output to the array
+            $allToolOutputs[] = [
+                'tool_call_id' => $toolCall->id,
+                'output' => ($skillResponse->response ?? $skillResponse->message)
+            ];
+        }
+
+        // Submit the tool outputs back to the OpenAI thread
+        return $service->submitToolOutputsStreamed($run->threadId, $run->id, [
+            'tool_outputs' => $allToolOutputs,
+        ]);
+    }
 
     /**
      * Run the specified tool call.
