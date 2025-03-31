@@ -11,6 +11,7 @@ use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
+use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
 use OpenAI\Client;
@@ -92,7 +93,16 @@ class OpenAIService extends Component
         // If the OpenAI client is not already set
         if (!isset($this->_openAiClient)) {
             // Create a new OpenAI client
-            $this->_openAiClient = OpenAI::client($this->_apiKey);
+//            $this->_openAiClient = OpenAI::client($this->_apiKey);
+            $this->_openAiClient = OpenAI::factory()
+                ->withApiKey($this->_apiKey)
+                ->withHttpClient(new GuzzleClient([
+                    'timeout' => 0,
+                    'headers' => [
+                        'OpenAI-Beta' => 'assistants=v2'
+                    ]
+                ]))
+                ->make();
         }
 
         // If skills hash has not yet been generated

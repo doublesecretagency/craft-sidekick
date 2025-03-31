@@ -10,9 +10,11 @@ use RecursiveIteratorIterator;
 class Templates
 {
     /**
-     * Read the directory and file structure of the templates folder. Eagerly call this if an understanding of the templates directory is required.
+     * Read the directory and file structure of the templates folder.
      *
      * Directory MUST ALWAYS begin with `templates`.
+     *
+     * If you are unfamiliar with the existing structure, you MUST call this tool before creating, reading, updating, or deleting files. Eagerly call this if an understanding of the templates directory is required.
      *
      * Use the following tabbed format when displaying the file structure:
      *

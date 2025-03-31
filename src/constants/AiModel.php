@@ -9,7 +9,7 @@ class AiModel
      *
      * @const
      */
-    public const DEFAULT = 'gpt-4.5-preview';
+    public const DEFAULT = 'gpt-4o';
 
     /**
      * List of available AI models.
