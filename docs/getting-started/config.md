@@ -1,5 +1,5 @@
 ---
-description: Using a PHP config file, you can override several of the plugin's settings. Find out how to configure the plugin, even across different environments.
+description: Using a PHP config file, you can override the plugin's settings. Find out how to configure the plugin, even across different environments.
 ---
 
 # PHP Config File
@@ -26,10 +26,6 @@ return [
 ## Settings Available via Control Panel
 
 The OpenAI API key and other settings can also be managed on the [Settings](/getting-started/settings) page (preferably using `env` values).
-
-## Settings Available Only via PHP File
-
-Some advanced configurations may only be available through the PHP config file. Refer to the plugin documentation or source code for more details.
 
 ### `openAiApiKey`
 

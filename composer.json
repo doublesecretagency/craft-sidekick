@@ -1,6 +1,6 @@
 {
     "name": "doublesecretagency/craft-sidekick",
-    "description": "Build complex Craft sites in the blink of an eye.",
+    "description": "Your AI companion for rapid Craft CMS development.",
     "type": "craft-plugin",
     "version": "0.9.0",
     "keywords": [

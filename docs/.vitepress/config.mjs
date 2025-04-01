@@ -2,14 +2,14 @@ import { defineConfig } from 'vitepress';
 
 const metaUrl = 'https://plugins.doublesecretagency.com/sidekick/';
 const metaTitle = 'Sidekick plugin for Craft CMS';
-const metaDescription = 'Build complex Craft sites in the blink of an eye.';
+const metaDescription = 'Your AI companion for rapid Craft CMS development.';
 const metaImage = 'https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 
   title: "Sidekick plugin",
-  description: "Build complex Craft sites in the blink of an eye.",
+  description: "Your AI companion for rapid Craft CMS development.",
 
   head: [
     ['meta', {'name': 'og:type', 'content': 'website'}],
@@ -35,41 +35,19 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       {text: 'Getting Started', link: '/getting-started/'},
+      {text: 'Chat Window', link: '/chat-window/'},
       {
-        text: 'Features',
+        text: 'Skills',
         items: [
           {
             items: [
-              {text: 'Chat Window', link: '/features/chat-window'},
-              {text: 'Add Skills', link: '/features/add-skills'}
+              {text: 'Native Skills', link: '/native-skills/'},
+              {text: 'Custom Skills', link: '/custom-skills/'},
             ]
           }
         ]
       },
-      {
-        text: 'Examples',
-        items: [
-          {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'},
-          {
-            text: 'Custom Tools',
-            items: [
-              {text: 'Send An Email',   link: '/examples/send-an-email'},
-              {text: 'Add To Calendar', link: '/examples/add-to-calendar'}
-            ]
-          }
-        ]
-      },
-      {
-        text: 'Guides',
-        items: [
-          {
-            items: [
-              {text: 'Best Practices for Using AI in Craft CMS', link: '/guides/#best-practices-for-using-ai-in-craft-cms'},
-              {text: 'Using the Clear Conversation Feature', link: '/guides/#using-the-clear-conversation-feature'}
-            ]
-          }
-        ]
-      }
+      {text: 'Disclaimers', link: '/disclaimers/'},
     ],
 
     sidebar: {
@@ -83,7 +61,7 @@ export default defineConfig({
               link: '/getting-started/',
               items: [
                 {text: 'Install via Plugin Store', link: '/getting-started/#installation-via-plugin-store'},
-                {text: 'Install via CLI',          link: '/getting-started/#installation-via-console-commands'}
+                {text: 'Install via CLI', link: '/getting-started/#installation-via-console-commands'}
               ]
             },
             {text: 'Settings Page', link: '/getting-started/settings'},
@@ -92,50 +70,73 @@ export default defineConfig({
         }
       ],
 
-      // Features
-      '/features/': [
+      // Chat Window
+      '/chat-window/': [
         {
-          text: 'Features',
+          text: 'Chat Window',
           items: [
-            {text: 'Overview', link: '/features/'},
-            {text: 'Chat Window', link: '/features/chat-window'},
-            {text: 'Add Skills', link: '/features/add-skills'}
-          ]
-        }
-      ],
-
-      // Custom Tools
-      '/custom-tools/': [
-      ],
-
-      // Examples
-      '/examples/': [
-        {
-          text: 'Examples',
-          items: [
-            {text: 'Overview', link: '/examples/'},
-            {text: 'Using the Chat Window', link: '/examples/using-the-chat-window'},
             {
-              text: 'Custom Tools',
+              text: 'Overview',
+              link: '/chat-window/',
               items: [
-                {text: 'Send An Email', link: '/examples/send-an-email'},
-                {text: 'Add To Calendar', link: '/examples/add-to-calendar'}
+                {text: 'How it Works', link: '/chat-window/#how-it-works'},
+                {text: 'Message Types', link: '/chat-window/#message-types'},
+                {text: 'Clearing the Conversation', link: '/chat-window/#clearing-the-conversation'},
+                {text: 'Switching GPT Models', link: '/chat-window/#switching-gpt-models'},
               ]
             }
           ]
         }
       ],
 
-      // Guides
-      '/guides/': [
+      // Native Skills
+      '/native-skills/': [
         {
-          text: 'Guides',
+          text: 'Native Skills',
           items: [
-            {text: 'Best Practices for Using AI in Craft CMS', link: '/guides/#best-practices-for-using-ai-in-craft-cms'},
-            {text: 'Using the Clear Conversation Feature', link: '/guides/#using-the-clear-conversation-feature'}
+            {
+              text: 'Overview',
+              link: '/native-skills/',
+              items: [
+                {text: 'Templates', link: '/native-skills/#templates'},
+                {text: 'Entries', link: '/native-skills/#entries'},
+                {text: 'Settings - Sections', link: '/native-skills/#settings-sections'},
+              ]
+            }
           ]
         }
-      ]
+      ],
+
+      // Custom Skills
+      '/custom-skills/': [
+        {
+          text: 'Custom Skills',
+          items: [
+            {text: 'Overview', link: '/custom-skills/'},
+            {
+              text: 'Examples',
+              items: [
+                {text: 'Send An Email', link: '/custom-skills/examples/send-an-email'},
+                {text: 'Add To Calendar', link: '/custom-skills/examples/add-to-calendar'}
+              ]
+            }
+          ]
+        }
+      ],
+
+      // Disclaimers
+      '/disclaimers/': [
+        {
+          text: 'Disclaimers',
+          items: [
+            {text: 'Overview', link: '/disclaimers/'},
+            {text: 'You are still in charge.', link: '/disclaimers/leadership'},
+            {text: 'Watch your changes!', link: '/disclaimers/quality-assurance'},
+            {text: 'We are not responsible for any mishaps.', link: '/disclaimers/liability'},
+          ]
+        }
+      ],
+
     },
 
     aside: false, // Hide right-hand sidebar for page anchors

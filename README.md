@@ -2,7 +2,7 @@
 
 # Sidekick plugin for Craft CMS
 
-**Build complex Craft sites in the blink of an eye.**
+**Your AI companion for rapid Craft CMS development.**
 
 ---
 

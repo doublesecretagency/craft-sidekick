@@ -6,15 +6,13 @@ description: Manage the OpenAI API key and other settings for Sidekick.
 
 To access the plugin settings, log into your control panel and visit **Settings > Sidekick**.
 
+Depending on your preference, you can alternatively use the [PHP config file](/getting-started/config) to manage settings.
+
 ## OpenAI API Key
 
 Sidekick requires an OpenAI API key to function. You can obtain one from your [OpenAI account](https://platform.openai.com/account/api-keys).
 
-1. Enter your OpenAI API key in the **API Key** field.
-
-[//]: # (   <img src="/images/settings/openai-api-key.png" alt="OpenAI API Key Settings" style="width:650px; margin-top:10px">)
-
-2. **Save** the settings.
+Once you have an API key, enter it into the **OpenAI API Key** field and save the settings.
 
 ### Using Environment Variables
 
@@ -26,18 +24,6 @@ It's recommended to use an [environment variable](https://craftcms.com/docs/4.x/
 OPENAI_API_KEY="your-openai-api-key"
 ```
 
-2. Reference the environment variable in the settings field using `$` syntax:
+2. Then reference the environment variable in the settings field using the `$` syntax:
 
-```
-$OPENAI_API_KEY
-```
-
-## AI Model Selection
-
-- Choose between different AI models depending on your requirements.
-- **Note**: Changing the model will take effect **only after starting a new conversation**.
-
-## Additional Settings
-
-- **Timeouts**: Configure request timeouts as needed.
-- **Logging**: While Sidekick does not maintain a separate logging system, it utilizes Craft’s native logging.
+<img src="/images/getting-started/openai-api-key.png" alt="OpenAI API Key Settings" style="max-width:332px; margin-bottom:26px">
