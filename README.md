@@ -6,8 +6,6 @@
 
 ---
 
----
-
 ## How to Install the Plugin
 
 ### Installation via Plugin Store
@@ -37,8 +35,6 @@ composer require doublesecretagency/craft-sidekick
 ```
 
 >Alternatively, you can visit the **Settings > Plugins** page to finish the installation. If installed via the control panel, you will automatically be redirected to configure the plugin after installation is complete.
-
----
 
 ---
 
