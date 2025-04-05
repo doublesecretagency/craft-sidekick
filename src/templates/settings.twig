@@ -5,6 +5,9 @@
 {# Field to be referenced in the settings #}
 {% set key = 'openAiApiKey' %}
 
+{# Link to documentation for adding an API key #}
+{% set docsUrl = 'https://plugins.doublesecretagency.com/sidekick/getting-started/settings#openai-api-key' %}
+
 {# Determine whether a config value is set #}
 {% set configOverride = (key in configFile|keys) %}
 
@@ -18,7 +21,7 @@
     label: "OpenAI API Key"|t('sidekick'),
     id: 'openAiApiKey',
     name: 'openAiApiKey',
-    instructions: 'Enter your OpenAI API Key here.',
+    instructions: "Enter your key here. [Learn how to get an API key...](#{docsUrl})",
     value: ((configFile[key] ?? settings[key] ?? null) ?: null),
     disabled: configOverride,
     warning: (configOverride ? message),

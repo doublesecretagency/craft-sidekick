@@ -4,6 +4,15 @@
 
 {% do view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\ChatAssetBundle') %}
 
+{# Whether to display the page in "Welcome" mode #}
+{% set welcome = craft.app.request.getQueryParam('welcome') %}
+
+{# Get plugin settings #}
+{% set settings = craft.app.plugins.getPlugin('sidekick').getSettings() %}
+
+{# Path to documentation #}
+{% set docs = 'https://plugins.doublesecretagency.com/sidekick' %}
+
 {% block actionButton %}
     <div class="btngroup">
         <select id="ai-model-select" class="btn">
@@ -17,6 +26,20 @@
 {% endblock %}
 
 {% block content %}
+    {# Show intro message #}
+    {% if welcome %}
+        {% set iconUrl = view.getAssetManager().getPublishedUrl('@doublesecretagency/sidekick/icon.svg', true) %}
+        <div class="pane" style="">
+            <img src="{{ iconUrl }}" alt="" width="120" style="float:left; margin:12px;">
+            <div style="padding-left: 160px">
+                <h2>Welcome! Thanks for using the Sidekick plugin. &nbsp;🎉</h2>
+                <p>Be sure to add your <a href="{{ cpUrl('settings/plugins/sidekick') }}">OpenAI API key</a> to get started.</p>
+                <p>If you haven't already, take a look at our <a href="{{ docs }}/" target="_blank">complete documentation...</a></p>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+    {% endif %}
+
     <div id="chat-window">
         <!-- Chat messages will be dynamically inserted here -->
     </div>
@@ -37,4 +60,5 @@
             <p class="instruction-text">Press Enter to send, Shift+Enter for a new line</p>
         </div>
     </form>
+
 {% endblock %}

@@ -17,6 +17,5 @@
 use craft\helpers\App;
 
 return [
-    'aiModel' => App::env('AI_MODEL'),
     'openAiApiKey' => App::env('OPENAI_API_KEY')
 ];

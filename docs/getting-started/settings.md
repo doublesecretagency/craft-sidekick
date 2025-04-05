@@ -14,6 +14,12 @@ Sidekick requires an OpenAI API key to function. You can obtain one from your [O
 
 Once you have an API key, enter it into the **OpenAI API Key** field and save the settings.
 
+<img class="dropshadow" src="/images/settings/openai-api-key.png" alt="OpenAI API key field" style="max-width:485px">
+
+:::warning Use an environment variable!
+For security reasons, it is _very highly recommended_ to store your API key in an environment variable. (see below)
+:::
+
 ### Using Environment Variables
 
 It's recommended to use an [environment variable](https://craftcms.com/docs/4.x/config/#control-panel-settings) for your API key to enhance security and portability.
@@ -24,6 +30,8 @@ It's recommended to use an [environment variable](https://craftcms.com/docs/4.x/
 OPENAI_API_KEY="your-openai-api-key"
 ```
 
-2. Then reference the environment variable in the settings field using the `$` syntax:
+2. Then simply reference the environment variable in the settings field using the `$` syntax:
 
-<img src="/images/getting-started/openai-api-key.png" alt="OpenAI API Key Settings" style="max-width:332px; margin-bottom:26px">
+<img class="dropshadow" src="/images/settings/openai-api-key-env-var.png" alt="OpenAI API key field using an environment variable" style="max-width:485px; margin-bottom:30px">
+
+That's it! After saving the settings, Sidekick will use your API key via the environment variable.

@@ -13,6 +13,7 @@ namespace doublesecretagency\sidekick\services;
 
 use Craft;
 use craft\helpers\App;
+use craft\helpers\UrlHelper;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\constants\Session;
@@ -92,9 +93,12 @@ class OpenAIService extends Component
         // Retrieve the OpenAI API key from plugin settings or environment variables
         $this->_apiKey = App::parseEnv(Sidekick::$plugin->getSettings()->openAiApiKey ?? '');
 
+        // Get link to the plugin settings page
+        $settingsUrl = UrlHelper::cpUrl('settings/plugins/sidekick');
+
         // If API key is not set, throw an exception
         if (!$this->_apiKey) {
-            $error = "OpenAI API key is not set.";
+            $error = "OpenAI API key is not set. Please [set the API key]({$settingsUrl}) to continue.";
             Craft::error($error, __METHOD__);
             throw new Exception($error);
         }

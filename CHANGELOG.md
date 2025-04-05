@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added a welcome message.
+
 ## 0.9.0 - 2025-04-03
 
 ### Added

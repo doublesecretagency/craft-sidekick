@@ -14,8 +14,11 @@ namespace doublesecretagency\sidekick;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\helpers\UrlHelper;
+use craft\services\Plugins;
 use craft\services\UserPermissions;
 use craft\web\UrlManager;
 use craft\web\View;
@@ -113,6 +116,9 @@ class Sidekick extends Plugin
         // Register the Twig extension
         Craft::$app->view->registerTwigExtension(new SidekickTwigExtension());
 
+        // Redirect after plugin is installed
+        $this->_postInstallRedirect();
+
         // Register user permissions for plugin features
         Event::on(
             UserPermissions::class,
@@ -166,13 +172,41 @@ class Sidekick extends Plugin
         );
 
         // Custom Logging Configuration
-        $this->initializeCustomLogger();
+        $this->_initializeCustomLogger();
+    }
+
+    // ========================================================================= //
+
+    /**
+     * After the plugin has been installed,
+     * redirect to the chat window page.
+     */
+    private function _postInstallRedirect(): void
+    {
+        // After the plugin has been installed
+        Event::on(
+            Plugins::class,
+            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
+            static function (PluginEvent $event) {
+                // If installed plugin isn't Sidekick, bail
+                if ('sidekick' !== $event->plugin->handle) {
+                    return;
+                }
+                // If installed via console, no need for a redirect
+                if (Craft::$app->getRequest()->getIsConsoleRequest()) {
+                    return;
+                }
+                // Redirect to the chat window page (with a welcome message)
+                $url = UrlHelper::cpUrl('sidekick/chat', ['welcome' => 1]);
+                Craft::$app->getResponse()->redirect($url)->send();
+            }
+        );
     }
 
     /**
      * Initializes a custom logger to write Sidekick logs to sidekick.log
      */
-    private function initializeCustomLogger(): void
+    private function _initializeCustomLogger(): void
     {
         // Define the log file path
         $logFilePath = Craft::getAlias('@storage/logs/sidekick.log');
@@ -190,6 +224,8 @@ class Sidekick extends Plugin
         // Add the custom log target to Craft's logger
         Craft::getLogger()->dispatcher->targets[] = $sidekickLogTarget;
     }
+
+    // ========================================================================= //
 
     /**
      * @return array
