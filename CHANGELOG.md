@@ -5,6 +5,9 @@
 ### Added
 - Added a welcome message.
 
+### Changed
+- Display placeholder images `@3x` resolution (aka “Super Retina”).
+
 ## 0.9.0 - 2025-04-03
 
 ### Added
