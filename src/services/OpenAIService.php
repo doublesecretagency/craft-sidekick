@@ -422,10 +422,18 @@ class OpenAIService extends Component
 
         } catch (\Exception $e) {
 
+            // Get the error message
+            $message = $e->getMessage();
+
+            // If message contains "Unable to read from stream"
+            if (str_contains($message, 'Unable to read from stream')) {
+                $message = 'Sorry, something has timed out. You may need to clear the conversation and start over.';
+            }
+
             // Compile error message
             $error = new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => $e->getMessage(),
+                'message' => $message,
             ]);
 
             // Log error and append to chat
