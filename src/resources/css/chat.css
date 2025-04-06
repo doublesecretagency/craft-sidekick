@@ -95,34 +95,48 @@
     margin-left: auto; /* Push the instruction text to the right */
 }
 
-/* Spinner Styles */
-.chat-spinner {
-    display: none; /* Hidden by default */
-    width: 24px;
-    height: 24px;
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-top-color: #333;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-left: 10px; /* Space between buttons and spinner */
-    vertical-align: middle; /* Align spinner with buttons */
+.chat-loading {
+    opacity: 0;
+    transition: opacity 0.1s ease-in-out; /* Adjust duration as needed */
+    font-size: 15px;
+    font-weight: bold;
+    margin-left: 4px;
+    /* Use a repeating gradient for a seamless ripple effect */
+    background: repeating-linear-gradient(
+            90deg,
+            #CDCDCD  0%,
+            #CDCDCD 13%,
+            #0B0B0B 25%,
+            #CDCDCD 37%,
+            #CDCDCD 50%
+    );
+    background-size: 200%;
+    background-repeat: repeat-x;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent; /* Reveal the gradient through the text */
+    animation: ripple 2s linear infinite;
 }
 
-/* Spinner Animation */
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
+.chat-loading.visible {
+    opacity: 1;
+}
+
+@keyframes ripple {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: 0 0;
     }
 }
 
-/* Optional: Adjust spinner size for smaller screens */
+/* Adjust text size for smaller screens */
 @media (max-width: 600px) {
-    .chat-spinner {
-        width: 20px;
-        height: 20px;
-        border-width: 3px;
-        margin-left: 0;
-        margin-top: 10px;
+    .chat-loading {
+        font-size: 14px;
+        padding-top: 7px;
+        text-align: center;
     }
 }
 

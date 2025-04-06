@@ -5,7 +5,7 @@ const SidekickChat = {
     chatForm: document.getElementById('chat-form'),
     chatInput: document.getElementById('chat-input'),
     clearButton: document.getElementById('clear-conversation-button'),
-    spinner: document.getElementById('chat-spinner'),
+    loader: document.getElementById('chat-loading'),
     aiModelSelect: document.getElementById('ai-model-select'),
     sendButton: null,
     greeting: null,
@@ -76,23 +76,21 @@ const SidekickChat = {
         }
     },
 
-    // Show the spinner and disable inputs
-    showSpinner: function () {
-        this.spinner.style.display = 'inline-block';
-        this.spinner.setAttribute('aria-hidden', 'false');
+    showLoader: function () {
+        this.loader.classList.add('visible');
+        this.loader.setAttribute('aria-hidden', 'false');
         this.sendButton.disabled = true;
         this.clearButton.disabled = true;
         this.chatInput.disabled = true;
     },
 
-    // Hide the spinner and refocus the message input
-    hideSpinner: function () {
-        this.spinner.style.display = 'none';
-        this.spinner.setAttribute('aria-hidden', 'true');
+    hideLoader: function () {
+        this.loader.classList.remove('visible');
+        this.loader.setAttribute('aria-hidden', 'true');
         this.sendButton.disabled = false;
         this.clearButton.disabled = false;
         this.chatInput.disabled = false;
-        this.chatInput.focus(); // Refocus the message input
+        this.chatInput.focus(); // Refocus the input
     },
 
     // Append a message to the chat window
@@ -246,8 +244,8 @@ const SidekickChat = {
         // Pass this object into the event listeners
         const that = this;
 
-        // Show the spinner and disable inputs
-        this.showSpinner();
+        // Show the loader and disable inputs
+        this.showLoader();
 
         // Clear the input
         this.chatInput.value = '';
@@ -267,8 +265,8 @@ const SidekickChat = {
         eventSource.addEventListener('close', function(event) {
             // console.log('Closing the connection.');
             eventSource.close();
-            // Hide the spinner
-            that.hideSpinner();
+            // Hide the loader
+            that.hideLoader();
         });
 
         // Listen for messages from the server
@@ -335,8 +333,8 @@ const SidekickChat = {
                 that.ROLE.ERROR,
                 'An unknown connection error occurred.'
             );
-            // Hide the spinner
-            that.hideSpinner();
+            // Hide the loader
+            that.hideLoader();
         };
 
     },
@@ -376,8 +374,8 @@ const SidekickChat = {
     clearConversation: function () {
         const confirmation = confirm('Are you sure you want to delete the entire conversation?');
         if (confirmation) {
-            // Show the spinner and disable inputs
-            this.showSpinner();
+            // Show the loader and disable inputs
+            this.showLoader();
 
             fetch('/actions/sidekick/chat/clear-conversation', {
                 method: 'POST',
@@ -389,8 +387,8 @@ const SidekickChat = {
             })
                 .then((response) => response.json())
                 .then((data) => {
-                    // Hide the spinner
-                    this.hideSpinner();
+                    // Hide the loader
+                    this.hideLoader();
 
                     if (data.success) {
                         // Clear the chat window
@@ -414,8 +412,8 @@ const SidekickChat = {
                     }
                 })
                 .catch((error) => {
-                    // Hide the spinner
-                    this.hideSpinner();
+                    // Hide the loader
+                    this.hideLoader();
 
                     console.error('Error clearing conversation:', error);
                     this.appendMessage(
