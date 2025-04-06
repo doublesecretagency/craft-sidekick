@@ -23,7 +23,8 @@ class Templates
      *
      * Directory MUST ALWAYS begin with `templates`.
      *
-     * If you are unfamiliar with the existing structure, you MUST call this tool before creating, reading, updating, or deleting files. Eagerly call this if an understanding of the templates directory is required.
+     * If you are unfamiliar with the existing structure, you MUST call this tool before creating, reading, updating, or deleting files.
+     * Eagerly call this if an understanding of the templates directory is required.
      *
      * Use the following tabbed format when displaying the file structure:
      *
@@ -302,7 +303,8 @@ class Templates
     /**
      * Delete the specified directory.
      *
-     * Empty directories cannot be deleted. When deleting both files and directories, the files must be deleted first.
+     * Empty directories cannot be deleted.
+     * When deleting both files and directories, the files must be deleted first.
      *
      * Directory MUST ALWAYS begin with `templates`.
      *

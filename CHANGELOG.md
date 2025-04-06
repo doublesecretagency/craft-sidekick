@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Improved entry and section management skills.
+
 ## 0.9.1 - 2025-04-05
 
 ### Added
