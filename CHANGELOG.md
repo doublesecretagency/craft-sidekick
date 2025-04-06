@@ -8,6 +8,7 @@
 ### Changed
 - Display placeholder images `@3x` resolution (aka “Super Retina”).
 - Replaced spinner circle with transitioning gradient text.
+- Render dynamic copyright dates.
 
 ## 0.9.0 - 2025-04-03
 
