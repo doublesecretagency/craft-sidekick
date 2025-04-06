@@ -34,6 +34,7 @@ use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\DummyDataService;
 use doublesecretagency\sidekick\services\SseService;
 use doublesecretagency\sidekick\skills\Entries;
+use doublesecretagency\sidekick\skills\SettingsFields;
 use doublesecretagency\sidekick\skills\SettingsSections;
 use doublesecretagency\sidekick\skills\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
@@ -76,6 +77,7 @@ class Sidekick extends Plugin
     public static array $skills = [
         Templates::class,
         Entries::class,
+        SettingsFields::class,
         SettingsSections::class,
     ];
 

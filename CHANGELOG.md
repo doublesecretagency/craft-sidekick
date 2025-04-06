@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added field management skills.
+
 ### Changed
 - Improved entry and section management skills.
 
