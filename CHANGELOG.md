@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.2 - 2025-04-07
 
 ### Added
 - Added field management skills.
