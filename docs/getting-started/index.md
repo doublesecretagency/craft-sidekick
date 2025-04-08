@@ -31,7 +31,7 @@ To install the Sidekick plugin via the plugin store, follow these steps:
     <div>
         <strong style="font-size:17px">Sidekick</strong>
         <div style="font-size:15px; margin-top:9px;">Your AI companion for rapid Craft CMS development.</div>
-        <p style="color:#8f98a3 !important; font-weight:normal;">$99</p>
+        <p style="color:#8f98a3 !important; font-weight:normal;">$79</p>
     </div>
 </div>
 
