@@ -153,6 +153,84 @@ class SettingsSections
     }
 
     /**
+     * Update an existing section with a new configuration.
+     *
+     * Make sure you understand the EXISTING section configuration before updating.
+     * If needed, you MUST call `getSections` to get the current configuration.
+     *
+     * For large updates, ask for confirmation before proceeding.
+     *
+     * @param string $sectionHandle Handle of the section to update.
+     * @param string $newConfig JSON-stringified configuration for the section.
+     * @return SkillResponse
+     */
+    public static function updateSection(string $sectionHandle, string $newConfig): SkillResponse
+    {
+        // Attempt to update the section
+        try {
+
+            // Get the section
+            $section = Craft::$app->getSections()->getSectionByHandle($sectionHandle);
+
+            // If section doesn't exist, return an error response
+            if (!$section) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to update, section `{$sectionHandle}` does not exist.",
+                ]);
+            }
+
+            // Decode the JSON configuration
+            $config = Json::decodeIfJson($newConfig);
+
+            // If the configuration is not valid JSON, return an error response
+            if ($config === null) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid JSON configuration provided.",
+                ]);
+            }
+
+            // Update the section with the new configuration
+            $section->name = ($config['name'] ?? $section->name);
+            $section->handle = ($config['handle'] ?? $section->handle);
+            $section->type = ($config['type'] ?? $section->type);
+//            $section->siteSettings = ($config['siteSettings'] ?? $section->siteSettings);
+//            $section->hasUrls = ($config['hasUrls'] ?? $section->hasUrls);
+//            $section->uriFormat = ($config['uriFormat'] ?? $section->uriFormat);
+//            $section->template = ($config['template'] ?? $section->template);
+//            $section->maxLevels = ($config['maxLevels'] ?? $section->maxLevels);
+//            $section->structureId = ($config['structureId'] ?? $section->structureId);
+//            $section->propagationMethod = ($config['propagationMethod'] ?? $section->propagationMethod);
+//            $section->propagationKeyFormat = ($config['propagationKeyFormat'] ?? $section->propagationKeyFormat);
+
+            // If unable to save the section, return an error response
+            if (!Craft::$app->getSections()->saveSection($section)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to update section: " . implode(', ', $section->getErrorSummary(true)),
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to update the section. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Section \"{$section->name}\" has been updated.",
+//            'response' => $config,
+        ]);
+    }
+
+    /**
      * Delete a section by its handle.
      *
      * ALWAYS ASK FOR CONFIRMATION!! This is a very destructive action.
