@@ -12,10 +12,7 @@
 namespace doublesecretagency\sidekick\helpers;
 
 use Craft;
-use doublesecretagency\sidekick\Sidekick;
-use doublesecretagency\sidekick\skills\Templates;
-use phpDocumentor\Reflection\DocBlockFactory;
-use ReflectionClass;
+use craft\helpers\Json;
 
 class SystemPrompt
 {
@@ -71,8 +68,11 @@ class SystemPrompt
             Craft::error($error, __METHOD__);
         }
 
-        // Append the actions documentation to the system prompt
-//        $systemPrompt = static::_appendActionsDocs($systemPrompt);
+        // Get the relevant system data
+        $data = static::_getSystemData();
+
+        // Append data unique to this system
+        $systemPrompt .= "\n\n# Craft CMS System Configuration\n\n{$data}";
 
         // Log that the system prompt has been compiled
         Craft::info("Compiled system prompt.", __METHOD__);
@@ -82,74 +82,20 @@ class SystemPrompt
     }
 
     /**
-     * Appends the actions documentation to the system prompt.
+     * Appends relevant system data to the prompt.
      *
-     * @param string $systemPrompt
      * @return string
      */
-    private static function _appendActionsDocs(string $systemPrompt): string
+    private static function _getSystemData(): string
     {
-        // Get the actions service
-        $actionsService = Sidekick::$plugin->actions;
+        // Relevant system data
+        $data = [
+            'Craft CMS version' => Craft::$app->getVersion(),
+            'Craft CMS edition' => Craft::$app->getEdition(),
+            'PHP version' => PHP_VERSION,
+        ];
 
-        // Get all skill methods
-        $methods = (new ReflectionClass(Templates::class))->getMethods();
-
-        // Create a new instance of the DocBlockFactory
-        $docFactory = DocBlockFactory::createInstance();
-
-        // Get the path to the Sidekick plugin
-        $path = Craft::getAlias('@doublesecretagency/sidekick');
-
-        // Load the content of the actions documentation
-        $filePath = "{$path}/prompts/actions.md";
-
-        // If the file doesn't exist, bail
-        if (!file_exists($filePath)) {
-            Craft::error('Unable to find Markdown prompt for Actions.', __METHOD__);
-            return '';
-        }
-
-        // Load the actions documentation
-        $actionsDocumentation = file_get_contents($filePath);
-
-        // Initialize the actions documentation
-        $listOfActions = '';
-
-        // Loop through each method
-        foreach ($methods as $method) {
-
-            // Get the method name
-            $action = $method->getName();
-
-            // Skip methods that aren't valid actions
-            if (!in_array($action, $actionsService->getValidActions(), true)) {
-                continue;
-            }
-
-            // Get the method's doc comment
-            $docComment = $method->getDocComment();
-
-            // If no doc comment is present, skip this method
-            if (!$docComment) {
-                continue;
-            }
-
-            // Create a new DocBlock instance
-            $docBlock = $docFactory->create($docComment);
-
-            // Get the summary and description
-            $summary = $docBlock->getSummary();
-            $description = $docBlock->getDescription();
-
-            // Append the action documentation to the system prompt
-            $listOfActions .= "\n{$summary}\n\n{$description}\n";
-        }
-
-        // Replace the placeholder with the actions documentation
-        $actionsDocumentation = str_replace('{listOfActions}', $listOfActions, $actionsDocumentation);
-
-        // Return the updated system prompt
-        return $systemPrompt.$actionsDocumentation;
+        // Return JSON encoded system data
+        return Json::encode($data);
     }
 }
