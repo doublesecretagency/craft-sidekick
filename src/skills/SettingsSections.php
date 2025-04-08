@@ -13,6 +13,7 @@ namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\helpers\Json;
+use craft\models\FieldLayout;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
 use doublesecretagency\sidekick\models\SkillResponse;
@@ -84,6 +85,154 @@ class SettingsSections
             'success' => true,
             'message' => "Reviewed the existing sections.",
             'response' => Json::encode($sections)
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get details of a specified field layout.
+     *
+     * @param string $fieldLayoutId ID of the field layout to identify.
+     * @return SkillResponse
+     */
+    public static function getFieldLayout(string $fieldLayoutId): SkillResponse
+    {
+        // Get the field layout by ID
+        $layout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
+
+        // If the layout doesn't exist, return an error response
+        if (!$layout) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed field layout {$fieldLayoutId}.",
+            'response' => Json::encode($layout->getConfig())
+        ]);
+    }
+
+    /**
+     * Create a new field layout.
+     *
+     * @param string $config JSON-stringified configuration for the field layout.
+     * @return SkillResponse
+     */
+    public static function createFieldLayout(string $config): SkillResponse
+    {
+        // Decode the JSON configuration
+        $config = Json::decodeIfJson($config);
+
+        // If the configuration is not valid JSON, return an error response
+        if ($config === null) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Invalid JSON configuration provided.",
+            ]);
+        }
+
+        // Attempt to create and save the field layout
+        try {
+
+            // Create the field layout
+            $layout = FieldLayout::createFromConfig($config);
+
+            // If unable to save the field layout, return an error response
+            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to create field layout: " . implode(', ', $layout->getErrorSummary(true)),
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to create the field layout. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Field layout has been created with ID {$layout->id}.",
+//            'response' => $config,
+        ]);
+    }
+
+    /**
+     * Update an existing field layout with a new configuration.
+     *
+     * @param string $fieldLayoutId ID of the field layout to identify.
+     * @param string $newConfig JSON-stringified configuration for the field layout.
+     * @return SkillResponse
+     */
+    public static function updateFieldLayout(string $fieldLayoutId, string $newConfig): SkillResponse
+    {
+        // Get the existing field layout by ID
+        $existingLayout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
+
+        // If the layout doesn't exist, return an error response
+        if (!$existingLayout) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
+            ]);
+        }
+
+        // Decode the JSON configuration
+        $config = Json::decodeIfJson($newConfig);
+
+        // If the configuration is not valid JSON, return an error response
+        if ($config === null) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Invalid JSON configuration provided.",
+            ]);
+        }
+
+        // Attempt to update and save the field layout
+        try {
+
+            // Create the field layout
+            $layout = FieldLayout::createFromConfig($config);
+
+            // Set the ID and type of the existing layout
+            $layout->id   = $existingLayout->id;
+            $layout->type = $existingLayout->type;
+            $layout->uid  = $existingLayout->uid;
+
+            // If unable to save the field layout, return an error response
+            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to update field layout: " . implode(', ', $layout->getErrorSummary(true)),
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to update the field layout. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Updated field layout {$layout->id}.",
+//            'response' => $config,
         ]);
     }
 
