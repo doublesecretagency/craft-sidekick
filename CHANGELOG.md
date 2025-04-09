@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Improved field management by adding explicit instructions for field layout configs.
+
 ## 0.9.2 - 2025-04-07
 
 ### Added
