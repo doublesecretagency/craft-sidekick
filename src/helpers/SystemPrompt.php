@@ -13,6 +13,7 @@ namespace doublesecretagency\sidekick\helpers;
 
 use Craft;
 use craft\helpers\Json;
+use doublesecretagency\sidekick\Sidekick;
 
 class SystemPrompt
 {
@@ -68,11 +69,11 @@ class SystemPrompt
             Craft::error($error, __METHOD__);
         }
 
-        // Get the relevant system data
-        $data = static::_getSystemData();
+        // Append the namespace hashes
+        $systemPrompt .= static::_namespaceHashes();
 
-        // Append data unique to this system
-        $systemPrompt .= "\n\n# Craft CMS System Configuration\n\n{$data}";
+        // Append the system data
+        $systemPrompt .= static::_systemData();
 
         // Log that the system prompt has been compiled
         Craft::info("Compiled system prompt.", __METHOD__);
@@ -81,18 +82,71 @@ class SystemPrompt
         return $systemPrompt;
     }
 
+    // ========================================================================= //
+
     /**
-     * Appends relevant system data to the prompt.
+     * Append namespace hashes to the system prompt.
      *
      * @return string
      */
-    private static function _getSystemData(): string
+    private static function _namespaceHashes(): string
+    {
+        // Get the namespace hashes from the OpenAI instance
+        $hashes = Sidekick::getInstance()?->openAi->skillsHash;
+
+        // Json encode the hashes
+        $hashes = Json::encode($hashes);
+
+        // Return JSON encoded system data
+        return <<<MARKDOWN
+
+# Namespace Hashes
+
+The prefix of each tool function is a short hash, which **directly translates** to a class namespace.
+
+You will obviously execute the tool by calling its correct tool name,
+but otherwise feel free to reference the complete (accurate) namespace, class name, and method name
+in communications with the user.
+
+When referencing a namespace, you MUST include the **complete namespace** (including ALL path segments).
+
+```
+{hash}-{ClassName}-{MethodName}
+# ... can be converted to ...
+{namespace}\{ClassName}::{MethodName}
+```
+
+Here is a practical example:
+
+```
+# BEFORE: Original tool function name
+41ff3f-Templates-templatesStructure
+
+# AFTER: Namespaced path to actual class method
+doublesecretagency\sidekick\skills\read\Templates::templatesStructure
+```
+
+You MUST ensure consistency between the hash key and its corresponding namespace.
+
+To perform the translations, here are the namespace hashes for all available tools:
+
+{$hashes}
+
+MARKDOWN;
+    }
+
+    /**
+     * Append relevant system data to the prompt.
+     *
+     * @return string
+     */
+    private static function _systemData(): string
     {
         // Get the general config settings
         $generalConfig = Craft::$app->getConfig()->general;
 
         // Relevant system data
-        $data = [
+        $data = Json::encode([
             'Craft CMS version' => Craft::$app->getVersion(),
             'Craft CMS edition' => Craft::$app->getEdition(),
             'PHP version' => PHP_VERSION,
@@ -100,9 +154,17 @@ class SystemPrompt
                 'aliases' => $generalConfig->aliases,
                 'allowAdminChanges' => $generalConfig->allowAdminChanges,
             ]
-        ];
+        ]);
 
         // Return JSON encoded system data
-        return Json::encode($data);
+return <<<MARKDOWN
+
+# Craft CMS System Configuration
+
+The following data represents the current system configuration of Craft CMS:
+
+{$data}
+
+MARKDOWN;
     }
 }

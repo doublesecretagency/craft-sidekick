@@ -9,70 +9,13 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills;
+namespace doublesecretagency\sidekick\skills\edit;
 
-use Craft;
+use doublesecretagency\sidekick\helpers\TemplatesHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 
-class Templates
+class EditTemplates
 {
-    /**
-     * Read the directory and file structure of the templates folder.
-     *
-     * Directory MUST ALWAYS begin with `templates`.
-     *
-     * If you are unfamiliar with the existing structure, you MUST call this tool before creating, reading, updating, or deleting files.
-     * Eagerly call this if an understanding of the templates directory is required.
-     *
-     * Use the following tabbed format when displaying the file structure:
-     *
-     * ```
-     * templates
-     * └── _layout
-     *     ├── footer.twig
-     *     └── header.twig
-     * └── index.twig
-     * ```
-     *
-     * @return SkillResponse
-     */
-    public static function templatesStructure(): SkillResponse
-    {
-        // Get the templates path
-        $templatesPath = Craft::getAlias('@templates');
-
-        // Get just the top directory of the templates folder
-        $topDirectory = basename($templatesPath);
-
-        // Regex pattern to match the templates path
-        $pattern = '/^'.preg_quote($templatesPath, '/').'/';
-
-        // Initialize the structure array
-        $structure = [];
-
-        // Recursive directory iterator to read the templates folder
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($templatesPath));
-
-        // Loop through the files and directories
-        foreach ($iterator as $file) {
-            // Replace the templates path with just the top directory
-            $relativePath = preg_replace($pattern, $topDirectory, $file->getPathname());
-            // Add the relative path to the structure array
-            $structure[] = $relativePath;
-        }
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Reviewed the structure of the templates directory.",
-            'response' => implode("\n", $structure)
-        ]);
-    }
-
-    // ========================================================================= //
-
     /**
      * Create a new directory.
      *
@@ -84,7 +27,7 @@ class Templates
     public static function createDirectory(string $directory): SkillResponse
     {
         // Parse the templates path
-        $path = self::_parseTemplatesPath($directory);
+        $path = TemplatesHelper::parseTemplatesPath($directory);
 
         // Get the directory path
         $directoryPath = dirname($path);
@@ -125,7 +68,7 @@ class Templates
     public static function createFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
-        $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
+        $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
 
         // If file already exists, return an error
         if (file_exists($filePath)) {
@@ -169,37 +112,6 @@ class Templates
     }
 
     /**
-     * Read an existing file.
-     *
-     * Directory MUST ALWAYS begin with `templates`.
-     *
-     * @param string $directory Directory to look in.
-     * @param string $file Name of the file to read.
-     * @return SkillResponse
-     */
-    public static function readFile(string $directory, string $file): SkillResponse
-    {
-        // Parse the templates path
-        $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
-
-        // If file doesn't exist, return an error
-        if (!file_exists($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to read file, {$directory}/{$file} does not exist."
-            ]);
-        }
-
-        // Read the file content
-        $content = file_get_contents($filePath);
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Read {$directory}/{$file}",
-            'response' => $content
-        ]);
-    }
-
-    /**
      * Update an existing file with specified content.
      *
      * Directory MUST ALWAYS begin with `templates`.
@@ -214,7 +126,7 @@ class Templates
     public static function updateFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
-        $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
+        $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
 
         // If the file doesn't exist, return an error
         if (!file_exists($filePath)) {
@@ -267,7 +179,7 @@ class Templates
     public static function deleteFile(string $directory, string $file): SkillResponse
     {
         // Parse the templates path
-        $filePath = self::_parseTemplatesPath("{$directory}/{$file}");
+        $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
 
         // If file does not exist, return an error
         if (!file_exists($filePath)) {
@@ -316,7 +228,7 @@ class Templates
     public static function deleteDirectory(string $directory): SkillResponse
     {
         // Parse the templates path
-        $path = self::_parseTemplatesPath($directory);
+        $path = TemplatesHelper::parseTemplatesPath($directory);
 
         // If directory does not exist, return an error
         if (!file_exists($path)) {
@@ -359,26 +271,5 @@ class Templates
             'success' => true,
             'message' => "Deleted {$directory}"
         ]);
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Parse the templates path.
-     *
-     * @param string $path
-     * @return string
-     */
-    private static function _parseTemplatesPath(string $path): string
-    {
-        // Trim leading slashes from the path
-        $path = ltrim($path, '/');
-
-        // Replace the `templates` prefix with the actual path
-        return preg_replace(
-            '/^templates/',
-            Craft::getAlias('@templates'),
-            $path
-        );
     }
 }

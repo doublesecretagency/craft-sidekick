@@ -9,129 +9,17 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills;
+namespace doublesecretagency\sidekick\skills\edit;
 
 use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\Json;
-use craft\models\FieldGroup;
+use craft\models\FieldLayout;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
 class SettingsFields
 {
-    /**
-     * Get a complete list of available field types.
-     *
-     * If you are considering creating a new field, you MUST call this tool first.
-     *
-     * @return SkillResponse
-     */
-    public static function getAvailableFieldTypes(): SkillResponse
-    {
-        // Get available field types
-        $availableFieldTypes = Craft::$app->getFields()->getAllFieldTypes();
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Checked available field types.",
-            'response' => Json::encode($availableFieldTypes)
-        ]);
-    }
-
-    /**
-     * Get the details of a particular field type.
-     *
-     * If you are considering creating a new field, you MUST call this tool first.
-     * You will typically run this tool AFTER the `getAvailableFieldTypes` tool.
-     *
-     * @param string $fieldType The field type to get details for.
-     * @return SkillResponse
-     */
-    public static function getFieldTypeDetails(string $fieldType): SkillResponse
-    {
-        /** @var FieldInterface $fieldType */
-
-        try {
-
-            // Get details about a specific field type
-            $fieldTypeDetails = (new $fieldType())->getSettings();
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to get details of the `{$fieldType}` field type. {$e->getMessage()}",
-            ]);
-
-        }
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Reviewed details of the `{$fieldType}` field type.",
-            'response' => Json::encode($fieldTypeDetails)
-        ]);
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Get a complete list of existing fields.
-     *
-     * If you are unfamiliar with the existing fields, you MUST call this tool before creating, reading, updating, or deleting fields.
-     * Eagerly call this if an understanding of the current fields is required.
-     *
-     * You may also find it helpful to call this tool before updating an Entry.
-     *
-     * @return SkillResponse
-     */
-    public static function getAllExistingFields(): SkillResponse
-    {
-        // Fetch all fields
-        $allFields = Craft::$app->getFields()->getAllFields();
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Reviewed the existing fields.",
-            'response' => Json::encode($allFields)
-        ]);
-    }
-
-    /**
-     * Get the details of a specific existing field.
-     *
-     * If you don't know which fields exist, you MUST call the `getAllExistingFields` tool instead.
-     *
-     * @param string $fieldHandle Handle of the field to get details for.
-     * @return SkillResponse
-     */
-    public static function getFieldDetails(string $fieldHandle): SkillResponse
-    {
-        // Get available field types
-        $field = Craft::$app->getFields()->getFieldByHandle($fieldHandle);
-
-        // If the field doesn't exist, return an error response
-        if (!$field) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Field `{$fieldHandle}` was not found.",
-            ]);
-        }
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Checked details of field `{$fieldHandle}`.",
-            'response' => Json::encode($field)
-        ]);
-    }
-
-    // ========================================================================= //
-
     /**
      * Create a new field.
      *
@@ -298,65 +186,36 @@ class SettingsFields
     // ========================================================================= //
 
     /**
-     * Get a complete list of available field groups.
+     * Create a new field layout.
      *
-     * ONLY AVAILABLE IN CRAFT 4.
-     *
+     * @param string $config JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
      * @return SkillResponse
      */
-    public static function getAvailableFieldGroups(): SkillResponse
+    public static function createFieldLayout(string $config): SkillResponse
     {
-        // If running Craft 5 or later, return success message to keep things moving
-        if (self::_isCraft5()) {
+        // Decode the JSON configuration
+        $config = Json::decodeIfJson($config);
+
+        // If the configuration was not valid JSON, return an error response
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+        if (!is_array($config)) {
             return new SkillResponse([
-                'success' => true,
-                'message' => "Ignoring field groups, not relevant after Craft 4.",
+                'success' => false,
+                'message' => "Invalid JSON provided for field layout configuration.",
             ]);
         }
 
-        // Get all field groups
-        $fieldGroups = Craft::$app->getFields()->getAllGroups();
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Checked available field groups.",
-            'response' => Json::encode($fieldGroups)
-        ]);
-    }
-
-    /**
-     * Create a new field group.
-     *
-     * ONLY AVAILABLE IN CRAFT 4.
-     *
-     * @param string $name Name of the field group.
-     * @param string $handle Handle of the field group.
-     * @return SkillResponse
-     */
-    public static function createFieldGroup(string $name, string $handle): SkillResponse
-    {
-        // If running Craft 5 or later, return success message to keep things moving
-        if (self::_isCraft5()) {
-            return new SkillResponse([
-                'success' => true,
-                'message' => "Ignoring field groups, not relevant after Craft 4.",
-            ]);
-        }
-
-        // Attempt to create the field group
+        // Attempt to create and save the field layout
         try {
 
-            // Create the field group
-            $fieldGroup = new FieldGroup([
-                'name' => $name,
-            ]);
+            // Create the field layout
+            $layout = FieldLayout::createFromConfig($config);
 
-            // If unable to save the field group, return an error response
-            if (!Craft::$app->getFields()->saveGroup($fieldGroup)) {
+            // If unable to save the field layout, return an error response
+            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to create field group: " . implode(', ', $fieldGroup->getErrorSummary(true)),
+                    'message' => "Failed to create field layout: " . implode(', ', $layout->getErrorSummary(true)),
                 ]);
             }
 
@@ -365,7 +224,7 @@ class SettingsFields
             // Something went wrong, return an error response
             return new SkillResponse([
                 'success' => false,
-                'message' => "Unable to create the field group. {$e->getMessage()}",
+                'message' => "Unable to create the field layout. {$e->getMessage()}",
             ]);
 
         }
@@ -373,21 +232,76 @@ class SettingsFields
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field group \"{$name}\" has been created.",
+            'message' => "Field layout has been created with ID {$layout->id}.",
 //            'response' => $config,
         ]);
     }
 
-    // ========================================================================= //
-
     /**
-     * Whether we're running Craft 5 or later.
+     * Update an existing field layout with a new configuration.
      *
-     * @return bool
+     * @param string $fieldLayoutId ID of the field layout to identify.
+     * @param string $newConfig JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
+     * @return SkillResponse
      */
-    private static function _isCraft5(): bool
+    public static function updateFieldLayout(string $fieldLayoutId, string $newConfig): SkillResponse
     {
-        // Check if we're running Craft 5 or later
-        return version_compare(Craft::$app->getVersion(), '5.0.0', '>=');
+        // Get the existing field layout by ID
+        $existingLayout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
+
+        // If the layout doesn't exist, return an error response
+        if (!$existingLayout) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
+            ]);
+        }
+
+        // Decode the JSON configuration
+        $config = Json::decodeIfJson($newConfig);
+
+        // If the configuration was not valid JSON, return an error response
+        if (!is_array($config)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Invalid JSON provided for field layout configuration.",
+            ]);
+        }
+
+        // Attempt to update and save the field layout
+        try {
+
+            // Create the field layout
+            $layout = FieldLayout::createFromConfig($config);
+
+            // Set the ID and type of the existing layout
+            $layout->id   = $existingLayout->id;
+            $layout->type = $existingLayout->type;
+            $layout->uid  = $existingLayout->uid;
+
+            // If unable to save the field layout, return an error response
+            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to update field layout: " . implode(', ', $layout->getErrorSummary(true)),
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to update the field layout. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Updated field layout {$layout->id}.",
+//            'response' => $config,
+        ]);
     }
 }

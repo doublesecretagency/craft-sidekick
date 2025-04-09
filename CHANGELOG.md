@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Separated skills based on whether `allowAdminChanges` is enabled.
 - When the chat encounters an error, it will continue trying based on the error response.
 - Improved field management by adding explicit instructions for field layout configs.
 

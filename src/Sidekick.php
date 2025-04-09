@@ -14,6 +14,7 @@ namespace doublesecretagency\sidekick;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\console\Application as ConsoleApplication;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
@@ -27,23 +28,27 @@ use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
-use doublesecretagency\sidekick\services\ChatService;
-use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\AltTagService;
-use doublesecretagency\sidekick\services\FileManagementService;
+use doublesecretagency\sidekick\services\ChatService;
 use doublesecretagency\sidekick\services\DummyDataService;
+use doublesecretagency\sidekick\services\FileManagementService;
+use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\SseService;
-use doublesecretagency\sidekick\skills\Entries;
-use doublesecretagency\sidekick\skills\SettingsFields;
-use doublesecretagency\sidekick\skills\SettingsSections;
-use doublesecretagency\sidekick\skills\Templates;
+use doublesecretagency\sidekick\skills\edit\EditTemplates;
+use doublesecretagency\sidekick\skills\edit\SettingsFields;
+use doublesecretagency\sidekick\skills\edit\SettingsFieldsCraft4;
+use doublesecretagency\sidekick\skills\edit\SettingsSections;
+use doublesecretagency\sidekick\skills\read\Entries;
+use doublesecretagency\sidekick\skills\read\Fields;
+use doublesecretagency\sidekick\skills\read\FieldsCraft4;
+use doublesecretagency\sidekick\skills\read\Sections;
+use doublesecretagency\sidekick\skills\read\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use yii\base\Event;
 use yii\base\Exception;
-use craft\console\Application as ConsoleApplication;
 
 /**
  * Class Sidekick
@@ -72,16 +77,6 @@ class Sidekick extends Plugin
     public static ?Sidekick $plugin = null;
 
     /**
-     * @var array List of available skills.
-     */
-    public static array $skills = [
-        Templates::class,
-        Entries::class,
-        SettingsFields::class,
-        SettingsSections::class,
-    ];
-
-    /**
      * @var bool $hasCpSection The plugin has a section with subpages.
      */
     public bool $hasCpSection = true;
@@ -90,6 +85,11 @@ class Sidekick extends Plugin
      * @var bool $hasCpSettings The plugin has a settings page in the control panel.
      */
     public bool $hasCpSettings = true;
+
+    /**
+     * @var array $skills The complete list of skills available to the plugin.
+     */
+    private array $_skills = [];
 
     /**
      * Initializes the plugin.
@@ -138,16 +138,6 @@ class Sidekick extends Plugin
                 ];
             }
         );
-
-        // Give plugins/modules a chance to add custom skills
-        if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
-            // Create a new AddSkillsEvent
-            $event = new AddSkillsEvent();
-            // Trigger the event
-            $this->trigger(self::EVENT_ADD_SKILLS, $event);
-            // Append any additional skills
-            self::$skills = array_merge(self::$skills, $event->skills);
-        }
 
         // Register the asset bundle for loading JS/CSS
         Event::on(
@@ -269,5 +259,80 @@ class Sidekick extends Plugin
             'configFile' => $configFile,
             'settings' => $this->getSettings(),
         ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get the list of available skills.
+     *
+     * @return array
+     */
+    public function getSkills(): array
+    {
+        // If the skills have already been defined, return them
+        if ($this->_skills) {
+            return $this->_skills;
+        }
+
+        // Get the general config
+        $generalConfig = Craft::$app->getConfig()->getGeneral();
+
+        // Define the default skills
+        $this->_skills[] = Entries::class;
+        $this->_skills[] = Fields::class;
+        $this->_skills[] = Sections::class;
+        $this->_skills[] = Templates::class;
+
+        // If admin changes are allowed
+        if ($generalConfig->allowAdminChanges) {
+            // Append development skills
+            $this->_skills[] = SettingsFields::class;
+            $this->_skills[] = SettingsSections::class;
+            $this->_skills[] = EditTemplates::class;
+        }
+
+        // If running Craft 4
+        if ($this->_craftBetween('4.0.0', '5.0.0')) {
+            // Append deprecated skills
+            $this->_skills[] = FieldsCraft4::class;
+            // If admin changes are allowed
+            if ($generalConfig->allowAdminChanges) {
+                // Append development skills
+                $this->_skills[] = SettingsFieldsCraft4::class;
+            }
+        }
+
+        // Give plugins/modules a chance to add custom skills
+        if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
+            // Create a new AddSkillsEvent
+            $event = new AddSkillsEvent();
+            // Trigger the event
+            $this->trigger(self::EVENT_ADD_SKILLS, $event);
+            // Append any additional skills
+            $this->_skills = array_merge($this->_skills, $event->skills);
+        }
+
+        // Return the complete list of skills
+        return $this->_skills;
+    }
+
+    /**
+     * Whether Craft is between the two specified versions.
+     *
+     * @param string $low The lower version bound.
+     * @param string $high The upper version bound.
+     * @return bool
+     */
+    private function _craftBetween(string $low, string $high): bool
+    {
+        // Get the Craft version
+        $v = Craft::$app->getVersion();
+
+        // Whether Craft is between the specified versions
+        return (
+            version_compare($v, $low, '>=') &&
+            version_compare($v, $high, '<')
+        );
     }
 }

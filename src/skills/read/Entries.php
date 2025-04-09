@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills;
+namespace doublesecretagency\sidekick\skills\read;
 
 use Craft;
 use craft\elements\Entry;

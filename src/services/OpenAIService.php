@@ -79,7 +79,7 @@ class OpenAIService extends Component
     /**
      * @var array List of skills hashes.
      */
-    private array $_skillsHash = [];
+    public array $skillsHash = [];
 
     /**
      * Initializes the service.
@@ -93,6 +93,22 @@ class OpenAIService extends Component
         // Retrieve the OpenAI API key from plugin settings or environment variables
         $this->_apiKey = App::parseEnv(Sidekick::$plugin->getSettings()->openAiApiKey ?? '');
 
+        // Set the AI client
+        $this->_setAiClient();
+
+        // Compile the available skills
+        $this->_compileSkills();
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Set the AI client.
+     *
+     * @throws Exception
+     */
+    private function _setAiClient(): void
+    {
         // Get link to the plugin settings page
         $settingsUrl = UrlHelper::cpUrl('settings/plugins/sidekick');
 
@@ -103,46 +119,53 @@ class OpenAIService extends Component
             throw new Exception($error);
         }
 
-        // If the OpenAI client is not already set
-        if (!isset($this->_openAiClient)) {
-            // Create a new OpenAI client
-//            $this->_openAiClient = OpenAI::client($this->_apiKey);
-            $this->_openAiClient = OpenAI::factory()
-                ->withApiKey($this->_apiKey)
-                ->withHttpClient(new GuzzleClient([
-                    'timeout' => 0,
-                    'headers' => [
-                        'OpenAI-Beta' => 'assistants=v2'
-                    ]
-                ]))
-                ->make();
+        // If the OpenAI client is already set, bail
+        if (isset($this->_openAiClient)) {
+            return;
         }
 
-        // If skills hash has not yet been generated
-        if (!$this->_skillsHash) {
+        // Create a new OpenAI client
+//        $this->_openAiClient = OpenAI::client($this->_apiKey);
+        $this->_openAiClient = OpenAI::factory()
+            ->withApiKey($this->_apiKey)
+            ->withHttpClient(new GuzzleClient([
+                'timeout' => 0,
+                'headers' => [
+                    'OpenAI-Beta' => 'assistants=v2'
+                ]
+            ]))
+            ->make();
+    }
 
-            // Loop through each tool class
-            foreach (Sidekick::$skills as $toolClass) {
-
-                // Split the tool class into parts
-                $nameParts = explode('\\', $toolClass);
-
-                // Remove the last part of the class name
-                array_pop($nameParts);
-
-                // Recombine the namespace
-                $namespace = implode('\\', $nameParts);
-
-                // Generate a truncated hash of the namespace
-                $hash = $this->_generateHash($namespace);
-
-                // Store the hash and namespace
-                $this->_skillsHash[$hash] = $namespace;
-
-            }
-
+    /**
+     * Compile the available skills.
+     */
+    private function _compileSkills(): void
+    {
+        // If skills hash has already been generated, bail
+        if ($this->skillsHash) {
+            return;
         }
 
+        // Loop through each tool class
+        foreach (Sidekick::getInstance()?->getSkills() as $toolClass) {
+
+            // Split the tool class into parts
+            $nameParts = explode('\\', $toolClass);
+
+            // Remove the last part of the class name
+            array_pop($nameParts);
+
+            // Recombine the namespace
+            $namespace = implode('\\', $nameParts);
+
+            // Generate a truncated hash of the namespace
+            $hash = $this->_generateHash($namespace);
+
+            // Store the hash and namespace
+            $this->skillsHash[$hash] = $namespace;
+
+        }
     }
 
     // ========================================================================= //
@@ -545,7 +568,7 @@ class OpenAIService extends Component
             $nameParts = explode('-', $fullName);
 
             // Convert hash to namespace
-            $nameParts[0] = ($this->_skillsHash[$nameParts[0]] ?? $nameParts[0]);
+            $nameParts[0] = ($this->skillsHash[$nameParts[0]] ?? $nameParts[0]);
 
             // Get the method and class names
             $method = array_pop($nameParts);
@@ -595,7 +618,7 @@ class OpenAIService extends Component
         ];
 
         // Loop through each tool class
-        foreach (Sidekick::$skills as $toolClass) {
+        foreach (Sidekick::getInstance()?->getSkills() as $toolClass) {
 
             // Get all class methods
             $toolFunctions = (new ReflectionClass($toolClass))->getMethods(ReflectionMethod::IS_PUBLIC);
