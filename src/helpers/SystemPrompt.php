@@ -88,11 +88,18 @@ class SystemPrompt
      */
     private static function _getSystemData(): string
     {
+        // Get the general config settings
+        $generalConfig = Craft::$app->getConfig()->general;
+
         // Relevant system data
         $data = [
             'Craft CMS version' => Craft::$app->getVersion(),
             'Craft CMS edition' => Craft::$app->getEdition(),
             'PHP version' => PHP_VERSION,
+            'General Config' => [
+                'aliases' => $generalConfig->aliases,
+                'allowAdminChanges' => $generalConfig->allowAdminChanges,
+            ]
         ];
 
         // Return JSON encoded system data

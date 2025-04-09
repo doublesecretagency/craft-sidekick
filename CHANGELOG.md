@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- When the chat encounters an error, it will continue trying based on the error response.
 - Improved field management by adding explicit instructions for field layout configs.
 
 ## 0.9.2 - 2025-04-07

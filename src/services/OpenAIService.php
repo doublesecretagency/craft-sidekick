@@ -148,18 +148,6 @@ class OpenAIService extends Component
     // ========================================================================= //
 
     /**
-     * Retrieves the current Craft CMS version.
-     *
-     * @return string
-     */
-    public function getCurrentCraftVersion(): string
-    {
-        return Craft::$app->version;
-    }
-
-    // ========================================================================= //
-
-    /**
      * Get the assistant ID.
      *
      * @return string|null
@@ -479,36 +467,57 @@ class OpenAIService extends Component
         // Loop through each tool call
         foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
 
-            // If the tool call is not a function
-            if ('function' !== $toolCall->type) {
-                // Cancel the run and throw an exception
-                $service->cancel($run->threadId, $run->id);
-                throw new Exception("Unknown tool type: {$toolCall->type}");
+            try {
+
+                // If the tool call is not a function, throw an exception
+                if ('function' !== $toolCall->type) {
+                    throw new Exception("Unknown tool type: {$toolCall->type}");
+                }
+
+                // Run the tool
+                $skillResponse = $this->_runTool($toolCall);
+
+                // If the tool response was not successful, throw an exception
+                if (!$skillResponse->success) {
+                    throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
+                }
+
+                // Append the tool output to the chat history
+                (new ChatMessage([
+                    'role' => ChatMessage::TOOL,
+                    'message' => ($skillResponse->message ?? '[missing tool message]')
+                ]))
+                    ->log()
+                    ->toChatHistory()
+                    ->toChatWindow();
+
+                // Set the tool output
+                $toolOutput = ($skillResponse->response ?? $skillResponse->message);
+
+            } catch (\Exception $e) {
+
+                // Append the error to the chat history
+                (new ChatMessage([
+                    'role' => ChatMessage::ERROR,
+                    'message' => ($e->getMessage())
+                ]))
+                    ->log()
+                    ->toChatHistory()
+                    ->toChatWindow();
+
+                // Get the error message and stack trace
+                $message = $e->getMessage();
+                $stackTrace = $e->getTraceAsString();
+
+                // Set the tool output
+                $toolOutput = "{$message}\n\n{$stackTrace}";
+
             }
-
-            // Run the tool
-            $skillResponse = $this->_runTool($toolCall);
-
-            // If the tool response was not successful
-            if (!$skillResponse->success) {
-                // Cancel the run and throw an exception
-                $service->cancel($run->threadId, $run->id);
-                throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
-            }
-
-            // Append the tool output to the chat history
-            (new ChatMessage([
-                'role' => ChatMessage::TOOL,
-                'message' => ($skillResponse->message ?? '[missing tool message]')
-            ]))
-                ->log()
-                ->toChatHistory()
-                ->toChatWindow();
 
             // Add the tool output to the array
             $allToolOutputs[] = [
                 'tool_call_id' => $toolCall->id,
-                'output' => ($skillResponse->response ?? $skillResponse->message)
+                'output' => $toolOutput
             ];
         }
 
