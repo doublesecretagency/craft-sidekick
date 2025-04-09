@@ -90,22 +90,14 @@ class SettingsFields
      */
     public static function getAllExistingFields(): SkillResponse
     {
-        // Initialize fields
-        $fields = [];
-
         // Fetch all fields
         $allFields = Craft::$app->getFields()->getAllFields();
-
-        // Loop through each field and format the output
-        foreach ($allFields as $field) {
-            $fields[] = self::_catalogField($field);
-        }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing fields.",
-            'response' => Json::encode($fields)
+            'response' => Json::encode($allFields)
         ]);
     }
 
@@ -134,7 +126,7 @@ class SettingsFields
         return new SkillResponse([
             'success' => true,
             'message' => "Checked details of field `{$fieldHandle}`.",
-            'response' => Json::encode(self::_catalogField($field))
+            'response' => Json::encode($field)
         ]);
     }
 
@@ -384,27 +376,6 @@ class SettingsFields
             'message' => "Field group \"{$name}\" has been created.",
 //            'response' => $config,
         ]);
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Catalog a field.
-     *
-     * @param FieldInterface $field
-     * @return array
-     */
-    private static function _catalogField(FieldInterface $field): array
-    {
-        return [
-            'ID' => $field->id,
-            'Name' => $field->name,
-            'Handle' => $field->handle,
-            'Instructions' => $field->instructions,
-            'Group ID' => ($field->groupId ?? null),
-            'Context' => $field->context,
-            'Settings' => $field->getSettings()
-        ];
     }
 
     // ========================================================================= //

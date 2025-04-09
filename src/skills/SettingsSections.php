@@ -93,6 +93,8 @@ class SettingsSections
     /**
      * Get details of a specified field layout.
      *
+     * To identify custom fields, you SHOULD also call `getAvailableFieldTypes` (if you haven't already).
+     *
      * @param string $fieldLayoutId ID of the field layout to identify.
      * @return SkillResponse
      */
@@ -120,7 +122,7 @@ class SettingsSections
     /**
      * Create a new field layout.
      *
-     * @param string $config JSON-stringified configuration for the field layout.
+     * @param string $config JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
      * @return SkillResponse
      */
     public static function createFieldLayout(string $config): SkillResponse
@@ -128,11 +130,12 @@ class SettingsSections
         // Decode the JSON configuration
         $config = Json::decodeIfJson($config);
 
-        // If the configuration is not valid JSON, return an error response
-        if ($config === null) {
+        // If the configuration was not valid JSON, return an error response
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+        if (!is_array($config)) {
             return new SkillResponse([
                 'success' => false,
-                'message' => "Invalid JSON configuration provided.",
+                'message' => "Invalid JSON provided for field layout configuration.",
             ]);
         }
 
@@ -172,7 +175,7 @@ class SettingsSections
      * Update an existing field layout with a new configuration.
      *
      * @param string $fieldLayoutId ID of the field layout to identify.
-     * @param string $newConfig JSON-stringified configuration for the field layout.
+     * @param string $newConfig JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
      * @return SkillResponse
      */
     public static function updateFieldLayout(string $fieldLayoutId, string $newConfig): SkillResponse
@@ -191,11 +194,11 @@ class SettingsSections
         // Decode the JSON configuration
         $config = Json::decodeIfJson($newConfig);
 
-        // If the configuration is not valid JSON, return an error response
-        if ($config === null) {
+        // If the configuration was not valid JSON, return an error response
+        if (!is_array($config)) {
             return new SkillResponse([
                 'success' => false,
-                'message' => "Invalid JSON configuration provided.",
+                'message' => "Invalid JSON provided for field layout configuration.",
             ]);
         }
 
@@ -237,6 +240,84 @@ class SettingsSections
     }
 
     // ========================================================================= //
+
+    /**
+     * Update an existing section with a new configuration.
+     *
+     * Make sure you understand the EXISTING section configuration before updating.
+     * If needed, you MUST call `getSections` to get the current configuration.
+     *
+     * For large updates, ask for confirmation before proceeding.
+     *
+     * @param string $sectionHandle Handle of the section to update.
+     * @param string $newConfig JSON-stringified configuration for the section.
+     * @return SkillResponse
+     */
+    public static function updateSection(string $sectionHandle, string $newConfig): SkillResponse
+    {
+        // Attempt to update the section
+        try {
+
+            // Get the section
+            $section = Craft::$app->getSections()->getSectionByHandle($sectionHandle);
+
+            // If section doesn't exist, return an error response
+            if (!$section) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to update, section `{$sectionHandle}` does not exist.",
+                ]);
+            }
+
+            // Decode the JSON configuration
+            $config = Json::decodeIfJson($newConfig);
+
+            // If the configuration was not valid JSON, return an error response
+            if (!is_array($config)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid JSON provided for section configuration.",
+                ]);
+            }
+
+            // Update the section with the new configuration
+            $section->name = ($config['name'] ?? $section->name);
+            $section->handle = ($config['handle'] ?? $section->handle);
+            $section->type = ($config['type'] ?? $section->type);
+//            $section->siteSettings = ($config['siteSettings'] ?? $section->siteSettings);
+//            $section->hasUrls = ($config['hasUrls'] ?? $section->hasUrls);
+//            $section->uriFormat = ($config['uriFormat'] ?? $section->uriFormat);
+//            $section->template = ($config['template'] ?? $section->template);
+//            $section->maxLevels = ($config['maxLevels'] ?? $section->maxLevels);
+//            $section->structureId = ($config['structureId'] ?? $section->structureId);
+//            $section->propagationMethod = ($config['propagationMethod'] ?? $section->propagationMethod);
+//            $section->propagationKeyFormat = ($config['propagationKeyFormat'] ?? $section->propagationKeyFormat);
+
+            // If unable to save the section, return an error response
+            if (!Craft::$app->getSections()->saveSection($section)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to update section: " . implode(', ', $section->getErrorSummary(true)),
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to update the section. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Section \"{$section->name}\" has been updated.",
+//            'response' => $config,
+        ]);
+    }
 
     /**
      * Create a new section.
@@ -297,84 +378,6 @@ class SettingsSections
         return new SkillResponse([
             'success' => true,
             'message' => "Section \"{$name}\" with handle \"{$handle}\" of type \"{$sectionType}\" has been created.",
-//            'response' => $config,
-        ]);
-    }
-
-    /**
-     * Update an existing section with a new configuration.
-     *
-     * Make sure you understand the EXISTING section configuration before updating.
-     * If needed, you MUST call `getSections` to get the current configuration.
-     *
-     * For large updates, ask for confirmation before proceeding.
-     *
-     * @param string $sectionHandle Handle of the section to update.
-     * @param string $newConfig JSON-stringified configuration for the section.
-     * @return SkillResponse
-     */
-    public static function updateSection(string $sectionHandle, string $newConfig): SkillResponse
-    {
-        // Attempt to update the section
-        try {
-
-            // Get the section
-            $section = Craft::$app->getSections()->getSectionByHandle($sectionHandle);
-
-            // If section doesn't exist, return an error response
-            if (!$section) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, section `{$sectionHandle}` does not exist.",
-                ]);
-            }
-
-            // Decode the JSON configuration
-            $config = Json::decodeIfJson($newConfig);
-
-            // If the configuration is not valid JSON, return an error response
-            if ($config === null) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON configuration provided.",
-                ]);
-            }
-
-            // Update the section with the new configuration
-            $section->name = ($config['name'] ?? $section->name);
-            $section->handle = ($config['handle'] ?? $section->handle);
-            $section->type = ($config['type'] ?? $section->type);
-//            $section->siteSettings = ($config['siteSettings'] ?? $section->siteSettings);
-//            $section->hasUrls = ($config['hasUrls'] ?? $section->hasUrls);
-//            $section->uriFormat = ($config['uriFormat'] ?? $section->uriFormat);
-//            $section->template = ($config['template'] ?? $section->template);
-//            $section->maxLevels = ($config['maxLevels'] ?? $section->maxLevels);
-//            $section->structureId = ($config['structureId'] ?? $section->structureId);
-//            $section->propagationMethod = ($config['propagationMethod'] ?? $section->propagationMethod);
-//            $section->propagationKeyFormat = ($config['propagationKeyFormat'] ?? $section->propagationKeyFormat);
-
-            // If unable to save the section, return an error response
-            if (!Craft::$app->getSections()->saveSection($section)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update section: " . implode(', ', $section->getErrorSummary(true)),
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the section. {$e->getMessage()}",
-            ]);
-
-        }
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Section \"{$section->name}\" has been updated.",
 //            'response' => $config,
         ]);
     }

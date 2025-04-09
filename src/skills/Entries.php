@@ -71,7 +71,7 @@ class Entries
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Entry \"{$entry->title}\" has been created. [{$jsonConfig}]",
+            'message' => "Entry \"{$entry->title}\" has been created.",
 //            'response' => $config,
         ]);
     }
