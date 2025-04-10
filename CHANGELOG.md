@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.3 - 2025-04-09
 
 ### Changed
 - Separated skills based on whether `allowAdminChanges` is enabled.
