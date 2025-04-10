@@ -52,8 +52,8 @@ const SidekickChat = {
         // Handle keydown events for "Enter" and "Shift + Enter" in the message input
         this.chatInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevent newline
-                this.chatForm.dispatchEvent(new Event('submit')); // Submit form
+                event.preventDefault();
+                this.sendMessage();
             }
         });
 

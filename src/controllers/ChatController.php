@@ -18,6 +18,7 @@ use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
+use Exception;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -117,7 +118,7 @@ class ChatController extends Controller
                 'greeting' => $greeting ?? null,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             // Return an error message
             return $this->asJson([
@@ -153,7 +154,7 @@ class ChatController extends Controller
                 'message' => 'Conversation cleared.',
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             // Return an error message
             return $this->asJson([
@@ -214,7 +215,7 @@ class ChatController extends Controller
             // Run the OpenAI thread
             $openAi->runThread();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             // Append error to the chat history
             (new ChatMessage([
