@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed overzealous namespace hash translations.
+
 ## 0.9.3 - 2025-04-09
 
 ### Changed
