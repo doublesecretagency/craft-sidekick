@@ -53,6 +53,19 @@ This is a standard example of a field layout config in Craft 4:
                     "uid": "6cb26f71-fb5b-47c2-92f5-ce02693e1495", // Required - UID of the field
                     "userCondition": null,
                     "elementCondition": null
+                },
+                { // Most field types will be covered by `CustomField` as a proxy for the real field type (identified via the `fieldUid`)
+                    "type": "craft\\fieldlayoutelements\\CustomField", // Required
+                    "label": null,
+                    "instructions": null,
+                    "tip": null,
+                    "warning": null,
+                    "required": false,
+                    "width": 100, // Required [25|50|75|100]
+                    "uid": "364220f6-19ac-4a7a-9217-1055ba0b2939", // Required - New or existing UID
+                    "userCondition": null,
+                    "elementCondition": null,
+                    "fieldUid": "5dc61f0b-c99b-4c53-bd24-398f47895b36" // Required - UID of the field, MUST match the field's UID
                 }
             ]
         }

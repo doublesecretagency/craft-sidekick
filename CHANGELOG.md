@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Improved field and section management skills.
+
 ### Fixed
 - Fixed overzealous namespace hash translations.
 

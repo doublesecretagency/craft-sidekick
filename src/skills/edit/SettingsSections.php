@@ -36,45 +36,45 @@ class SettingsSections
     /**
      * Create a new section.
      *
-     * @param string $name Name of the section to create.
-     * @param string $handle Handle for the section. If not otherwise specified, use a camelCase version of the name.
-     * @param string $sectionType Type of the section (must be 'single', 'channel', or 'structure'). If not specified, ask for clarification.
+     * @param string $sectionConfig JSON-stringified configuration for the `Section` model.
+     * @param string $siteSettingsConfig JSON-stringified configuration for the `Section_SiteSettings` model.
      * @return SkillResponse
      */
-    public static function createSection(string $name, string $handle, string $sectionType): SkillResponse
+    public static function createSection(string $sectionConfig, string $siteSettingsConfig): SkillResponse
     {
+        // Decode the JSON configurations
+        $section      = Json::decodeIfJson($sectionConfig);
+        $siteSettings = Json::decodeIfJson($siteSettingsConfig);
+
+        // Get the section type
+        $sectionType = ($section['type'] ?? null);
+
         // If the section type is not valid, return an error response
         if (!in_array($sectionType, self::SECTION_TYPES, true)) {
+            $types = implode(', ', self::SECTION_TYPES);
             return new SkillResponse([
                 'success' => false,
-                'message' => "Invalid section type: {$sectionType}. Valid types are: " . implode(', ', self::SECTION_TYPES),
+                'message' => "Invalid section type: {$sectionType}. Valid types are: {$types}",
             ]);
         }
 
         // Attempt to create and save the section
         try {
 
+            // Create the site settings
+            $section['siteSettings'] = [
+                new Section_SiteSettings($siteSettings),
+            ];
+
             // Create the section
-            $section = new Section([
-                'name' => $name,
-                'handle' => $handle,
-                'type' => $sectionType,
-                'siteSettings' => [
-                    new Section_SiteSettings([
-                        'siteId' => Craft::$app->sites->getPrimarySite()->id,
-                        'enabledByDefault' => true,
-                        'hasUrls' => false,
-//                        'uriFormat' => 'foo/{slug}',
-//                        'template' => 'foo/_entry',
-                    ]),
-                ]
-            ]);
+            $section = new Section($section);
 
             // If unable to save the section, return an error response
             if (!Craft::$app->getSections()->saveSection($section)) {
+                $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to create section: " . implode(', ', $section->getErrorSummary(true)),
+                    'message' => "Failed to create section: {$errors}",
                 ]);
             }
 
@@ -91,7 +91,7 @@ class SettingsSections
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Section \"{$name}\" with handle \"{$handle}\" of type \"{$sectionType}\" has been created.",
+            'message' => "Section \"{$section['name']}\" with handle \"{$section['handle']}\" of type \"{$sectionType}\" has been created.",
 //            'response' => $config,
         ]);
     }
@@ -150,9 +150,10 @@ class SettingsSections
 
             // If unable to save the section, return an error response
             if (!Craft::$app->getSections()->saveSection($section)) {
+                $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to update section: " . implode(', ', $section->getErrorSummary(true)),
+                    'message' => "Failed to update section: {$errors}",
                 ]);
             }
 
@@ -186,8 +187,11 @@ class SettingsSections
      */
     public static function deleteSection(string $handle): SkillResponse
     {
+        // Get the sections service
+        $sectionsService = Craft::$app->getSections();
+
         // Attempt to find the section by its handle
-        $section = Craft::$app->getSections()->getSectionByHandle($handle);
+        $section = $sectionsService->getSectionByHandle($handle);
 
         // If the section doesn't exist, return an error response
         if (!$section) {
@@ -200,7 +204,7 @@ class SettingsSections
         // Attempt to delete the section
         try {
             // If unable to delete the section, return an error response
-            if (!Craft::$app->getSections()->deleteSection($section)) {
+            if (!$sectionsService->deleteSection($section)) {
                 $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,

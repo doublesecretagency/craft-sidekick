@@ -47,9 +47,10 @@ class SettingsFields
 
             // If unable to save the field, return an error response
             if (!Craft::$app->getFields()->saveField($field)) {
+                $errors = implode(', ', $field->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to create field: " . implode(', ', $field->getErrorSummary(true)),
+                    'message' => "Failed to create field: {$errors}",
                 ]);
             }
 
@@ -110,9 +111,10 @@ class SettingsFields
 
             // If unable to save the field, return an error response
             if (!Craft::$app->getFields()->saveField($field)) {
+                $errors = implode(', ', $field->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to update field: " . implode(', ', $field->getErrorSummary(true)),
+                    'message' => "Failed to update field: {$errors}",
                 ]);
             }
 
@@ -146,6 +148,9 @@ class SettingsFields
      */
     public static function deleteField(string $handle): SkillResponse
     {
+        // Get the fields service
+        $fieldsService = Craft::$app->getFields();
+
         // Attempt to find the field by its handle
         $field = Craft::$app->getFields()->getFieldByHandle($handle);
 
@@ -159,14 +164,16 @@ class SettingsFields
 
         // Attempt to delete the field
         try {
-            // If unable to delete the field, return an error response
-            if (!Craft::$app->getFields()->deleteField($field)) {
+            // If unable to mark field for deletion, return an error response
+            if (!$fieldsService->deleteField($field)) {
                 $errors = implode(', ', $field->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
                     'message' => "Failed to delete field: {$errors}",
                 ]);
             }
+            // Actually delete the field
+            $fieldsService->applyFieldDelete($field->uid);
         } catch (Throwable $e) {
             // Something went wrong, return an error response
             return new SkillResponse([
@@ -213,9 +220,10 @@ class SettingsFields
 
             // If unable to save the field layout, return an error response
             if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+                $errors = implode(', ', $layout->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to create field layout: " . implode(', ', $layout->getErrorSummary(true)),
+                    'message' => "Failed to create field layout: {$errors}",
                 ]);
             }
 
@@ -281,9 +289,10 @@ class SettingsFields
 
             // If unable to save the field layout, return an error response
             if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+                $errors = implode(', ', $layout->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to update field layout: " . implode(', ', $layout->getErrorSummary(true)),
+                    'message' => "Failed to update field layout: {$errors}",
                 ]);
             }
 

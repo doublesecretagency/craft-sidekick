@@ -276,7 +276,7 @@ class Sidekick extends Plugin
         }
 
         // Get the general config
-        $generalConfig = Craft::$app->getConfig()->getGeneral();
+        $allowAdminChanges = Craft::$app->getConfig()->getGeneral()->allowAdminChanges;
 
         // Define the default skills
         $this->_skills[] = Entries::class;
@@ -285,7 +285,7 @@ class Sidekick extends Plugin
         $this->_skills[] = Templates::class;
 
         // If admin changes are allowed
-        if ($generalConfig->allowAdminChanges) {
+        if ($allowAdminChanges) {
             // Append development skills
             $this->_skills[] = SettingsFields::class;
             $this->_skills[] = SettingsSections::class;
@@ -297,7 +297,7 @@ class Sidekick extends Plugin
             // Append deprecated skills
             $this->_skills[] = FieldsCraft4::class;
             // If admin changes are allowed
-            if ($generalConfig->allowAdminChanges) {
+            if ($allowAdminChanges) {
                 // Append development skills
                 $this->_skills[] = SettingsFieldsCraft4::class;
             }

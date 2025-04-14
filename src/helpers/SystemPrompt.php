@@ -26,7 +26,9 @@ class SystemPrompt
         'tool-functions.md',
         'twig-templates.md',
         'chat-messages.md',
+        'saving-sections.md',
         'field-layout-configs.md',
+        'generating-uids.md',
         'namespace-hashes.md',
     ];
 

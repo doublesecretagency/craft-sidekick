@@ -39,9 +39,10 @@ class SettingsFieldsCraft4
 
             // If unable to save the field group, return an error response
             if (!Craft::$app->getFields()->saveGroup($fieldGroup)) {
+                $errors = implode(', ', $fieldGroup->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Failed to create field group: " . implode(', ', $fieldGroup->getErrorSummary(true)),
+                    'message' => "Failed to create field group: {$errors}",
                 ]);
             }
 
