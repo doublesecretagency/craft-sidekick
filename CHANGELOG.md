@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added site and site group management skills.
+
 ### Changed
 - Improved field and section management skills.
 

@@ -38,10 +38,12 @@ use doublesecretagency\sidekick\skills\edit\EditTemplates;
 use doublesecretagency\sidekick\skills\edit\SettingsFields;
 use doublesecretagency\sidekick\skills\edit\SettingsFieldsCraft4;
 use doublesecretagency\sidekick\skills\edit\SettingsSections;
+use doublesecretagency\sidekick\skills\edit\SettingsSites;
 use doublesecretagency\sidekick\skills\read\Entries;
 use doublesecretagency\sidekick\skills\read\Fields;
 use doublesecretagency\sidekick\skills\read\FieldsCraft4;
 use doublesecretagency\sidekick\skills\read\Sections;
+use doublesecretagency\sidekick\skills\read\Sites;
 use doublesecretagency\sidekick\skills\read\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use Twig\Error\LoaderError;
@@ -279,6 +281,7 @@ class Sidekick extends Plugin
         $allowAdminChanges = Craft::$app->getConfig()->getGeneral()->allowAdminChanges;
 
         // Define the default skills
+        $this->_skills[] = Sites::class;
         $this->_skills[] = Entries::class;
         $this->_skills[] = Fields::class;
         $this->_skills[] = Sections::class;
@@ -287,6 +290,7 @@ class Sidekick extends Plugin
         // If admin changes are allowed
         if ($allowAdminChanges) {
             // Append development skills
+            $this->_skills[] = SettingsSites::class;
             $this->_skills[] = SettingsFields::class;
             $this->_skills[] = SettingsSections::class;
             $this->_skills[] = EditTemplates::class;
