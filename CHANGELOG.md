@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.4 - 2025-04-17
 
 ### Added
 - Added site and site group management skills.
