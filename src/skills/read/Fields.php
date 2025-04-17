@@ -34,7 +34,7 @@ class Fields
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Checked available field types.",
+            'message' => "Reviewed the existing field types.",
             'response' => Json::encode($availableFieldTypes)
         ]);
     }

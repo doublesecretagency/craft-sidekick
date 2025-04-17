@@ -30,14 +30,22 @@ class SettingsSites
      */
     public static function createSite(string $siteConfig): SkillResponse
     {
-        // Decode the JSON configurations
-        $site = Json::decodeIfJson($siteConfig);
-
         // Attempt to create and save the site
         try {
 
             // Create the site
-            $site = new Site($site);
+            $site = new Site(
+                Json::decode($siteConfig)
+            );
+
+            // If the site is not valid, return an error response
+            if (!$site->validate()) {
+                $errors = implode(', ', $site->getErrorSummary(true));
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid site configuration: {$errors}",
+                ]);
+            }
 
             // If unable to save the site, return an error response
             if (!Craft::$app->getSites()->saveSite($site)) {
@@ -95,7 +103,7 @@ class SettingsSites
             }
 
             // Decode the JSON configuration
-            $config = Json::decodeIfJson($newConfig);
+            $config = Json::decode($newConfig);
 
             // If the configuration was not valid JSON, return an error response
             if (!is_array($config)) {
@@ -207,11 +215,11 @@ class SettingsSites
      */
     public static function createSiteGroup(string $siteGroupConfig): SkillResponse
     {
-        // Decode the JSON configurations
-        $siteGroup = Json::decodeIfJson($siteGroupConfig);
-
         // Attempt to create and save the site group
         try {
+
+            // Decode the JSON configurations
+            $siteGroup = Json::decode($siteGroupConfig);
 
             // Create the site
             $group = new SiteGroup($siteGroup);
@@ -272,7 +280,7 @@ class SettingsSites
             }
 
             // Decode the JSON configuration
-            $config = Json::decodeIfJson($newConfig);
+            $config = Json::decode($newConfig);
 
             // If the configuration was not valid JSON, return an error response
             if (!is_array($config)) {

@@ -38,3 +38,7 @@
 - **Confirming Multi-step Tasks:**
 
     - If a task involves multiple steps, summarize the steps to the user and ask for confirmation before proceeding.
+
+## User Instructions
+
+If a user gives you vague instructions (ie: "Make a blog"), you should extrapolate and make a few assumptions about what they might want. Formulate a plan, and run your plan past the user before proceeding. See if the user wants to make any changes, revisions, or improvements to your plan before you execute it.

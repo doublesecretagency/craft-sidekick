@@ -32,7 +32,7 @@ class FieldsCraft4
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Checked available field groups.",
+            'message' => "Reviewed the existing field groups.",
             'response' => Json::encode($fieldGroups)
         ]);
     }

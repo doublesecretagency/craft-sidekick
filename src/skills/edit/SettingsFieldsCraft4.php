@@ -24,10 +24,9 @@ class SettingsFieldsCraft4
      * ONLY AVAILABLE IN CRAFT 4.
      *
      * @param string $name Name of the field group.
-     * @param string $handle Handle of the field group.
      * @return SkillResponse
      */
-    public static function createFieldGroup(string $name, string $handle): SkillResponse
+    public static function createFieldGroup(string $name): SkillResponse
     {
         // Attempt to create the field group
         try {
@@ -60,6 +59,59 @@ class SettingsFieldsCraft4
         return new SkillResponse([
             'success' => true,
             'message' => "Field group \"{$name}\" has been created.",
+//            'response' => $config,
+        ]);
+    }
+
+    /**
+     * Delete an existing field group.
+     *
+     * ONLY AVAILABLE IN CRAFT 4.
+     *
+     * @param string $groupId ID of the field group to be deleted.
+     * @return SkillResponse
+     */
+    public static function deleteFieldGroup(string $groupId): SkillResponse
+    {
+        // Attempt to delete the field group
+        try {
+
+            // Get the fields service
+            $fields = Craft::$app->getFields();
+
+            // Get the field group by ID
+            $group = $fields->getGroupById($groupId);
+
+            // If group does not exist, return an error response
+            if (!$group) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to delete, field group does not exist.",
+                ]);
+            }
+
+            // If unable to delete the field group, return an error response
+            if (!$fields->deleteGroup($group)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to delete the field group \"{$group->name}\".",
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete the field group. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Field group \"{$group->name}\" has been deleted.",
 //            'response' => $config,
         ]);
     }

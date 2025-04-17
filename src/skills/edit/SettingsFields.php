@@ -30,16 +30,24 @@ class SettingsFields
      * Call `getAvailableFieldGroups` to get a list of available field groups in Craft 4.
      *
      * @param string $fieldType Type of the field (from list of available field types). If not specified, ask for clarification.
-     * @param string $config JSON-stringified configuration for the field.
+     * @param string $fieldConfig JSON-stringified configuration for the field.
      * @return SkillResponse
      */
-    public static function createField(string $fieldType, string $config): SkillResponse
+    public static function createField(string $fieldType, string $fieldConfig): SkillResponse
     {
         // Attempt to create and save the field
         try {
 
             // Decode the JSON configuration
-            $config = Json::decodeIfJson($config);
+            $config = Json::decode($fieldConfig);
+
+            // If config is invalid, return an error response
+            if (!$config || !is_array($config)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid field configuration.",
+                ]);
+            }
 
             // Create the field
             /** @var FieldInterface $fieldType */
@@ -101,7 +109,7 @@ class SettingsFields
             }
 
             // Decode the JSON configuration
-            $config = Json::decodeIfJson($newConfig);
+            $config = Json::decode($newConfig);
 
             // Merge the new configuration with the existing field
             $field->setAttributes($config, false);
@@ -195,16 +203,15 @@ class SettingsFields
     /**
      * Create a new field layout.
      *
-     * @param string $config JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
+     * @param string $fieldLayoutConfig JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
      * @return SkillResponse
      */
-    public static function createFieldLayout(string $config): SkillResponse
+    public static function createFieldLayout(string $fieldLayoutConfig): SkillResponse
     {
         // Decode the JSON configuration
-        $config = Json::decodeIfJson($config);
+        $config = Json::decode($fieldLayoutConfig);
 
         // If the configuration was not valid JSON, return an error response
-        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         if (!is_array($config)) {
             return new SkillResponse([
                 'success' => false,
@@ -266,7 +273,7 @@ class SettingsFields
         }
 
         // Decode the JSON configuration
-        $config = Json::decodeIfJson($newConfig);
+        $config = Json::decode($newConfig);
 
         // If the configuration was not valid JSON, return an error response
         if (!is_array($config)) {

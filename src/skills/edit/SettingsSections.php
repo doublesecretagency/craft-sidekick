@@ -37,37 +37,47 @@ class SettingsSections
      * Create a new section.
      *
      * @param string $sectionConfig JSON-stringified configuration for the `Section` model.
-     * @param string $siteSettingsConfig JSON-stringified configuration for the `Section_SiteSettings` model.
+     * @param string $siteSettingsConfig JSON-stringified array of configurations, each for the `Section_SiteSettings` model.
      * @return SkillResponse
      */
     public static function createSection(string $sectionConfig, string $siteSettingsConfig): SkillResponse
     {
-        // Decode the JSON configurations
-        $section      = Json::decodeIfJson($sectionConfig);
-        $siteSettings = Json::decodeIfJson($siteSettingsConfig);
-
-        // Get the section type
-        $sectionType = ($section['type'] ?? null);
-
-        // If the section type is not valid, return an error response
-        if (!in_array($sectionType, self::SECTION_TYPES, true)) {
-            $types = implode(', ', self::SECTION_TYPES);
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Invalid section type: {$sectionType}. Valid types are: {$types}",
-            ]);
-        }
-
         // Attempt to create and save the section
         try {
 
-            // Create the site settings
-            $section['siteSettings'] = [
-                new Section_SiteSettings($siteSettings),
-            ];
+            // Decode the JSON configurations
+            $section      = Json::decode($sectionConfig);
+            $siteSettings = Json::decode($siteSettingsConfig);
+
+            // Get the section type
+            $sectionType = ($section['type'] ?? null);
+
+            // If the section type is not valid, return an error response
+            if (!in_array($sectionType, self::SECTION_TYPES, true)) {
+                $types = implode(', ', self::SECTION_TYPES);
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid section type: {$sectionType}. Valid types are: {$types}",
+                ]);
+            }
 
             // Create the section
             $section = new Section($section);
+
+            // Append site settings
+            $section->setSiteSettings(array_map(
+                static fn(array $config) => new Section_SiteSettings($config),
+                $siteSettings
+            ));
+
+            // If the section is not valid, return an error response
+            if (!$section->validate()) {
+                $errors = implode(', ', $section->getErrorSummary(true));
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Invalid site configuration: {$errors}",
+                ]);
+            }
 
             // If unable to save the section, return an error response
             if (!Craft::$app->getSections()->saveSection($section)) {
@@ -125,7 +135,7 @@ class SettingsSections
             }
 
             // Decode the JSON configuration
-            $config = Json::decodeIfJson($newConfig);
+            $config = Json::decode($newConfig);
 
             // If the configuration was not valid JSON, return an error response
             if (!is_array($config)) {
