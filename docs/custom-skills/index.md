@@ -42,13 +42,16 @@ Add each new skill set class to the existing `$event->skills` array. You can add
 
 ## Define the new Skills
 
-Create a class for each of the skill sets you want to add. Each class will be composed primarily of `public static` methods.
+Create a class for each of the skill sets you want to add. It will be composed primarily of `public static` methods.
 
 ```php
 namespace modules\mymodule\skills;
 
 use doublesecretagency\sidekick\models\SkillResponse;
 
+/**
+ * @category My Skills Category
+ */
 class MyCustomSkills
 {
    /**
@@ -85,6 +88,16 @@ class MyCustomSkills
    }
 }
 ```
+
+Listed in order of appearance, each important component is described below...
+
+---
+
+### `@category`
+
+For self-documenting purposes only. See the results in the "What can Sidekick do?" [slideout](/native-skills/).
+
+Specify a category (aka group) for your custom skills. If you are building multiple custom skills classes, each class can have a unique or common `@category` value. Classes sharing categories will be grouped together.
 
 ### `public static`
 

@@ -162,6 +162,7 @@ class Sidekick extends Plugin
                 $event->rules['sidekick/chat/send-message'] = 'sidekick/chat/send-message';
                 $event->rules['sidekick/chat/get-conversation'] = 'sidekick/chat/get-conversation';
                 $event->rules['sidekick/chat/clear-conversation'] = 'sidekick/chat/clear-conversation';
+                $event->rules['sidekick/chat/list-skills'] = 'sidekick/chat/list-skills';
             }
         );
 
@@ -281,19 +282,19 @@ class Sidekick extends Plugin
         $allowAdminChanges = Craft::$app->getConfig()->getGeneral()->allowAdminChanges;
 
         // Define the default skills
-        $this->_skills[] = Sites::class;
+        $this->_skills[] = Templates::class;
         $this->_skills[] = Entries::class;
         $this->_skills[] = Fields::class;
         $this->_skills[] = Sections::class;
-        $this->_skills[] = Templates::class;
+        $this->_skills[] = Sites::class;
 
         // If admin changes are allowed
         if ($allowAdminChanges) {
             // Append development skills
-            $this->_skills[] = SettingsSites::class;
+            $this->_skills[] = EditTemplates::class;
             $this->_skills[] = SettingsFields::class;
             $this->_skills[] = SettingsSections::class;
-            $this->_skills[] = EditTemplates::class;
+            $this->_skills[] = SettingsSites::class;
         }
 
         // If running Craft 4

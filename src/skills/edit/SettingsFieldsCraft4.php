@@ -16,6 +16,9 @@ use craft\models\FieldGroup;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
+/**
+ * @category Fields
+ */
 class SettingsFieldsCraft4
 {
     /**

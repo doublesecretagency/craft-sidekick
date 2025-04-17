@@ -17,6 +17,9 @@ use doublesecretagency\sidekick\models\SkillResponse;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
+/**
+ * @category Templates
+ */
 class Templates
 {
     /**
@@ -39,7 +42,7 @@ class Templates
      *
      * @return SkillResponse
      */
-    public static function templatesStructure(): SkillResponse
+    public static function getTemplatesFolderStructure(): SkillResponse
     {
         // Get the templates path
         $templatesPath = Craft::getAlias('@templates');

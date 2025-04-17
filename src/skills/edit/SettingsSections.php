@@ -18,6 +18,9 @@ use craft\models\Section_SiteSettings;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
+/**
+ * @category Sections
+ */
 class SettingsSections
 {
     /**

@@ -17,6 +17,9 @@ use craft\helpers\Json;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
+/**
+ * @category Fields
+ */
 class Fields
 {
     /**

@@ -13,12 +13,17 @@ namespace doublesecretagency\sidekick\controllers;
 
 use Craft;
 use craft\errors\MissingComponentException;
+use craft\helpers\StringHelper;
 use craft\web\Controller;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\Sidekick;
 use Exception;
+use phpDocumentor\Reflection\DocBlockFactory;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionMethod;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -230,5 +235,108 @@ class ChatController extends Controller
 
         // Close the connection
         $sse->closeConnection();
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Displays a complete list of existing skills.
+     *
+     * @return Response
+     */
+    public function actionListSkills(): Response
+    {
+        // Initialize skill sets
+        $skillSets = [];
+
+        // Create a new instance of the DocBlockFactory
+        $docFactory = DocBlockFactory::createInstance();
+
+        // Loop through each tool class
+        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
+
+            // Defaults to uncategorized
+            $category = 'Uncategorized';
+
+            // Attempt to get the actual category
+            try {
+
+                // Get reflection class object
+                $reflection = new ReflectionClass($skill);
+
+                // Get all class methods
+                $toolFunctions = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
+
+                // Get the class's docblock
+                $classDocsComment = $reflection->getDocComment();
+
+                // If the class has a docblock
+                if ($classDocsComment) {
+
+                    // Get the method's docblock
+                    $classDocs = $docFactory->create($classDocsComment);
+
+                    // Get the @category value of the class
+                    $categories = $classDocs->getTagsByName('category');
+
+                    // If any category tags exist
+                    if ($categories) {
+                        // Get only the first category
+                        $category = $categories[0]->getDescription()->render();
+                    }
+
+                }
+
+            } catch (ReflectionException $e) {
+
+                // Something went wrong, skip to the next one
+                continue;
+
+            }
+
+            // Loop through each tool function
+            foreach ($toolFunctions as $toolFunction) {
+
+                // Get the method's docblock
+                $docBlock = $docFactory->create($toolFunction->getDocComment());
+
+//                // Split the tool class into parts
+//                $nameParts = explode('\\', $skill);
+//
+//                // Get the last part of the class name
+//                $className = array_pop($nameParts);
+//
+//                // Recombine the namespace
+//                $namespace = implode('\\', $nameParts);
+
+                // Get the method name
+                $method = $toolFunction->getName();
+
+                // Convert camelCase $method to normal Title Caps
+                $name = StringHelper::toPascalCase($method);
+                $name = implode(' ', StringHelper::toWords($name));
+
+                // If category array does not yet exist, initialize it
+                if (!isset($skillSets[$category])) {
+                    $skillSets[$category] = [];
+                }
+
+                // Configure the skill info
+                $skillSets[$category][] = [
+                    'fullPath' => "$skill::$method",
+                    'name' => $name,
+                    'description' => $docBlock->getSummary()
+                ];
+
+            }
+
+        }
+
+        // Return the slideout
+        return $this->asCpScreen()
+            ->title('What can Sidekick do?')
+            ->contentTemplate('sidekick/list-skills.twig', [
+                'skillSets' => $skillSets
+            ]);
     }
 }

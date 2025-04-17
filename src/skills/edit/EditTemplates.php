@@ -14,47 +14,11 @@ namespace doublesecretagency\sidekick\skills\edit;
 use doublesecretagency\sidekick\helpers\TemplatesHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 
+/**
+ * @category Templates
+ */
 class EditTemplates
 {
-    /**
-     * Create a new directory.
-     *
-     * Directory MUST ALWAYS begin with `templates`.
-     *
-     * @param string $directory Directory to create the file in.
-     * @return SkillResponse
-     */
-    public static function createDirectory(string $directory): SkillResponse
-    {
-        // Parse the templates path
-        $path = TemplatesHelper::parseTemplatesPath($directory);
-
-        // Get the directory path
-        $directoryPath = dirname($path);
-
-        // If the required directory already exists
-        if (is_dir($directoryPath)) {
-            return new SkillResponse([
-                'success' => true,
-                'message' => "The directory {$directory} already exists."
-            ]);
-        }
-
-        // Attempt to create the directory (with check to ensure that it worked)
-        if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the directory {$directory}."
-            ]);
-        }
-
-        // Return success message
-        return new SkillResponse([
-            'success' => true,
-            'message' => "Created the directory {$directory}."
-        ]);
-    }
-
     /**
      * Create a new file with specified content.
      *
@@ -209,6 +173,47 @@ class EditTemplates
         return new SkillResponse([
             'success' => true,
             'message' => "Deleted {$directory}/{$file}"
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Create a new directory.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
+     *
+     * @param string $directory Directory to create the file in.
+     * @return SkillResponse
+     */
+    public static function createDirectory(string $directory): SkillResponse
+    {
+        // Parse the templates path
+        $path = TemplatesHelper::parseTemplatesPath($directory);
+
+        // Get the directory path
+        $directoryPath = dirname($path);
+
+        // If the required directory already exists
+        if (is_dir($directoryPath)) {
+            return new SkillResponse([
+                'success' => true,
+                'message' => "The directory {$directory} already exists."
+            ]);
+        }
+
+        // Attempt to create the directory (with check to ensure that it worked)
+        if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to create the directory {$directory}."
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Created the directory {$directory}."
         ]);
     }
 

@@ -18,6 +18,9 @@ use craft\models\FieldLayout;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
+/**
+ * @category Fields
+ */
 class SettingsFields
 {
     /**

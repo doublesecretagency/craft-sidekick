@@ -1,4 +1,5 @@
 // Define the SidekickChat object
+// noinspection JSVoidFunctionReturnValueUsed
 const SidekickChat = {
     // Properties
     chatWindow: document.getElementById('chat-window'),
@@ -37,6 +38,9 @@ const SidekickChat = {
 
         // Load selected AI model
         this.loadSelectedModel();
+
+        // Activate skills slideout
+        new this.ListSkills();
 
         // Configure marked to use highlight.js
         marked.setOptions({
@@ -428,6 +432,20 @@ const SidekickChat = {
                 });
         }
     },
+
+    // Activate skills slideout
+    ListSkills: Garnish.Base.extend({
+        init: function() {
+            // Open slideout when the button is clicked
+            $('#sidekick-list-skills').on('click', $.proxy(this, 'onClick'));
+        },
+        onClick: function() {
+            // Render and open the slideout
+            const slideout = new Craft.CpScreenSlideout('sidekick/chat/list-skills');
+            slideout.open();
+        },
+    }),
+
 };
 
 // Initialize the SidekickChat object when the DOM is loaded

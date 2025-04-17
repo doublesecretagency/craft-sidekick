@@ -148,10 +148,10 @@ class OpenAIService extends Component
         }
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkills() as $toolClass) {
+        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
 
             // Split the tool class into parts
-            $nameParts = explode('\\', $toolClass);
+            $nameParts = explode('\\', $skill);
 
             // Remove the last part of the class name
             array_pop($nameParts);
@@ -618,10 +618,10 @@ class OpenAIService extends Component
         ];
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkills() as $toolClass) {
+        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
 
             // Get all class methods
-            $toolFunctions = (new ReflectionClass($toolClass))->getMethods(ReflectionMethod::IS_PUBLIC);
+            $toolFunctions = (new ReflectionClass($skill))->getMethods(ReflectionMethod::IS_PUBLIC);
 
             // Create a new instance of the DocBlockFactory
             $docFactory = DocBlockFactory::createInstance();
@@ -664,7 +664,7 @@ class OpenAIService extends Component
                 }
 
                 // Split the tool class into parts
-                $nameParts = explode('\\', $toolClass);
+                $nameParts = explode('\\', $skill);
 
                 // Get the last part of the class name
                 $className = array_pop($nameParts);

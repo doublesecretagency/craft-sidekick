@@ -18,6 +18,9 @@ use craft\models\SiteGroup;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
+/**
+ * @category Sites
+ */
 class SettingsSites
 {
     /**
@@ -332,7 +335,7 @@ class SettingsSites
      * @param string $groupId ID of site group to delete.
      * @return SkillResponse
      */
-    public static function deleteSiteGroupById(string $groupId): SkillResponse
+    public static function deleteSiteGroup(string $groupId): SkillResponse
     {
         // Get the sites service
         $sitesService = Craft::$app->getSites();

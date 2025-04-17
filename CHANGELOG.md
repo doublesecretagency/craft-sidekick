@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added slideout to list available skills.
+
 ## 0.9.4 - 2025-04-17
 
 ### Added

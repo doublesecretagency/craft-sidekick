@@ -15,6 +15,9 @@ use Craft;
 use craft\helpers\Json;
 use doublesecretagency\sidekick\models\SkillResponse;
 
+/**
+ * @category Sites
+ */
 class Sites
 {
     /**
