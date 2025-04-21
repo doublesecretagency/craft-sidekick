@@ -25,6 +25,7 @@ use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
 use doublesecretagency\sidekick\events\AddSkillsEvent;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ActionsService;
@@ -298,7 +299,7 @@ class Sidekick extends Plugin
         }
 
         // If running Craft 4
-        if ($this->_craftBetween('4.0.0', '5.0.0')) {
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
             // Append deprecated skills
             $this->_skills[] = FieldsCraft4::class;
             // If admin changes are allowed
@@ -320,24 +321,5 @@ class Sidekick extends Plugin
 
         // Return the complete list of skills
         return $this->_skills;
-    }
-
-    /**
-     * Whether Craft is between the two specified versions.
-     *
-     * @param string $low The lower version bound.
-     * @param string $high The upper version bound.
-     * @return bool
-     */
-    private function _craftBetween(string $low, string $high): bool
-    {
-        // Get the Craft version
-        $v = Craft::$app->getVersion();
-
-        // Whether Craft is between the specified versions
-        return (
-            version_compare($v, $low, '>=') &&
-            version_compare($v, $high, '<')
-        );
     }
 }

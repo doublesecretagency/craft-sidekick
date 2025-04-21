@@ -13,6 +13,7 @@ namespace doublesecretagency\sidekick\skills\read;
 
 use Craft;
 use craft\helpers\Json;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 
 /**
@@ -35,8 +36,14 @@ class Sections
         // Initialize sections
         $sections = [];
 
-        // Fetch all sections
-        $allSections = Craft::$app->getSections()->getAllSections();
+        // Get all sections
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            $allSections = Craft::$app->getSections()->getAllSections();
+        } else {
+            // Craft 5+
+            $allSections = Craft::$app->getEntries()->getAllSections();
+        }
 
         // Loop through each section and format the output
         foreach ($allSections as $section) {

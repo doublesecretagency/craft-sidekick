@@ -5,6 +5,9 @@
 ### Added
 - Added slideout to list available skills.
 
+### Fixed
+- Fixed bug when getting all sections in Craft 5.
+
 ## 0.9.4 - 2025-04-17
 
 ### Added
