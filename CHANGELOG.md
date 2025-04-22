@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug which prevented the project config from updating properly.
+
 ## 0.9.5 - 2025-04-21
 
 ### Added

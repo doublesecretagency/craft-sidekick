@@ -196,7 +196,7 @@ class SettingsFields
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field \"{$handle}\" has been deleted.",
+            'message' => "Field \"{$field->name}\" has been deleted.",
 //            'response' => $config,
         ]);
     }

@@ -203,7 +203,7 @@ class SettingsSites
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site \"{$handle}\" has been deleted.",
+            'message' => "Site \"{$site->name}\" has been deleted.",
 //            'response' => $config,
         ]);
     }
@@ -379,7 +379,7 @@ class SettingsSites
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site group \"{$group->getName()}\" has been deleted.",
+            'message' => "Site group \"{$group->name}\" has been deleted.",
 //            'response' => $config,
         ]);
     }

@@ -422,6 +422,9 @@ class OpenAIService extends Component
             // The thread is no longer running
             $running = false;
 
+            // Save all project config changes
+            Craft::$app->getProjectConfig()->saveModifiedConfigData();
+
             // Get the latest assistant message
             $reply = $this->_getLatestAssistantMessage();
 

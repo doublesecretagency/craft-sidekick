@@ -235,7 +235,7 @@ class SettingsSections
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Section \"{$handle}\" has been deleted.",
+            'message' => "Section \"{$section->name}\" has been deleted.",
 //            'response' => $config,
         ]);
     }
