@@ -1,0 +1,16 @@
+{% extends '_layouts/cp' %}
+{% import '_includes/forms' as forms %}
+
+{# Get plugin settings #}
+{% set settings = craft.app.plugins.getPlugin('sidekick').getSettings() %}
+
+{# Set the page title #}
+{% set title = (settings.overrideLinkName ?? 'Sidekick') %}
+
+{% block actionButton %}
+    {% include 'sidekick/chat/buttons' %}
+{% endblock %}
+
+{% block content %}
+    {% include 'sidekick/chat/window' %}
+{% endblock %}

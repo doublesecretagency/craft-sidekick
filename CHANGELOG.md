@@ -4,6 +4,7 @@
 
 ### Added
 - Added setting to override nav link label.
+- Added setting to use chat window as a Utility.
 
 ### Fixed
 - Fixed bug which prevented the project config from updating properly.

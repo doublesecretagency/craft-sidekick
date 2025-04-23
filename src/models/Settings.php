@@ -26,6 +26,11 @@ class Settings extends Model
     public string $openAiApiKey = '';
 
     /**
+     * @var string Where to show the Sidekick link in the CP nav.
+     */
+    public string $sidekickLinkLocation = 'mainNav';
+
+    /**
      * @var string|null Override for the link label.
      */
     public ?string $overrideLinkName = null;
@@ -38,6 +43,7 @@ class Settings extends Model
         return [
             [['openAiApiKey'], 'string'],
             [['openAiApiKey'], 'required'],
+            [['sidekickLinkLocation'], 'in', 'range' => ['mainNav', 'utilities']],
             [['overrideLinkName'], 'string'],
         ];
     }

@@ -21,6 +21,7 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
 use craft\services\Plugins;
 use craft\services\UserPermissions;
+use craft\services\Utilities;
 use craft\web\UrlManager;
 use craft\web\View;
 use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
@@ -47,6 +48,7 @@ use doublesecretagency\sidekick\skills\read\Sections;
 use doublesecretagency\sidekick\skills\read\Sites;
 use doublesecretagency\sidekick\skills\read\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
+use doublesecretagency\sidekick\utilities\ChatWindowUtility;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -80,12 +82,7 @@ class Sidekick extends Plugin
     public static ?Sidekick $plugin = null;
 
     /**
-     * @var bool $hasCpSection The plugin has a section with subpages.
-     */
-    public bool $hasCpSection = true;
-
-    /**
-     * @var bool $hasCpSettings The plugin has a settings page in the control panel.
+     * @var bool $hasCpSettings Whether the plugin has a settings page in the control panel.
      */
     public bool $hasCpSettings = true;
 
@@ -123,6 +120,21 @@ class Sidekick extends Plugin
 
         // Redirect after plugin is installed
         $this->_postInstallRedirect();
+
+        // Get the plugin's settings
+        $settings = $this->getSettings();
+
+        // Get the link location
+        $location = ($settings->sidekickLinkLocation ?? 'mainNav');
+
+        // If the showing the link in Utilities
+        if ($location === 'utilities') {
+            // Enable the utilities link
+            $this->_utilitiesLink();
+        } else {
+            // Enable the default main nav link
+            $this->hasCpSection = true;
+        }
 
         // Register user permissions for plugin features
         Event::on(
@@ -172,6 +184,20 @@ class Sidekick extends Plugin
     }
 
     // ========================================================================= //
+
+    /**
+     * Register the link in the Utilities section.
+     */
+    private function _utilitiesLink(): void
+    {
+        Event::on(
+            Utilities::class,
+            Utilities::EVENT_REGISTER_UTILITY_TYPES,
+            static function(RegisterComponentTypesEvent $event) {
+                $event->types[] = ChatWindowUtility::class;
+            }
+        );
+    }
 
     /**
      * After the plugin has been installed,

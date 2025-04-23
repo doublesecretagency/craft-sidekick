@@ -44,3 +44,15 @@
     value: (configFile['overrideLinkName'] ?? settings['overrideLinkName'] ?? null),
     placeholder: "Sidekick"|t('sidekick'),
 }) }}
+
+{{ forms.selectField({
+    label: "Sidekick Link Location"|t('sidekick'),
+    id: 'sidekickLinkLocation',
+    name: 'sidekickLinkLocation',
+    instructions: 'The "Sidekick" link can appear either in the main navigation or the utilities menu.',
+    value: (configFile['sidekickLinkLocation'] ?? settings['sidekickLinkLocation'] ?? null),
+    options: [
+        { value: 'mainNav', label: "Main Nav"|t('sidekick') },
+        { value: 'utilities', label: "Utilities"|t('sidekick') },
+    ],
+}) }}

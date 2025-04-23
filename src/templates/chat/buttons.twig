@@ -1,0 +1,30 @@
+{% css %}
+/* Keep icon on the same line */
+#action-buttons {
+    flex-wrap: nowrap;
+}
+{% endcss %}
+
+{# Get info icon #}
+{% set file = craft.app.view.assetManager.publish('@doublesecretagency/sidekick/resources/images/information.svg') %}
+{% set infoIcon = file[1] %}
+
+<div style="display:flex; flex-direction:row-reverse; align-items:center;">
+    <div class="btngroup">
+        <select id="ai-model-select" class="btn">
+            {% for option in sidekickChat.aiModelOptions %}
+                {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}
+                <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
+    </div>
+    <img
+        src="{{ infoIcon }}"
+        id="sidekick-list-skills"
+        alt="{{ 'What can Sidekick do?'|t }}"
+        title="{{ 'What can Sidekick do?'|t }}"
+        aria-label="{{ 'What can Sidekick do?'|t }}"
+        style="max-height:24px; margin-right:6px; cursor:pointer;"
+    />
+</div>
