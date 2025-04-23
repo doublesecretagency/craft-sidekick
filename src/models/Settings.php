@@ -26,6 +26,11 @@ class Settings extends Model
     public string $openAiApiKey = '';
 
     /**
+     * @var string|null Override for the link label.
+     */
+    public ?string $overrideLinkName = null;
+
+    /**
      * @inheritdoc
      */
     public function rules(): array
@@ -33,6 +38,7 @@ class Settings extends Model
         return [
             [['openAiApiKey'], 'string'],
             [['openAiApiKey'], 'required'],
+            [['overrideLinkName'], 'string'],
         ];
     }
 }

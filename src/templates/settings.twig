@@ -2,14 +2,11 @@
 
 <h2>Sidekick Settings</h2>
 
-{# Field to be referenced in the settings #}
-{% set key = 'openAiApiKey' %}
-
 {# Link to documentation for adding an API key #}
 {% set docsUrl = 'https://plugins.doublesecretagency.com/sidekick/getting-started/settings#openai-api-key' %}
 
 {# Determine whether a config value is set #}
-{% set configOverride = (key in configFile|keys) %}
+{% set configOverride = ('openAiApiKey' in configFile|keys) %}
 
 {# Config override warning message #}
 {% set message = "This is being set in the config file. [{file}]"|t('sidekick', {
@@ -22,7 +19,7 @@
     id: 'openAiApiKey',
     name: 'openAiApiKey',
     instructions: "Enter your key here. [Learn how to get an API key...](#{docsUrl})",
-    value: ((configFile[key] ?? settings[key] ?? null) ?: null),
+    value: (configFile['openAiApiKey'] ?? settings['openAiApiKey'] ?? null),
     disabled: configOverride,
     warning: (configOverride ? message),
     suggestEnvVars: not configOverride
@@ -38,3 +35,12 @@
         <p>Doing so will protect the key from being recorded in either the database or project config YAML files.</p>
     </blockquote>
 </div>
+
+{{ forms.textField({
+    label: "Override Link Name"|t('sidekick'),
+    id: 'overrideLinkName',
+    name: 'overrideLinkName',
+    instructions: 'The "Sidekick" link can be renamed to anything you like.',
+    value: (configFile['overrideLinkName'] ?? settings['overrideLinkName'] ?? null),
+    placeholder: "Sidekick"|t('sidekick'),
+}) }}

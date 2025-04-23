@@ -228,9 +228,17 @@ class Sidekick extends Plugin
      */
     public function getCpNavItem(): array
     {
+        // Get settings
+        $settings = $this->getSettings();
+
+        // Get the default configuration
         $navItem = parent::getCpNavItem();
-        $navItem['label'] = 'Sidekick';
+
+        // Set label and URL of the link
+        $navItem['label'] = ($settings->overrideLinkName ?? 'Sidekick');
         $navItem['url'] = 'sidekick/chat';
+
+        // Return the nav item
         return $navItem;
     }
 

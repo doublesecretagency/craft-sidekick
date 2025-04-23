@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added setting to override nav link label.
+
 ### Fixed
 - Fixed bug which prevented the project config from updating properly.
 
