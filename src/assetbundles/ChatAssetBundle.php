@@ -63,6 +63,7 @@ class ChatAssetBundle extends AssetBundle
         // Define dependencies
         $this->depends = [
             CpAsset::class,
+            CpAssetBundle::class,
         ];
 
         // Initialize array of language URLs

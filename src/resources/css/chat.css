@@ -96,39 +96,9 @@
 }
 
 .chat-loading {
-    opacity: 0;
-    transition: opacity 0.1s ease-in-out; /* Adjust duration as needed */
     font-size: 15px;
     font-weight: bold;
     margin-left: 4px;
-    /* Use a repeating gradient for a seamless ripple effect */
-    background: repeating-linear-gradient(
-            90deg,
-            #CDCDCD  0%,
-            #CDCDCD 13%,
-            #0B0B0B 25%,
-            #CDCDCD 37%,
-            #CDCDCD 50%
-    );
-    background-size: 200%;
-    background-repeat: repeat-x;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent; /* Reveal the gradient through the text */
-    animation: ripple 2s linear infinite;
-}
-
-.chat-loading.visible {
-    opacity: 1;
-}
-
-@keyframes ripple {
-    0% {
-        background-position: 100% 0;
-    }
-    100% {
-        background-position: 0 0;
-    }
 }
 
 /* Adjust text size for smaller screens */

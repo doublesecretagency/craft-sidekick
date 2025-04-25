@@ -12,20 +12,24 @@
 namespace doublesecretagency\sidekick;
 
 use Craft;
+use craft\base\Element;
 use craft\base\Model;
 use craft\base\Plugin;
 use craft\console\Application as ConsoleApplication;
+use craft\events\ElementEvent;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
+use craft\services\Elements;
+use craft\services\Fields as FieldsService;
 use craft\services\Plugins;
 use craft\services\UserPermissions;
 use craft\services\Utilities;
 use craft\web\UrlManager;
-use craft\web\View;
-use doublesecretagency\sidekick\assetbundles\SidekickAssetBundle;
 use doublesecretagency\sidekick\events\AddSkillsEvent;
+use doublesecretagency\sidekick\fields\AiSummary;
+use doublesecretagency\sidekick\helpers\AiSummaryHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
@@ -92,6 +96,11 @@ class Sidekick extends Plugin
     private array $_skills = [];
 
     /**
+     * @var array IDs of elements which have already been parsed.
+     */
+    private array $_parsedElements;
+
+    /**
      * Initializes the plugin.
      */
     public function init(): void
@@ -136,37 +145,35 @@ class Sidekick extends Plugin
             $this->hasCpSection = true;
         }
 
-        // Register user permissions for plugin features
+        // Register the custom field type
         Event::on(
-            UserPermissions::class,
-            UserPermissions::EVENT_REGISTER_PERMISSIONS,
-            static function (RegisterComponentTypesEvent $event) {
-                $event->permissions[] = [
-                    'label' => 'Sidekick Plugin Permissions',
-                    'permissions' => [
-                        'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
-                        'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
-//                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
-//                        'sidekick-seed-dummy-data' => ['label' => 'Seed sections with dummy data'],
-                        'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
-                    ],
-                ];
+            FieldsService::class,
+            FieldsService::EVENT_REGISTER_FIELD_TYPES,
+            static function(RegisterComponentTypesEvent $e) {
+                $e->types[] = AiSummary::class;
             }
         );
 
-        // Register the asset bundle for loading JS/CSS
-        Event::on(
-            View::class,
-            View::EVENT_BEFORE_RENDER_TEMPLATE,
-            static function () {
-                // Check if we're on the asset edit page and load the asset bundle
-                if (Craft::$app->request->getSegment(1) === 'assets') {
-                    Craft::$app->view->registerAssetBundle(SidekickAssetBundle::class);
-                }
-            }
-        );
+        // Handle the AI Summary field
+        $this->_handleAiSummaryField();
 
         // Register all routing for the control panel
+        $this->_cpRouting();
+
+        // Register user permissions for plugin features
+        $this->_userPermissions();
+
+        // Custom Logging Configuration
+        $this->_initializeCustomLogger();
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Register all routing for the control panel.
+     */
+    private function _cpRouting(): void
+    {
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
@@ -178,12 +185,29 @@ class Sidekick extends Plugin
                 $event->rules['sidekick/chat/list-skills'] = 'sidekick/chat/list-skills';
             }
         );
-
-        // Custom Logging Configuration
-        $this->_initializeCustomLogger();
     }
 
-    // ========================================================================= //
+    /**
+     * Register user permissions for plugin features.
+     */
+    private function _userPermissions(): void
+    {
+        Event::on(
+            UserPermissions::class,
+            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+            static function (RegisterComponentTypesEvent $event) {
+                $event->permissions[] = [
+                    'label' => 'Sidekick Plugin Permissions',
+                    'permissions' => [
+                        'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
+                        'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
+//                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
+                        'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
+                    ],
+                ];
+            }
+        );
+    }
 
     /**
      * Register the link in the Utilities section.
@@ -355,5 +379,55 @@ class Sidekick extends Plugin
 
         // Return the complete list of skills
         return $this->_skills;
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Handle the AI Summary field.
+     */
+    private function _handleAiSummaryField(): void
+    {
+        // Before save element event handler
+        Event::on(
+            Elements::class,
+            Elements::EVENT_BEFORE_SAVE_ELEMENT,
+            function (ElementEvent $event) {
+
+                /** @var Element $element */
+                $element = $event->element;
+
+                // If the element is a draft, bail
+                if ($element->getIsDraft()) {
+                    return;
+                }
+
+                // If the element is a revision, bail
+                if ($element->getIsRevision()) {
+                    return;
+                }
+
+                // Compile a unique key for each element
+                $key = "{$element->id}:{$element->siteId}";
+
+                // If not parsing the element
+                if (!isset($this->_parsedElements[$key])) {
+
+                    // Mark the element as being parsed
+                    $this->_parsedElements[$key] = true;
+
+                    // Get the AI-generated summary
+                    $content = AiSummaryHelper::parseElement($element);
+
+                    // If the content is not empty, set the field values
+                    if (!empty($content)) {
+                        $element->setFieldValues($content);
+                    }
+
+                    // Remove the element from the preparsed elements array
+                    unset($this->_parsedElements[$key]);
+                }
+            }
+        );
     }
 }

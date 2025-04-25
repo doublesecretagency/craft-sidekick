@@ -100,7 +100,7 @@ class ChatMessage extends Model
     public function toChatHistory(): ChatMessage
     {
         // Add the message to the chat history
-        Sidekick::$plugin->chat->addMessage($this);
+        Sidekick::getInstance()?->chat->addMessage($this);
 
         // Return the message for chaining
         return $this;
@@ -114,7 +114,7 @@ class ChatMessage extends Model
     public function toChatWindow(): ChatMessage
     {
         // Send the message to the chat window
-        Sidekick::$plugin->sse->sendMessage($this);
+        Sidekick::getInstance()?->sse->sendMessage($this);
 
         // Return the message for chaining
         return $this;
@@ -151,7 +151,7 @@ class ChatMessage extends Model
         }
 
         // Add the message to the OpenAI thread
-        Sidekick::$plugin->openAi->addMessage([
+        Sidekick::getInstance()?->openAi->addMessage([
             'role' => $role,
             'content' => $message,
         ]);

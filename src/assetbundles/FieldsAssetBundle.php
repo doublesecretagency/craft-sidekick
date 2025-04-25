@@ -14,13 +14,8 @@ namespace doublesecretagency\sidekick\assetbundles;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 
-/**
- * Class SidekickAssetBundle
- * @since 1.0.0
- */
-class SidekickAssetBundle extends AssetBundle
+class FieldsAssetBundle extends AssetBundle
 {
-
     /**
      * Initializes the bundle.
      */
@@ -30,14 +25,15 @@ class SidekickAssetBundle extends AssetBundle
 
         $this->depends = [
             CpAsset::class,
+            CpAssetBundle::class,
         ];
 
         $this->css = [
-            'css/generateAltText.css',
+            'css/fields.css',
         ];
 
         $this->js = [
-            'js/generateAltText.js',
+            'js/fields.js',
         ];
 
         parent::init();

@@ -1,0 +1,60 @@
+{% import '_includes/forms' as forms %}
+
+<h2>How to write AI instructions</h2>
+<p>Use as much detail as you'd like to help the AI assistant craft the best possible summary.</p>
+<p>Refer to specific fields by their names or handles. If you have any limitations (eg: word/character limit), please specify them in the instructions.</p>
+
+{{ forms.textareaField({
+    label: "Summary Instructions",
+    instructions: 'How would you like each element to be processed and summarized?',
+    id: 'summaryInstructions',
+    name: 'summaryInstructions',
+    value: field.summaryInstructions,
+    placeholder: 'eg: "Review the entire Content Builder matrix and summarize it in 3 short sentences."',
+    errors: field.getErrors('summaryInstructions'),
+    rows: 10
+}) }}
+
+{{ forms.textField({
+    name: 'initialRows',
+    label: 'Initial Rows'|t('app'),
+    instructions: 'Default number of rows for the textarea.',
+    value: (field.initialRows ?: 4),
+    size: 3,
+    errors: field.getErrors('initialRows')
+}) }}
+
+{{ forms.selectField({
+    label: "Field Mode"|t('sidekick'),
+    id: 'fieldMode',
+    name: 'fieldMode',
+    instructions: 'Should the text field be editable, read-only, or disabled?',
+    value: (field.fieldMode ?? 'editable'),
+    options: [
+        { value: 'editable', label: "Editable"|t('sidekick') },
+        { value: 'readOnly', label: "Read Only"|t('sidekick') },
+        { value: 'disabled', label: "Disabled"|t('sidekick') },
+    ],
+}) }}
+
+<hr>
+
+{{ forms.lightswitchField({
+    name: 'generateOnSave',
+    label: 'Generate On Save',
+    instructions: 'When an element is saved, generate the summary (if one does not already exist).',
+    on: field.generateOnSave,
+    onLabel: 'Generate Summary Automatically',
+    toggle: 'force-regeneration'
+}) }}
+
+<div id="force-regeneration">
+    {{ forms.lightswitchField({
+        name: 'forceRegeneration',
+        label: 'Force Regeneration',
+        instructions: 'Regenerate the summary on every save (regardless of whether it already exists).',
+        on: field.forceRegeneration,
+        onLabel: 'Replace Existing Summary',
+        show: field.generateOnSave,
+    }) }}
+</div>

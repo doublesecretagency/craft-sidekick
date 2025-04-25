@@ -8,7 +8,7 @@ use markhuot\craftpest\test\TestCase;
 uses(TestCase::class);
 
 beforeEach(function () {
-    $this->actionsService = Sidekick::$plugin->actions;
+    $this->actionsService = Sidekick::getInstance()?->actions;
 
     // Create a mock for the FileManagementService
     $mockFileService = Mockery::mock(FileManagementService::class);
@@ -20,7 +20,7 @@ beforeEach(function () {
     $mockFileService->shouldReceive('writeFile')->andReturn(true);
 
     // Inject the mocked service into the plugin
-    Sidekick::$plugin->set('fileManagement', $mockFileService);
+    Sidekick::getInstance()?->set('fileManagement', $mockFileService);
 });
 
 test('Retrieves valid actions from ActionsService', function () {
@@ -79,7 +79,7 @@ test('Displays file contents successfully', function () {
     $mockFileService->shouldReceive('readFile')->andReturn($mockContent);
 
     // Inject the mocked service
-    Sidekick::$plugin->set('fileManagement', $mockFileService);
+    Sidekick::getInstance()?->set('fileManagement', $mockFileService);
 
     // Prepare the action
     $action = [

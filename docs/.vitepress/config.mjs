@@ -47,6 +47,7 @@ export default defineConfig({
           }
         ]
       },
+      {text: 'AI Summary Field', link: '/fields/ai-summary'},
       {text: 'Disclaimers', link: '/disclaimers/'},
     ],
 
@@ -120,6 +121,17 @@ export default defineConfig({
                 {text: 'Add To Calendar', link: '/custom-skills/examples/add-to-calendar'}
               ]
             }
+          ]
+        }
+      ],
+
+      // Fields
+      '/fields/': [
+        {
+          text: 'Fields',
+          items: [
+            {text: 'AI Summary Field Type', link: '/fields/ai-summary'},
+            {text: 'How does it work?', link: '/fields/ai-summary#how-does-it-work'},
           ]
         }
       ],

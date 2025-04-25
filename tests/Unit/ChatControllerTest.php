@@ -67,7 +67,7 @@
 //    Craft::$app->set('session', $session);
 //
 //    // Mock the OpenAI service
-//    $openAiService = Mockery::mock(Sidekick::$plugin->openAi);
+//    $openAiService = Mockery::mock(Sidekick::getInstance()?->openAi);
 //    $openAiService->shouldReceive('callChatCompletion')
 //        ->andReturn([
 //            'success' => true,
@@ -75,10 +75,10 @@
 //        ]);
 //
 //    // Set the mock OpenAI service in the plugin
-//    Sidekick::$plugin->set('openAi', $openAiService);
+//    Sidekick::getInstance()?->set('openAi', $openAiService);
 //
 //    // Mock the Actions service
-//    $actionsService = Mockery::mock(Sidekick::$plugin->actions);
+//    $actionsService = Mockery::mock(Sidekick::getInstance()?->actions);
 //    $actionsService->shouldReceive('executeActions')
 //        ->andReturn([
 //            'success'        => true,
@@ -88,7 +88,7 @@
 //        ]);
 //
 //    // Set the mock Actions service in the plugin
-//    Sidekick::$plugin->set('actions', $actionsService);
+//    Sidekick::getInstance()?->set('actions', $actionsService);
 //
 //    // Instantiate the ChatController
 //    $controller = new ChatController('chat', Craft::$app);

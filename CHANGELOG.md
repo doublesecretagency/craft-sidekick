@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added the [AI Summary](https://plugins.doublesecretagency.com/sidekick/fields/ai-summary) field type.
 - Added setting to override nav link label.
 - Added setting to use chat window as a Utility.
 

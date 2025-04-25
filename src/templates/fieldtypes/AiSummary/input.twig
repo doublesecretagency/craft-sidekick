@@ -1,0 +1,48 @@
+{% import '_includes/forms' as forms %}
+
+{% do view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\FieldsAssetBundle') %}
+
+{# Get info icon #}
+{% set file = craft.app.view.assetManager.publish('@doublesecretagency/sidekick/resources/images/information.svg') %}
+{% set infoIcon = file[1] %}
+
+{{ forms.textarea({
+    name: field.handle,
+    value: value,
+    readonly: (field.fieldMode == 'readOnly'),
+    disabled: (field.fieldMode == 'disabled'),
+    rows: field.initialRows ?: 4,
+}) }}
+
+<div class="ai-summary-field">
+    <div style="text-align: left;">
+        <img
+            src="{{ infoIcon }}"
+            alt="{{ field.summaryInstructions }}"
+            title="{{ field.summaryInstructions }}"
+            aria-label="{{ field.summaryInstructions }}"
+{#            alt="{{ 'See complete field instructions'|t }}"#}
+{#            title="{{ 'See complete field instructions'|t }}"#}
+{#            aria-label="{{ 'See complete field instructions'|t }}"#}
+        />
+    </div>
+    <div style="text-align: right;">
+        <div class="ai-waiting" aria-hidden="true" role="status">
+            Regenerating...
+        </div>
+        <div class="btngroup">
+            <button type="button"
+                    onclick="sidekickClear('{{ field.name }}', '{{ field.handle|namespaceInputName }}')"
+                    class="btn small">
+                Clear
+            </button>
+            {% if element.id %}
+                <button type="button"
+                        onclick="sidekickRegenerate('{{ field.name }}', '{{ field.handle|namespaceInputName }}', {{ field.id }}, {{ element.id }})"
+                        class="btn small secondary">
+                    Regenerate
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

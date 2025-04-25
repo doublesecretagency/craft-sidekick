@@ -12,7 +12,9 @@
 namespace doublesecretagency\sidekick\services;
 
 use Craft;
+use craft\base\Element;
 use craft\helpers\App;
+use craft\helpers\Json;
 use craft\helpers\UrlHelper;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
@@ -91,7 +93,7 @@ class OpenAIService extends Component
         parent::init();
 
         // Retrieve the OpenAI API key from plugin settings or environment variables
-        $this->_apiKey = App::parseEnv(Sidekick::$plugin->getSettings()->openAiApiKey ?? '');
+        $this->_apiKey = App::parseEnv(Sidekick::getInstance()?->getSettings()->openAiApiKey ?? '');
 
         // Set the AI client
         $this->_setAiClient();
@@ -125,7 +127,6 @@ class OpenAIService extends Component
         }
 
         // Create a new OpenAI client
-//        $this->_openAiClient = OpenAI::client($this->_apiKey);
         $this->_openAiClient = OpenAI::factory()
             ->withApiKey($this->_apiKey)
             ->withHttpClient(new GuzzleClient([
@@ -136,6 +137,55 @@ class OpenAIService extends Component
             ]))
             ->make();
     }
+
+    // ========================================================================= //
+
+    /**
+     * Summarize the element.
+     *
+     * @param Element $element
+     * @param string $instructions
+     * @return string
+     */
+    public function summarizeElement(Element $element, string $instructions): string
+    {
+        // Compress the element data
+        $elementData = Json::encode($element);
+
+        /*
+         * @TODO: Permit different column types.
+         *        Copy how it's done in the Plain Text field.
+         *        Max length would be based on selected column type.
+         */
+
+        // Compile the content for the AI
+        $content = <<<CONTENT
+# Instructions
+{$instructions}
+
+## Maximum Response Length
+**IMPORTANT:** Unless otherwise specified, the absolute maximum length of your response must be 240 characters or fewer. Longer text will cause an error when the field is saved.
+
+# Craft CMS Element
+{$elementData}
+CONTENT;
+
+        // Perform the AI query
+        $result = $this->_openAiClient->chat()->create([
+            'model' => 'o4-mini',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $content
+                ],
+            ],
+        ]);
+
+        // Return the AI response
+        return ($result->choices[0]->message->content ?? '');
+    }
+
+    // ========================================================================= //
 
     /**
      * Compile the available skills.
@@ -750,7 +800,7 @@ class OpenAIService extends Component
      */
     public function getConversation(): array
     {
-        return Sidekick::$plugin->chat->getConversation();
+        return Sidekick::getInstance()?->chat->getConversation();
     }
 
     /**

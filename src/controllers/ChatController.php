@@ -106,12 +106,12 @@ class ChatController extends Controller
             $this->requireAcceptsJson();
 
             // Get the existing conversation
-            $conversation = Sidekick::$plugin->chat->getConversation();
+            $conversation = Sidekick::getInstance()?->chat->getConversation();
 
             // If no conversation exists
             if (!$conversation) {
                 // Generate a greeting message
-                $greeting = Sidekick::$plugin->openAi->getGreetingMessage();
+                $greeting = Sidekick::getInstance()?->openAi->getGreetingMessage();
                 // Start conversation with a greeting
                 $conversation = [$greeting];
             }
@@ -148,7 +148,7 @@ class ChatController extends Controller
             $this->requireAcceptsJson();
 
             // Clear the conversation from the session
-            Sidekick::$plugin->chat->clearConversation();
+            Sidekick::getInstance()?->chat->clearConversation();
 
             // Log the message
             Craft::info('Cleared the conversation.', __METHOD__);
@@ -178,15 +178,15 @@ class ChatController extends Controller
     public function actionSendMessage(): void
     {
         // Start the SSE connection
-        $sse = Sidekick::$plugin->sse;
+        $sse = Sidekick::getInstance()?->sse;
 
         // Start the SSE connection
         $sse->startConnection();
 
         try {
             // Get services
-            $chat   = Sidekick::$plugin->chat;
-            $openAi = Sidekick::$plugin->openAi;
+            $chat   = Sidekick::getInstance()?->chat;
+            $openAi = Sidekick::getInstance()?->openAi;
 
             // Receive the user's message
             $request = Craft::$app->getRequest();
