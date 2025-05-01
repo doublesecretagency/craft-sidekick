@@ -46,7 +46,9 @@ class ChatController extends Controller
      */
     public function actionIndex(): Response
     {
-        return $this->renderTemplate('sidekick/chat');
+        return $this->renderTemplate('sidekick/chat', [
+            'skillSets' => $this->_getSkillSets(),
+        ]);
     }
 
     // ========================================================================= //
@@ -240,11 +242,11 @@ class ChatController extends Controller
     // ========================================================================= //
 
     /**
-     * Displays a complete list of existing skills.
+     * Get the complete list of available skill sets.
      *
-     * @return Response
+     * @return array
      */
-    public function actionListSkills(): Response
+    public function _getSkillSets(): array
     {
         // Initialize skill sets
         $skillSets = [];
@@ -332,11 +334,7 @@ class ChatController extends Controller
 
         }
 
-        // Return the slideout
-        return $this->asCpScreen()
-            ->title('What can Sidekick do?')
-            ->contentTemplate('sidekick/list-skills.twig', [
-                'skillSets' => $skillSets
-            ]);
+        // Return the skill sets
+        return $skillSets;
     }
 }

@@ -17,34 +17,76 @@ img.dropshadow {
 
 /* Mimic chat window format */
 .chat-window {
-    /*height: 400px;*/
-    /*overflow-y: auto;*/
-    font-family: Arial, sans-serif;
-    max-width: 80%;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+    margin-bottom: 10px;
     background-color: #f9f9f9;
-    border: 1px solid #dddddd;
-    border-radius: 1px;
-    padding: 10px;
-    margin: 1.2em 0.75em 1.5em;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
-.chat-window > div {
-    margin-bottom: 0.5em;
+.chat-window p {
+    margin: 0;
+    line-height: inherit;
 }
-.chat-window .user-message,
-.chat-window .assistant-message {
-    color: #333333;
+
+.chat-message {
+    display: flex;
 }
-.chat-window .system-message {
-    color: #127fbf;
-    font-style: italic;
+
+.chat-message .sender-column {
+    width: 80px;
+    flex-shrink: 0;
+    padding: 6px 6px 5px 5px;
+    font-weight: bold;
+    text-align: right;
+    border-width: 0 1px 1px 0;
+    border-style: solid;
 }
-.chat-window .error-message {
-    color: #d81e23;
+.chat-message .content-column {
+    flex: 1;
+    padding: 6px 5px 5px 6px;
 }
-.chat-window ul,
-.chat-window ol {
-    margin-top: 0.7em;
-    margin-bottom: 0.2em;
-    padding-left: 1.7em;
+.chat-message .content-column ul {
+    padding-left: 34px;
+    margin: 0 0 1em;
+}
+.chat-message .content-column ul li {
+    list-style-type: disc;
+    margin-bottom: 4px;
+}
+
+.chat-message.user-message .sender-column {
+    color: rgba(51, 51, 51, 1);
+    background-color: rgba(255, 190, 10, 0.15);
+    border-color: rgba(255, 190, 10, 0.37);
+}
+.chat-message.assistant-message .sender-column {
+    color: rgba(51, 51, 51, 1);
+    background-color: rgba(18, 127, 191, 0.05);
+    border-color: rgba(18, 127, 191, 0.15);
+}
+.chat-message.tool-message .sender-column {
+    /*font-style: italic;*/
+    /*color: rgba(18, 127, 191, 1);*/
+    background-color: rgba(18, 127, 191, 0.05);
+    border-color: rgba(18, 127, 191, 0.15);
+    border-bottom: 0;
+}
+.chat-message.tool-message .content-column {
+    color: rgba(18, 127, 191, 1);
+}
+.chat-message.error-message .sender-column {
+    color: rgba(216, 30, 35, 1);
+    background-color: rgba(216, 30, 35, 0.05);
+    border-color: rgba(216, 30, 35, 0.15);
+}
+.chat-message.error-message .content-column {
+    color: rgba(216, 30, 35, 1);
+}
+.chat-message.success-message .sender-column {
+    color: rgba(20, 125, 100, 1);
+    background-color: rgba(20, 125, 100, 0.05);
+    border-color: rgba(20, 125, 100, 0.15);
+}
+.chat-message.success-message .content-column {
+    color: rgba(20, 125, 100, 1);
 }

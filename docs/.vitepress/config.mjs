@@ -95,15 +95,8 @@ export default defineConfig({
         {
           text: 'Native Skills',
           items: [
-            {
-              text: 'Overview',
-              link: '/native-skills/',
-              items: [
-                {text: 'Templates', link: '/native-skills/#templates'},
-                {text: 'Entries', link: '/native-skills/#entries'},
-                {text: 'Settings - Sections', link: '/native-skills/#settings-sections'},
-              ]
-            }
+            {text: 'Overview', link: '/native-skills/'},
+            {text: 'Permissions & Capabilities', link: '/native-skills/#permissions-capabilities'},
           ]
         }
       ],
@@ -117,8 +110,8 @@ export default defineConfig({
             {
               text: 'Examples',
               items: [
-                {text: 'Send An Email', link: '/custom-skills/examples/send-an-email'},
-                {text: 'Add To Calendar', link: '/custom-skills/examples/add-to-calendar'}
+                {text: 'Add To Calendar', link: '/custom-skills/examples/add-to-calendar'},
+                {text: 'Send An Email', link: '/custom-skills/examples/send-an-email'}
               ]
             }
           ]

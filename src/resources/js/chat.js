@@ -433,16 +433,31 @@ const SidekickChat = {
         }
     },
 
+    // Global slideout object
+    slideout: null,
+
     // Activate skills slideout
     ListSkills: Garnish.Base.extend({
-        init: function() {
-            // Open slideout when the button is clicked
-            $('#sidekick-list-skills').on('click', $.proxy(this, 'onClick'));
+        init: function () {
+            $('#sidekick-list-skills').on('click', $.proxy(this, 'open'));
         },
-        onClick: function() {
-            // Render and open the slideout
-            const slideout = new Craft.CpScreenSlideout('sidekick/chat/list-skills');
-            slideout.open();
+
+        // Open the slideout
+        open: function () {
+            // Get the HTML and open the slideout
+            const html = document.getElementById('sidekick-list-skills-content').innerHTML;
+            this.slideout = new Craft.Slideout(html);
+            this.slideout.open();
+
+            // Bind the Close button in the new slideout container
+            this.slideout.$container
+                .find('.so-footer button')
+                .on('click', $.proxy(this, 'close'));
+        },
+
+        // Close the slideout
+        close: function () {
+            this.slideout.close();
         },
     }),
 

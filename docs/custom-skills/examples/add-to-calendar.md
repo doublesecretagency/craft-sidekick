@@ -4,11 +4,24 @@ description: An example of a custom skill which adds an event to the calendar.
 
 # Add to Calendar
 
+## Sample Conversation
+
 <div class="chat-window">
-  <div class="user-message"><strong>You:</strong> Add an event titled "Team Meeting" to the calendar on October 15th at 10 AM.</div>
-  <div class="system-message">The event "Team Meeting" has been added to the calendar for October 15, 2024 at 10:00 AM.</div>
-  <div class="assistant-message"><strong>Sidekick:</strong> I've added the event 'Team Meeting' to your calendar on October 15th at 10 AM.</div>
+    <div class="chat-message user-message">
+        <div class="sender-column">You:</div>
+        <div class="content-column"><p>add Team Meeting to the calendar on Oct 15th at 10</p></div>
+    </div>
+    <div class="chat-message tool-message">
+        <div class="sender-column"></div>
+        <div class="content-column"><p>The event "Team Meeting" has been added to the calendar for October 15, 2025 at 10:00 AM.</p></div>
+    </div>
+    <div class="chat-message assistant-message">
+        <div class="sender-column">Sidekick:</div>
+        <div class="content-column"><p>I've scheduled the Team Meeting for October 15th at 10:00 am. Can help with anything else?</p></div>
+    </div>
 </div>
+
+## Sample Code
 
 ```php
 /**

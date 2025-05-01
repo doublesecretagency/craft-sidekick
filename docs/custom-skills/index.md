@@ -12,8 +12,8 @@ One of the most powerful features is the ability to extend Sidekick's functional
 
 See some practical examples of what's possible with custom skills:
 
-- [Send an Email](/custom-skills/examples/send-an-email)
 - [Add to Calendar](/custom-skills/examples/add-to-calendar)
+- [Send an Email](/custom-skills/examples/send-an-email)
 
 ## Listen to the Event
 
@@ -89,9 +89,9 @@ class MyCustomSkills
 }
 ```
 
-Listed in order of appearance, each important component is described below...
+## Detailed Breakdown
 
----
+Each important component is described below (listed in order of appearance)...
 
 ### `@category`
 
@@ -123,7 +123,7 @@ Regardless of whether the method succeeds or fails, it must return an instance o
 
 - _bool_ `success`: A boolean indicating whether the operation was successful.
 - _string_ `message`: A string containing the success or error message.
-- _string_ `response`: (optional) Any additional information you want to send back to the API for further processing. For complex data, you may send a JSON stringified array.
+- _string_ `response`: (optional) Any additional information you want to send back to the API for further processing. For complex data, you may send a JSON stringified array. This data will not be displayed to the end user.
 
 ## Class Name + Method Name = Max 56 Characters
 

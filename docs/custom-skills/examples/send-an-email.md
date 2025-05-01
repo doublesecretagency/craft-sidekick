@@ -4,11 +4,24 @@ description: An example of a custom skill which sends an email to a specified us
 
 # Send an Email
 
+## Sample Conversation
+
 <div class="chat-window">
-  <div class="user-message"><strong>You:</strong> Send an email to Bob reminding him about tomorrow's meeting.</div>
-  <div class="system-message">An email has been sent to bob@example.com with the subject "Reminder about tomorrow's meeting".</div>
-  <div class="assistant-message"><strong>Sidekick:</strong> I've sent a reminder email to Bob.</div>
+    <div class="chat-message user-message">
+        <div class="sender-column">You:</div>
+        <div class="content-column"><p>email Doug to remind him about tomorrow's meeting</p></div>
+    </div>
+    <div class="chat-message tool-message">
+        <div class="sender-column"></div>
+        <div class="content-column"><p>Email sent to doug@example.com with the subject "Reminder about tomorrow's meeting".</p></div>
+    </div>
+    <div class="chat-message assistant-message">
+        <div class="sender-column">Sidekick:</div>
+        <div class="content-column"><p>I've sent a reminder email to Doug. Would you like assistance with anything else?</p></div>
+    </div>
 </div>
+
+## Sample Code
 
 ```php
 /**
