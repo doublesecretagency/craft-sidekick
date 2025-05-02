@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.7 - 2025-05-02
 
 ### Changed
 - Updated plugin icons.
