@@ -214,9 +214,15 @@ class Sidekick extends Plugin
      */
     private function _utilitiesLink(): void
     {
+        // Gets the right event for registering utilities
+        $event = defined('craft\services\Utilities::EVENT_REGISTER_UTILITY_TYPES')
+            ? Utilities::EVENT_REGISTER_UTILITY_TYPES  // Craft 4
+            : Utilities::EVENT_REGISTER_UTILITIES;     // Craft 5+
+
+        // Register the utilities
         Event::on(
             Utilities::class,
-            Utilities::EVENT_REGISTER_UTILITY_TYPES,
+            $event,
             static function(RegisterComponentTypesEvent $event) {
                 $event->types[] = ChatWindowUtility::class;
             }

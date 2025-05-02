@@ -39,8 +39,9 @@ class ChatWindowUtility extends Utility
 
     /**
      * @inheritdoc
+     * @version Craft 5+
      */
-    public static function iconPath(): ?string
+    public static function icon(): ?string
     {
         // Set the icon mask path
         $iconPath = Craft::getAlias('@vendor/doublesecretagency/craft-sidekick/src/icon-mask.svg');
@@ -52,6 +53,16 @@ class ChatWindowUtility extends Utility
 
         // Return the icon mask path
         return $iconPath;
+    }
+
+    /**
+     * @inheritdoc
+     * @version Craft 4
+     */
+    public static function iconPath(): ?string
+    {
+        // Compatible with Craft 4
+        return self::icon();
     }
 
     /**

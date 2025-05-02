@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Improved behavior of utility in Craft 5.
+
 ## 0.9.6 - 2025-05-02
 
 ### Added
