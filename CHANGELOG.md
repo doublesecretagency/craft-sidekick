@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Updated plugin icons.
+
 ### Fixed
 - Improved behavior of utility in Craft 5.
 
