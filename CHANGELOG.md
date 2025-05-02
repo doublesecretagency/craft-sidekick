@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.6 - 2025-05-02
 
 ### Added
 - Added the [AI Summary](https://plugins.doublesecretagency.com/sidekick/fields/ai-summary) field type.
