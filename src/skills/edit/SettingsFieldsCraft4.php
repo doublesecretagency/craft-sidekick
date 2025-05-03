@@ -71,6 +71,8 @@ class SettingsFieldsCraft4
      *
      * ONLY AVAILABLE IN CRAFT 4.
      *
+     * If you do not have a clear understanding of which field groups exist, call the `getAvailableFieldGroups` skill first.
+     *
      * @param string $groupId ID of the field group to be deleted.
      * @return SkillResponse
      */
@@ -78,6 +80,14 @@ class SettingsFieldsCraft4
     {
         // Attempt to delete the field group
         try {
+
+            // If group ID is not numeric, return an error response
+            if (!is_numeric($groupId)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to delete field group, invalid ID: {$groupId}",
+                ]);
+            }
 
             // Get the fields service
             $fields = Craft::$app->getFields();

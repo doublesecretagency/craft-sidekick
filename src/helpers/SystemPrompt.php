@@ -28,6 +28,7 @@ class SystemPrompt
         'chat-messages.md',
         'saving-sections.md',
         'field-layout-configs.md',
+        'element-configs.md',
         'generating-uids.md',
         'namespace-hashes.md',
     ];

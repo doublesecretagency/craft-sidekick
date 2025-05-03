@@ -25,6 +25,9 @@ class FieldsCraft4
      *
      * ONLY AVAILABLE IN CRAFT 4.
      *
+     * If you are unfamiliar with the existing field groups, you MUST call this tool before creating, updating, or deleting field groups.
+     * Eagerly call this if an understanding of the current field groups is required.
+     *
      * @return SkillResponse
      */
     public static function getAvailableFieldGroups(): SkillResponse

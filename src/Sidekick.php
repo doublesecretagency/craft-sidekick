@@ -161,7 +161,7 @@ class Sidekick extends Plugin
         $this->_cpRouting();
 
         // Register user permissions for plugin features
-        $this->_userPermissions();
+//        $this->_userPermissions();
 
         // Custom Logging Configuration
         $this->_initializeCustomLogger();
@@ -187,27 +187,27 @@ class Sidekick extends Plugin
         );
     }
 
-    /**
-     * Register user permissions for plugin features.
-     */
-    private function _userPermissions(): void
-    {
-        Event::on(
-            UserPermissions::class,
-            UserPermissions::EVENT_REGISTER_PERMISSIONS,
-            static function (RegisterComponentTypesEvent $event) {
-                $event->permissions[] = [
-                    'label' => 'Sidekick Plugin Permissions',
-                    'permissions' => [
-                        'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
-                        'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
-//                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
-                        'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
-                    ],
-                ];
-            }
-        );
-    }
+//    /**
+//     * Register user permissions.
+//     */
+//    private function _userPermissions(): void
+//    {
+//        Event::on(
+//            UserPermissions::class,
+//            UserPermissions::EVENT_REGISTER_PERMISSIONS,
+//            static function (RegisterComponentTypesEvent $event) {
+//                $event->permissions[] = [
+//                    'label' => 'Sidekick Plugin Permissions',
+//                    'permissions' => [
+//                        'sidekick-create-update-templates' => ['label' => 'Create & update Twig templates'],
+//                        'sidekick-create-update-files' => ['label' => 'Create & update plugin/module files'],
+////                        'sidekick-generate-alt-tags' => ['label' => 'Manually generate alt tags'],
+//                        'sidekick-clear-conversation' => ['label' => 'Clear Chat Conversations'],
+//                    ],
+//                ];
+//            }
+//        );
+//    }
 
     /**
      * Register the link in the Utilities section.

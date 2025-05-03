@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Improved entry management skills.
+
 ## 0.9.7 - 2025-05-02
 
 ### Changed
@@ -65,7 +70,7 @@
 - Added a welcome message.
 
 ### Changed
-- Display placeholder images `@3x` resolution (aka “Super Retina”).
+- Display placeholder images `@3x` resolution (aka "Super Retina").
 - Replaced spinner circle with transitioning gradient text.
 - Improved error message for timeouts.
 - Render dynamic copyright dates.
