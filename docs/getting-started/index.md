@@ -1,5 +1,6 @@
 ---
-description: Follow these instructions to set up the Sidekick plugin for Craft CMS. This simple step-by-step guide shows how to get started.
+title: "Getting Started | Sidekick plugin for Craft CMS"
+description: "Follow these instructions to set up the Sidekick plugin for Craft CMS. This simple step-by-step guide shows how to get started."
 ---
 
 # Getting Started

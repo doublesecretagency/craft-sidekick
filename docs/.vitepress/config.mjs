@@ -1,28 +1,7 @@
 import { defineConfig } from 'vitepress';
 
-const metaUrl = 'https://plugins.doublesecretagency.com/sidekick/';
-const metaTitle = 'Sidekick plugin for Craft CMS';
-const metaDescription = 'Your AI companion for rapid Craft CMS development.';
-const metaImage = 'https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png';
-
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-
-  title: "Sidekick plugin",
-  description: "Your AI companion for rapid Craft CMS development.",
-
-  head: [
-    ['meta', {'name': 'og:type', 'content': 'website'}],
-    ['meta', {'name': 'og:url', 'content': metaUrl}],
-    ['meta', {'name': 'og:title', 'content': metaTitle}],
-    ['meta', {'name': 'og:description', 'content': metaDescription}],
-    ['meta', {'name': 'og:image', 'content': metaImage}],
-    ['meta', {'name': 'twitter:card', 'content': 'summary_large_image'}],
-    ['meta', {'name': 'twitter:url', 'content': metaUrl}],
-    ['meta', {'name': 'twitter:title', 'content': metaTitle}],
-    ['meta', {'name': 'twitter:description', 'content': metaDescription}],
-    ['meta', {'name': 'twitter:image', 'content': metaImage}],
-  ],
 
   base: '/sidekick/',
   cleanUrls: true,
@@ -47,8 +26,17 @@ export default defineConfig({
           }
         ]
       },
-      {text: 'AI Summary Field', link: '/fields/ai-summary'},
-      {text: 'Disclaimers', link: '/disclaimers/'},
+      {
+        text: 'More',
+        items: [
+          {
+            items: [
+              {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
+              {text: 'Disclaimers', link: '/disclaimers/'},
+            ]
+          }
+        ]
+      },
     ],
 
     sidebar: {
@@ -121,10 +109,9 @@ export default defineConfig({
       // Fields
       '/fields/': [
         {
-          text: 'Fields',
+          text: 'More',
           items: [
-            {text: 'AI Summary Field Type', link: '/fields/ai-summary'},
-            {text: 'How does it work?', link: '/fields/ai-summary#how-does-it-work'},
+            {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
           ]
         }
       ],
@@ -134,10 +121,9 @@ export default defineConfig({
         {
           text: 'Disclaimers',
           items: [
-            {text: 'Overview', link: '/disclaimers/'},
             {text: 'You are still in charge.', link: '/disclaimers/leadership'},
             {text: 'Watch your changes!', link: '/disclaimers/quality-assurance'},
-            {text: 'We are not responsible for any mishaps.', link: '/disclaimers/liability'},
+            {text: 'We are not liable for mishaps.', link: '/disclaimers/liability'},
           ]
         }
       ],

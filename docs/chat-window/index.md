@@ -1,5 +1,37 @@
 ---
-description: Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files.
+title: "Chat Window | Sidekick plugin for Craft CMS"
+description: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+head:
+  - - meta
+    - property: "og:type"
+      content: "website"
+  - - meta
+    - property: "og:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat-window/"
+  - - meta
+    - property: "og:title"
+      content: "Chat Window | Sidekick plugin for Craft CMS"
+  - - meta
+    - property: "og:description"
+      content: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+  - - meta
+    - property: "og:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/chat-window-example.png"
+  - - meta
+    - name: "twitter:card"
+      content: "summary_large_image"
+  - - meta
+    - name: "twitter:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat-window/"
+  - - meta
+    - name: "twitter:title"
+      content: "Chat Window | Sidekick plugin for Craft CMS"
+  - - meta
+    - name: "twitter:description"
+      content: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+  - - meta
+    - name: "twitter:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/chat-window-example.png"
 ---
 
 # Chat Window

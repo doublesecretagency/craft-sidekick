@@ -1,5 +1,6 @@
 ---
-description: In addition to the native skills that come with Sidekick, you can also create your own custom skills.
+title: "Custom Skills | Sidekick plugin for Craft CMS"
+description: "In addition to the native skills that come with Sidekick, you can also create your own custom skills."
 ---
 
 # Custom Skills

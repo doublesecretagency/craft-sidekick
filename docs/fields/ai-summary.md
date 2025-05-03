@@ -1,29 +1,40 @@
 ---
-description: Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!
-meta:
-  - property: og:type
-    content: website
-  - property: og:url
-    content: https://plugins.doublesecretagency.com/sidekick/fields/ai-summary
-  - property: og:title
-    content: AI Summary Field Type | Sidekick plugin for Craft CMS
-  - property: og:description
-    content: Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!
-  - property: og:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/fields/ai-summary-example.png
-  - property: twitter:card
-    content: summary_large_image
-  - property: twitter:url
-    content: https://plugins.doublesecretagency.com/sidekick/fields/ai-summary
-  - property: twitter:title
-    content: AI Summary Field Type | Sidekick plugin for Craft CMS
-  - property: twitter:description
-    content: Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!
-  - property: twitter:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/fields/ai-summary-example.png
+title: "AI Summary Field Type | Sidekick plugin for Craft CMS"
+description: "Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!"
+head:
+  - - meta
+    - property: "og:type"
+      content: "website"
+  - - meta
+    - property: "og:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/fields/ai-summary"
+  - - meta
+    - property: "og:title"
+      content: "AI Summary Field Type | Sidekick plugin for Craft CMS"
+  - - meta
+    - property: "og:description"
+      content: "Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!"
+  - - meta
+    - property: "og:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/fields/ai-summary-example.png"
+  - - meta
+    - name: "twitter:card"
+      content: "summary_large_image"
+  - - meta
+    - name: "twitter:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/fields/ai-summary"
+  - - meta
+    - name: "twitter:title"
+      content: "AI Summary Field Type | Sidekick plugin for Craft CMS"
+  - - meta
+    - name: "twitter:description"
+      content: "Using an AI Summary field, you can generate concise and accurate overviews of your entries. Great for SEO descriptions!"
+  - - meta
+    - name: "twitter:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/fields/ai-summary-example.png"
 ---
 
-# AI Summary Field Type
+# "AI Summary" Field Type
 
 Quickly generate a summary of your content via the magic of AI...
 

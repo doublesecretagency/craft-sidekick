@@ -1,5 +1,6 @@
 ---
-description: Please read each the following disclaimers carefully before using Sidekick.
+title: "Disclaimers | Sidekick plugin for Craft CMS"
+description: "Please read each the following disclaimers carefully before using Sidekick."
 ---
 
 # Disclaimers

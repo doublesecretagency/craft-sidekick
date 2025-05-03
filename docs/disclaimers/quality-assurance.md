@@ -1,5 +1,6 @@
 ---
-description: Depending on how your chats go, you may ask Sidekick to do some pretty dramatic things with your code. As a nascent technology, AI can sometimes "move fast and break things", so it's your responsibility to make sure that any changes made by Sidekick can be reasonably undone.
+title: "Disclaimer: Watch your changes! | Sidekick plugin for Craft CMS"
+description: "Depending on how your chats go, you may ask Sidekick to do some pretty dramatic things with your code. As a nascent technology, AI can sometimes \"move fast and break things\", so it's your responsibility to make sure that any changes made by Sidekick can be reasonably undone."
 ---
 
 # Watch your changes!

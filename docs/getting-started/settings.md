@@ -1,5 +1,6 @@
 ---
-description: Manage the OpenAI API key and other settings for Sidekick.
+title: "Settings Page | Sidekick plugin for Craft CMS"
+description: "Manage the OpenAI API key and other settings for Sidekick."
 ---
 
 # Settings Page

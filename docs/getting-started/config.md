@@ -1,5 +1,6 @@
 ---
-description: Using a PHP config file, you can override the plugin's settings. Find out how to configure the plugin, even across different environments.
+title: "PHP Config File | Sidekick plugin for Craft CMS"
+description: "Using a PHP config file, you can override the plugin's settings. Find out how to configure the plugin, even across different environments."
 ---
 
 # PHP Config File

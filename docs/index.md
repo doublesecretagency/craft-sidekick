@@ -1,25 +1,37 @@
 ---
-meta:
-  - property: og:type
-    content: website
-  - property: og:url
-    content: https://plugins.doublesecretagency.com/sidekick/
-  - property: og:title
-    content: Sidekick plugin for Craft CMS
-  - property: og:description
-    content: Your AI companion for rapid Craft CMS development.
-  - property: og:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png
-  - property: twitter:card
-    content: summary_large_image
-  - property: twitter:url
-    content: https://plugins.doublesecretagency.com/sidekick/
-  - property: twitter:title
-    content: Sidekick plugin for Craft CMS
-  - property: twitter:description
-    content: Your AI companion for rapid Craft CMS development.
-  - property: twitter:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png
+title: "Sidekick plugin for Craft CMS"
+description: "Your AI companion for rapid Craft CMS development."
+head:
+  - - meta
+    - property: "og:type"
+      content: "website"
+  - - meta
+    - property: "og:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/"
+  - - meta
+    - property: "og:title"
+      content: "Sidekick plugin for Craft CMS"
+  - - meta
+    - property: "og:description"
+      content: "Your AI companion for rapid Craft CMS development."
+  - - meta
+    - property: "og:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png"
+  - - meta
+    - name: "twitter:card"
+      content: "summary_large_image"
+  - - meta
+    - name: "twitter:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/"
+  - - meta
+    - name: "twitter:title"
+      content: "Sidekick plugin for Craft CMS"
+  - - meta
+    - name: "twitter:description"
+      content: "Your AI companion for rapid Craft CMS development."
+  - - meta
+    - name: "twitter:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png"
 
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home

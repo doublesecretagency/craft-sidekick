@@ -1,5 +1,6 @@
 ---
-description: It is important to recognize that **you are the human** and Sidekick is... well, your sidekick. This tool is merely an assistant, a utility for getting your job done more quickly and easily.
+title: "Disclaimer: You are still in charge | Sidekick plugin for Craft CMS"
+description: "It is important to recognize that **you are the human** and Sidekick is... well, your sidekick. This tool is merely an assistant, a utility for getting your job done more quickly and easily."
 ---
 
 # You are still in charge.

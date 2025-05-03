@@ -1,8 +1,9 @@
 ---
-description: An example of a custom skill which adds an event to the calendar.
+title: "Example: Add to Calendar | Sidekick plugin for Craft CMS"
+description: "An example of a custom skill which adds an event to the calendar."
 ---
 
-# Add to Calendar
+# Example: Add to Calendar
 
 ## Sample Conversation
 

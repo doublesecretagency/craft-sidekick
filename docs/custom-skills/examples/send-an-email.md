@@ -1,8 +1,9 @@
 ---
-description: An example of a custom skill which sends an email to a specified user.
+title: "Example: Send an Email | Sidekick plugin for Craft CMS"
+description: "An example of a custom skill which sends an email to a specified user."
 ---
 
-# Send an Email
+# Example: Send an Email
 
 ## Sample Conversation
 

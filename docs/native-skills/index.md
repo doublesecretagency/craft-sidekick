@@ -1,26 +1,37 @@
 ---
-description: Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections.
-meta:
-  - property: og:type
-    content: website
-  - property: og:url
-    content: https://plugins.doublesecretagency.com/sidekick/fields/ai-summary
-  - property: og:title
-    content: Native Skills | Sidekick plugin for Craft CMS
-  - property: og:description
-    content: Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections.
-  - property: og:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png
-  - property: twitter:card
-    content: summary_large_image
-  - property: twitter:url
-    content: https://plugins.doublesecretagency.com/sidekick/fields/ai-summary
-  - property: twitter:title
-    content: Native Skills | Sidekick plugin for Craft CMS
-  - property: twitter:description
-    content: Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections.
-  - property: twitter:image
-    content: https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png
+title: "Native Skills | Sidekick plugin for Craft CMS"
+description: "Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections."
+head:
+  - - meta
+    - property: "og:type"
+      content: "website"
+  - - meta
+    - property: "og:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/fields/native-skills/"
+  - - meta
+    - property: "og:title"
+      content: "Native Skills | Sidekick plugin for Craft CMS"
+  - - meta
+    - property: "og:description"
+      content: "Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections."
+  - - meta
+    - property: "og:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png"
+  - - meta
+    - name: "twitter:card"
+      content: "summary_large_image"
+  - - meta
+    - name: "twitter:url"
+      content: "https://plugins.doublesecretagency.com/sidekick/fields/native-skills/"
+  - - meta
+    - name: "twitter:title"
+      content: "Native Skills | Sidekick plugin for Craft CMS"
+  - - meta
+    - name: "twitter:description"
+      content: "Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections."
+  - - meta
+    - name: "twitter:image"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png"
 ---
 
 # Native Skills
