@@ -1,4 +1,4 @@
-<img width="66" align="left" src="https://plugins.doublesecretagency.com/sidekick/images/icon.svg?v=2" alt="Plugin icon">
+<img width="66" align="left" src="https://plugins.doublesecretagency.com/sidekick/images/icon.svg?v=3" alt="Plugin icon">
 
 # Sidekick plugin for Craft CMS
 
@@ -6,41 +6,35 @@
 
 ---
 
-## How to Install the Plugin
+## What Is It?
 
-### Installation via Plugin Store
+Sidekick is a fully-integrated AI companion for editing and updating Craft CMS. With direct access to template files, entries, and various settings, Sidekick can streamline your development process.
 
-See the complete instructions for [installing via the plugin store...](https://plugins.doublesecretagency.com/sidekick/getting-started/#installation-via-plugin-store)
+### Chat Window
 
-### Installation via Console Commands
+You can talk to Sidekick via the [chat window](https://plugins.doublesecretagency.com/sidekick/chat-window/), using plain language requests to manage code and content. Sidekick boasts a healthy set of [native skills](https://plugins.doublesecretagency.com/sidekick/native-skills/), and you can easily add your own [custom skills](https://plugins.doublesecretagency.com/sidekick/custom-skills/) with a module or separate plugin.
 
-To install the **Sidekick** plugin via the console, follow these steps:
+### AI Summary Field Type
 
-1. Open your terminal and go to your Craft project:
+The relatively simple [AI Summary field](https://plugins.doublesecretagency.com/sidekick/fields/ai-summary) allows you to automatically summarize the content of a single element. The content can be summarized manually, or when each element is saved.
 
-```sh
-cd /path/to/project
-```
+---
 
-2. Then tell Composer to load the plugin:
+## AI Providers
 
-```sh
-composer require doublesecretagency/craft-sidekick
-```
+Sidekick currently supports [Open AI](https://openai.com), with planned support for both [Claude](https://github.com/doublesecretagency/craft-sidekick/issues/1) and [Gemini](https://github.com/doublesecretagency/craft-sidekick/issues/2) in the future.
 
-3. Then tell Craft to install the plugin:
+---
 
-```sh
-./craft plugin/install sidekick
-```
+## Installing Sidekick
 
->Alternatively, you can visit the **Settings > Plugins** page to finish the installation. If installed via the control panel, you will automatically be redirected to configure the plugin after installation is complete.
+See the official docs for instructions on [installing the plugin](https://plugins.doublesecretagency.com/sidekick/getting-started/).
 
 ---
 
 ## Further Reading
 
-If you haven't already, flip through the [complete plugin documentation](https://plugins.doublesecretagency.com/sidekick/). The examples above are just the tip of the iceberg, there is so much more that is possible!
+If you haven't already, flip through the [complete plugin documentation](https://plugins.doublesecretagency.com/sidekick/).
 
 And if you have any remaining questions, feel free to [reach out to us](https://www.doublesecretagency.com/contact) (via Discord is preferred).
 
