@@ -1,4 +1,4 @@
-<img width="66" align="left" src="https://plugins.doublesecretagency.com/sidekick/images/icon.svg?v=1" alt="Plugin icon">
+<img width="66" align="left" src="https://plugins.doublesecretagency.com/sidekick/images/icon.svg?v=2" alt="Plugin icon">
 
 # Sidekick plugin for Craft CMS
 
