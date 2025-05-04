@@ -3,22 +3,35 @@
 #action-buttons {
     flex-wrap: nowrap;
 }
+/* Put icon before the buttons */
+#button-set {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    min-width: 34px;
+    min-height: 34px;
+}
 {% endcss %}
 
 {# Get info icon #}
 {% set file = craft.app.view.assetManager.publish('@doublesecretagency/sidekick/resources/images/information.svg') %}
 {% set infoIcon = file[1] %}
 
-<div style="display:flex; flex-direction:row-reverse; align-items:center;">
-    <div class="btngroup">
-        <select id="ai-model-select" class="btn">
-            {% for option in sidekickChat.aiModelOptions %}
-                {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}
-                <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>
-            {% endfor %}
-        </select>
-        <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
-    </div>
+{# Get plugin settings #}
+{% set settings = craft.app.plugins.getPlugin('sidekick').getSettings() %}
+
+<div id="button-set">
+    {% if (settings.openAiApiKey ?? false) %}
+        <div class="btngroup">
+            <select id="ai-model-select" class="btn">
+                {% for option in sidekickChat.aiModelOptions %}
+                    {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}
+                    <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
+        </div>
+    {% endif %}
     <img
         src="{{ infoIcon }}"
         id="sidekick-list-skills"

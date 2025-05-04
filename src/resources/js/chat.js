@@ -54,23 +54,29 @@ const SidekickChat = {
     // Bind event listeners
     bindEvents: function () {
         // Handle keydown events for "Enter" and "Shift + Enter" in the message input
-        this.chatInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                this.sendMessage();
-            }
-        });
+        if (this.chatInput) {
+            this.chatInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
 
         // Handle form submission when the user sends a message
-        this.chatForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            this.sendMessage();
-        });
+        if (this.chatForm) {
+            this.chatForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                this.sendMessage();
+            });
+        }
 
         // Event listener for model selection change
-        this.aiModelSelect.addEventListener('change', () => {
-            this.setSelectedModel();
-        });
+        if (this.aiModelSelect) {
+            this.aiModelSelect.addEventListener('change', () => {
+                this.setSelectedModel();
+            });
+        }
 
         // Handle Clear Conversation Button Click
         if (this.clearButton) {
