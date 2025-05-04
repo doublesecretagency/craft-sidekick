@@ -1,7 +1,5 @@
 {% import '_includes/forms' as forms %}
 
-<h2>Sidekick Settings</h2>
-
 {# Link to documentation for adding an API key #}
 {% set docsUrl = 'https://plugins.doublesecretagency.com/sidekick/getting-started/settings#openai-api-key' %}
 
@@ -13,8 +11,7 @@
     file: '`config/sidekick.php`'
 }) %}
 
-{# Configure the field #}
-{% set config = {
+{{ forms.autosuggestField({
     label: "OpenAI API Key"|t('sidekick'),
     id: 'openAiApiKey',
     name: 'openAiApiKey',
@@ -23,27 +20,9 @@
     disabled: configOverride,
     warning: (configOverride ? message),
     suggestEnvVars: not configOverride
-} %}
-
-{# Render input field #}
-{{ forms.autosuggestField(config) }}
-
-{# Recommendation to use environment variable #}
-<div class="readable">
-    <blockquote class="note warning">
-        <p>For enhanced security, we highly recommend using an <strong>environment variable</strong> to store your API key.</p>
-        <p>Doing so will protect the key from being recorded in either the database or project config YAML files.</p>
-    </blockquote>
-</div>
-
-{{ forms.textField({
-    label: "Override Link Name"|t('sidekick'),
-    id: 'overrideLinkName',
-    name: 'overrideLinkName',
-    instructions: 'The "Sidekick" link can be renamed to anything you like.',
-    value: (configFile['overrideLinkName'] ?? settings['overrideLinkName'] ?? null),
-    placeholder: "Sidekick"|t('sidekick'),
 }) }}
+
+<hr>
 
 {{ forms.selectField({
     label: "Sidekick Link Location"|t('sidekick'),
@@ -55,4 +34,13 @@
         { value: 'mainNav', label: "Main Nav"|t('sidekick') },
         { value: 'utilities', label: "Utilities"|t('sidekick') },
     ],
+}) }}
+
+{{ forms.textField({
+    label: "Override Link Name"|t('sidekick'),
+    id: 'overrideLinkName',
+    name: 'overrideLinkName',
+    instructions: 'The "Sidekick" link can be renamed to anything you like.',
+    value: (configFile['overrideLinkName'] ?? settings['overrideLinkName'] ?? null),
+    placeholder: "Sidekick"|t('sidekick'),
 }) }}
