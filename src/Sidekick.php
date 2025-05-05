@@ -119,10 +119,10 @@ class Sidekick extends Plugin
             'sse'            => SseService::class,
         ]);
 
-        // Register console commands
-        if (Craft::$app instanceof ConsoleApplication) {
-            $this->controllerNamespace = 'doublesecretagency\sidekick\console';
-        }
+//        // Register console commands
+//        if (Craft::$app instanceof ConsoleApplication) {
+//            $this->controllerNamespace = 'doublesecretagency\sidekick\console';
+//        }
 
         // Register the Twig extension
         Craft::$app->view->registerTwigExtension(new SidekickTwigExtension());

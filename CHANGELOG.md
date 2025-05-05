@@ -4,6 +4,7 @@
 
 ### Changed
 - Improved entry management skills.
+- Minor improvements to matrix field management skills.
 
 ## 0.9.7 - 2025-05-02
 

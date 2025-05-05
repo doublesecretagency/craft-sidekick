@@ -20,7 +20,7 @@ class SystemPrompt
     /**
      * @var array The list of system prompt files to compile.
      */
-    private static array $systemPromptFiles = [
+    private static array $_systemPromptFiles = [
         'basic-instructions.md',
         'general-guidelines.md',
         'tool-functions.md',
@@ -53,8 +53,20 @@ class SystemPrompt
          * the DYNAMIC content LAST.
          */
 
+        // Load the most static content first
+        $promptFiles = self::$_systemPromptFiles;
+
+        // Append handling of Matrix fields
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            $promptFiles[] = 'matrix-fields-c4.md';
+        } else {
+            // Craft 5+
+            $promptFiles[] = 'matrix-fields-c5.md';
+        }
+
         // Loop through each prompt file
-        foreach (static::$systemPromptFiles as $file) {
+        foreach ($promptFiles as $file) {
 
             // Load the content of each prompt file
             $filePath = "{$path}/prompts/{$file}";
