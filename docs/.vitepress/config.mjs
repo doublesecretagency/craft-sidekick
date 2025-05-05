@@ -3,6 +3,9 @@ import { defineConfig } from 'vitepress';
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 
+  title: "Sidekick",
+  description: "Your AI companion for rapid Craft CMS development.",
+
   base: '/sidekick/',
   cleanUrls: true,
 
@@ -32,6 +35,7 @@ export default defineConfig({
           {
             items: [
               {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
+              {text: 'Troubleshooting', link: '/troubleshooting/'},
               {text: 'Disclaimers', link: '/disclaimers/'},
             ]
           }
@@ -112,6 +116,16 @@ export default defineConfig({
           text: 'More',
           items: [
             {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
+          ]
+        }
+      ],
+
+      // Troubleshooting
+      '/troubleshooting/': [
+        {
+          text: 'Troubleshooting',
+          items: [
+            {text: 'Tips', link: '/troubleshooting/'},
           ]
         }
       ],
