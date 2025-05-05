@@ -255,7 +255,7 @@ class ChatController extends Controller
         $docFactory = DocBlockFactory::createInstance();
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
+        foreach (Sidekick::getInstance()?->getSkillSets() as $skill) {
 
             // Defaults to uncategorized
             $category = 'Uncategorized';
@@ -263,11 +263,11 @@ class ChatController extends Controller
             // Attempt to get the actual category
             try {
 
+                // Get available tool functions
+                $toolFunctions = (new $skill())->getToolFunctions();
+
                 // Get reflection class object
                 $reflection = new ReflectionClass($skill);
-
-                // Get all class methods
-                $toolFunctions = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
                 // Get the class's docblock
                 $classDocsComment = $reflection->getDocComment();
@@ -301,15 +301,6 @@ class ChatController extends Controller
 
                 // Get the method's docblock
                 $docBlock = $docFactory->create($toolFunction->getDocComment());
-
-//                // Split the tool class into parts
-//                $nameParts = explode('\\', $skill);
-//
-//                // Get the last part of the class name
-//                $className = array_pop($nameParts);
-//
-//                // Recombine the namespace
-//                $namespace = implode('\\', $nameParts);
 
                 // Get the method name
                 $method = $toolFunction->getName();

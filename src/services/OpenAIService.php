@@ -23,6 +23,7 @@ use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
+use doublesecretagency\sidekick\skills\BaseSkillSet;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
@@ -81,7 +82,7 @@ class OpenAIService extends Component
     /**
      * @var array List of skills hashes.
      */
-    public array $skillsHash = [];
+    public array $skillSetsHash = [];
 
     /**
      * Initializes the service.
@@ -192,16 +193,16 @@ CONTENT;
      */
     private function _compileSkills(): void
     {
-        // If skills hash has already been generated, bail
-        if ($this->skillsHash) {
+        // If skill sets hash has already been generated, bail
+        if ($this->skillSetsHash) {
             return;
         }
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
+        foreach (Sidekick::getInstance()?->getSkillSets() as $skillSet) {
 
             // Split the tool class into parts
-            $nameParts = explode('\\', $skill);
+            $nameParts = explode('\\', $skillSet);
 
             // Remove the last part of the class name
             array_pop($nameParts);
@@ -213,7 +214,7 @@ CONTENT;
             $hash = $this->_generateHash($namespace);
 
             // Store the hash and namespace
-            $this->skillsHash[$hash] = $namespace;
+            $this->skillSetsHash[$hash] = $namespace;
 
         }
     }
@@ -621,7 +622,7 @@ CONTENT;
             $nameParts = explode('-', $fullName);
 
             // Convert hash to namespace
-            $nameParts[0] = ($this->skillsHash[$nameParts[0]] ?? $nameParts[0]);
+            $nameParts[0] = ($this->skillSetsHash[$nameParts[0]] ?? $nameParts[0]);
 
             // Get the method and class names
             $method = array_pop($nameParts);
@@ -671,10 +672,10 @@ CONTENT;
         ];
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
+        foreach (Sidekick::getInstance()?->getSkillSets() as $skillSet) {
 
-            // Get all class methods
-            $toolFunctions = (new ReflectionClass($skill))->getMethods(ReflectionMethod::IS_PUBLIC);
+            // Get available tool functions
+            $toolFunctions = (new $skillSet())->getToolFunctions();
 
             // Create a new instance of the DocBlockFactory
             $docFactory = DocBlockFactory::createInstance();
@@ -717,7 +718,7 @@ CONTENT;
                 }
 
                 // Split the tool class into parts
-                $nameParts = explode('\\', $skill);
+                $nameParts = explode('\\', $skillSet);
 
                 // Get the last part of the class name
                 $className = array_pop($nameParts);

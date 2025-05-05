@@ -9,20 +9,112 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills\edit;
+namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\Json;
+use craft\models\FieldGroup;
 use craft\models\FieldLayout;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
 /**
  * @category Fields
  */
-class SettingsFields
+class Fields extends BaseSkillSet
 {
+    /**
+     * @inheritdoc
+     */
+    protected function restrictedMethods(): array
+    {
+        // All methods available by default
+        $restrictedMethods = [];
+
+        // Get the general config settings
+        $config = Craft::$app->getConfig()->getGeneral();
+
+        // Methods unavailable when `allowAdminChanges` is false
+        if (!$config->allowAdminChanges) {
+            $restrictedMethods[] = 'createField';
+            $restrictedMethods[] = 'updateField';
+            $restrictedMethods[] = 'deleteField';
+            $restrictedMethods[] = 'createFieldLayout';
+            $restrictedMethods[] = 'updateFieldLayout';
+            // Craft 4 only
+            $restrictedMethods[] = 'createFieldGroup';
+            $restrictedMethods[] = 'deleteFieldGroup';
+        }
+
+        // Methods unavailable after Craft 4
+        if (!VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            $restrictedMethods[] = 'getAvailableFieldGroups';
+            $restrictedMethods[] = 'createFieldGroup';
+            $restrictedMethods[] = 'deleteFieldGroup';
+        }
+
+        // Return list of restricted methods
+        return $restrictedMethods;
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get a complete list of existing fields.
+     *
+     * If you are unfamiliar with the existing fields, you MUST call this tool before creating, reading, updating, or deleting fields.
+     * Eagerly call this if an understanding of the current fields is required.
+     *
+     * You may also find it helpful to call this tool before updating an Entry.
+     *
+     * @return SkillResponse
+     */
+    public static function getAllExistingFields(): SkillResponse
+    {
+        // Fetch all fields
+        $allFields = Craft::$app->getFields()->getAllFields();
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed the existing fields.",
+            'response' => Json::encode($allFields)
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get the details of a specific existing field.
+     *
+     * If you don't know which fields exist, you MUST call the `getAllExistingFields` tool instead.
+     *
+     * @param string $fieldHandle Handle of the field to get details for.
+     * @return SkillResponse
+     */
+    public static function getFieldDetails(string $fieldHandle): SkillResponse
+    {
+        // Get available field types
+        $field = Craft::$app->getFields()->getFieldByHandle($fieldHandle);
+
+        // If the field doesn't exist, return an error response
+        if (!$field) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Field `{$fieldHandle}` was not found.",
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Checked details of field `{$fieldHandle}`.",
+            'response' => Json::encode($field)
+        ]);
+    }
+
     /**
      * Create a new field.
      *
@@ -202,6 +294,226 @@ class SettingsFields
     }
 
     // ========================================================================= //
+
+    /**
+     * Get a complete list of available field groups.
+     *
+     * ONLY AVAILABLE IN CRAFT 4.
+     *
+     * If you are unfamiliar with the existing field groups, you MUST call this tool before creating, updating, or deleting field groups.
+     * Eagerly call this if an understanding of the current field groups is required.
+     *
+     * @return SkillResponse
+     */
+    public static function getAvailableFieldGroups(): SkillResponse
+    {
+        // Get all field groups
+        $fieldGroups = Craft::$app->getFields()->getAllGroups();
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed the existing field groups.",
+            'response' => Json::encode($fieldGroups)
+        ]);
+    }
+
+    /**
+     * Create a new field group.
+     *
+     * ONLY AVAILABLE IN CRAFT 4.
+     *
+     * @param string $name Name of the field group.
+     * @return SkillResponse
+     */
+    public static function createFieldGroup(string $name): SkillResponse
+    {
+        // Attempt to create the field group
+        try {
+
+            // Create the field group
+            $fieldGroup = new FieldGroup([
+                'name' => $name,
+            ]);
+
+            // If unable to save the field group, return an error response
+            if (!Craft::$app->getFields()->saveGroup($fieldGroup)) {
+                $errors = implode(', ', $fieldGroup->getErrorSummary(true));
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to create field group: {$errors}",
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to create the field group. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Field group \"{$name}\" has been created.",
+//            'response' => $config,
+        ]);
+    }
+
+    /**
+     * Delete an existing field group.
+     *
+     * ONLY AVAILABLE IN CRAFT 4.
+     *
+     * If you do not have a clear understanding of which field groups exist, call the `getAvailableFieldGroups` skill first.
+     *
+     * @param string $groupId ID of the field group to be deleted.
+     * @return SkillResponse
+     */
+    public static function deleteFieldGroup(string $groupId): SkillResponse
+    {
+        // Attempt to delete the field group
+        try {
+
+            // If group ID is not numeric, return an error response
+            if (!is_numeric($groupId)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to delete field group, invalid ID: {$groupId}",
+                ]);
+            }
+
+            // Get the fields service
+            $fields = Craft::$app->getFields();
+
+            // Get the field group by ID
+            $group = $fields->getGroupById($groupId);
+
+            // If group does not exist, return an error response
+            if (!$group) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Unable to delete, field group does not exist.",
+                ]);
+            }
+
+            // If unable to delete the field group, return an error response
+            if (!$fields->deleteGroup($group)) {
+                return new SkillResponse([
+                    'success' => false,
+                    'message' => "Failed to delete the field group \"{$group->name}\".",
+                ]);
+            }
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to delete the field group. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Field group \"{$group->name}\" has been deleted.",
+//            'response' => $config,
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get a complete list of available field types.
+     *
+     * If you are considering creating a new field, you MUST call this tool first.
+     *
+     * @return SkillResponse
+     */
+    public static function getAvailableFieldTypes(): SkillResponse
+    {
+        // Get available field types
+        $availableFieldTypes = Craft::$app->getFields()->getAllFieldTypes();
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed the existing field types.",
+            'response' => Json::encode($availableFieldTypes)
+        ]);
+    }
+
+    /**
+     * Get the details of a particular field type.
+     *
+     * If you are considering creating a new field, you MUST call this tool first.
+     * You will typically run this tool AFTER the `getAvailableFieldTypes` tool.
+     *
+     * @param string $fieldType The field type to get details for.
+     * @return SkillResponse
+     */
+    public static function getFieldTypeDetails(string $fieldType): SkillResponse
+    {
+        /** @var FieldInterface $fieldType */
+
+        try {
+
+            // Get details about a specific field type
+            $fieldTypeDetails = (new $fieldType())->getSettings();
+
+        } catch (Throwable $e) {
+
+            // Something went wrong, return an error response
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to get details of the `{$fieldType}` field type. {$e->getMessage()}",
+            ]);
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed details of the `{$fieldType}` field type.",
+            'response' => Json::encode($fieldTypeDetails)
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Get details of a specified field layout.
+     *
+     * To identify custom fields, you SHOULD also call `getAvailableFieldTypes` (if you haven't already).
+     *
+     * @param string $fieldLayoutId ID of the field layout to identify.
+     * @return SkillResponse
+     */
+    public static function getFieldLayout(string $fieldLayoutId): SkillResponse
+    {
+        // Get the field layout by ID
+        $layout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
+
+        // If the layout doesn't exist, return an error response
+        if (!$layout) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
+            ]);
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed field layout {$fieldLayoutId}.",
+            'response' => Json::encode($layout->getConfig())
+        ]);
+    }
 
     /**
      * Create a new field layout.

@@ -49,11 +49,12 @@ Create a class for each of the skill sets you want to add. It will be composed p
 namespace modules\mymodule\skills;
 
 use doublesecretagency\sidekick\models\SkillResponse;
+use doublesecretagency\sidekick\skills\BaseSkillSet;
 
 /**
  * @category My Skills Category
  */
-class MyCustomSkills
+class MyCustomSkills extends BaseSkillSet
 {
    /**
     * A custom function to be triggered via the Sidekick chat window.

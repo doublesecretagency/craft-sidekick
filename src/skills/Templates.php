@@ -9,18 +9,133 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills\edit;
+namespace doublesecretagency\sidekick\skills;
 
+use Craft;
 use doublesecretagency\sidekick\helpers\TemplatesHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * @category Templates
  */
-class EditTemplates
+class Templates extends BaseSkillSet
 {
     /**
-     * Create a new file with specified content.
+     * @inheritdoc
+     */
+    protected function restrictedMethods(): array
+    {
+        // All methods available by default
+        $restrictedMethods = [];
+
+        // Get the general config settings
+        $config = Craft::$app->getConfig()->getGeneral();
+
+        // Methods unavailable when `allowAdminChanges` is false
+        if (!$config->allowAdminChanges) {
+            $restrictedMethods[] = 'createFile';
+            $restrictedMethods[] = 'updateFile';
+            $restrictedMethods[] = 'deleteFile';
+            $restrictedMethods[] = 'createDirectory';
+            $restrictedMethods[] = 'deleteDirectory';
+        }
+
+        // Return list of restricted methods
+        return $restrictedMethods;
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Read the directory and file structure of the templates folder.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
+     *
+     * If you are unfamiliar with the existing structure, you MUST call this tool before creating, reading, updating, or deleting files.
+     * Eagerly call this if an understanding of the templates directory is required.
+     *
+     * Use the following tabbed format when displaying the file structure:
+     *
+     * ```
+     * templates
+     * └── _layout
+     *     ├── footer.twig
+     *     └── header.twig
+     * └── index.twig
+     * ```
+     *
+     * @return SkillResponse
+     */
+    public static function getTemplatesFolderStructure(): SkillResponse
+    {
+        // Get the templates path
+        $templatesPath = Craft::getAlias('@templates');
+
+        // Get just the top directory of the templates folder
+        $topDirectory = basename($templatesPath);
+
+        // Regex pattern to match the templates path
+        $pattern = '/^'.preg_quote($templatesPath, '/').'/';
+
+        // Initialize the structure array
+        $structure = [];
+
+        // Recursive directory iterator to read the templates folder
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($templatesPath));
+
+        // Loop through the files and directories
+        foreach ($iterator as $file) {
+            // Replace the templates path with just the top directory
+            $relativePath = preg_replace($pattern, $topDirectory, $file->getPathname());
+            // Add the relative path to the structure array
+            $structure[] = $relativePath;
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed the structure of the templates directory.",
+            'response' => implode("\n", $structure)
+        ]);
+    }
+
+    // ========================================================================= //
+
+    /**
+     * Read an existing template file.
+     *
+     * Directory MUST ALWAYS begin with `templates`.
+     *
+     * @param string $directory Directory to look in.
+     * @param string $file Name of the file to read.
+     * @return SkillResponse
+     */
+    public static function readTemplateFile(string $directory, string $file): SkillResponse
+    {
+        // Parse the templates path
+        $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
+
+        // If file doesn't exist, return an error
+        if (!file_exists($filePath)) {
+            return new SkillResponse([
+                'success' => false,
+                'message' => "Unable to read file, {$directory}/{$file} does not exist."
+            ]);
+        }
+
+        // Read the file content
+        $content = file_get_contents($filePath);
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Read {$directory}/{$file}",
+            'response' => $content
+        ]);
+    }
+
+    /**
+     * Create a new template file with specified content.
      *
      * Directory MUST ALWAYS begin with `templates`.
      *
@@ -29,7 +144,7 @@ class EditTemplates
      * @param string $content Content to include in the file.
      * @return SkillResponse
      */
-    public static function createFile(string $directory, string $file, string $content): SkillResponse
+    public static function createTemplateFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
         $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
@@ -76,7 +191,7 @@ class EditTemplates
     }
 
     /**
-     * Update an existing file with specified content.
+     * Update an existing template file with specified content.
      *
      * Directory MUST ALWAYS begin with `templates`.
      *
@@ -87,7 +202,7 @@ class EditTemplates
      * @param string $content Content to include in the file.
      * @return SkillResponse
      */
-    public static function updateFile(string $directory, string $file, string $content): SkillResponse
+    public static function updateTemplateFile(string $directory, string $file, string $content): SkillResponse
     {
         // Parse the templates path
         $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
@@ -128,7 +243,7 @@ class EditTemplates
     }
 
     /**
-     * Delete the specified file.
+     * Delete the specified template file.
      *
      * Empty directories cannot be deleted. When deleting both files and directories, the files must be deleted first.
      *
@@ -140,7 +255,7 @@ class EditTemplates
      * @param string $file The name of the file to be deleted.
      * @return SkillResponse
      */
-    public static function deleteFile(string $directory, string $file): SkillResponse
+    public static function deleteTemplateFile(string $directory, string $file): SkillResponse
     {
         // Parse the templates path
         $filePath = TemplatesHelper::parseTemplatesPath("{$directory}/{$file}");
@@ -179,14 +294,14 @@ class EditTemplates
     // ========================================================================= //
 
     /**
-     * Create a new directory.
+     * Create a new template directory.
      *
      * Directory MUST ALWAYS begin with `templates`.
      *
      * @param string $directory Directory to create the file in.
      * @return SkillResponse
      */
-    public static function createDirectory(string $directory): SkillResponse
+    public static function createTemplateDirectory(string $directory): SkillResponse
     {
         // Parse the templates path
         $path = TemplatesHelper::parseTemplatesPath($directory);
@@ -218,7 +333,7 @@ class EditTemplates
     }
 
     /**
-     * Delete the specified directory.
+     * Delete the specified template directory.
      *
      * Empty directories cannot be deleted.
      * When deleting both files and directories, the files must be deleted first.
@@ -230,7 +345,7 @@ class EditTemplates
      * @param string $directory The directory to be deleted.
      * @return SkillResponse
      */
-    public static function deleteDirectory(string $directory): SkillResponse
+    public static function deleteTemplateDirectory(string $directory): SkillResponse
     {
         // Parse the templates path
         $path = TemplatesHelper::parseTemplatesPath($directory);

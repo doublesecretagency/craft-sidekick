@@ -15,7 +15,6 @@ use Craft;
 use craft\base\Element;
 use craft\base\Model;
 use craft\base\Plugin;
-use craft\console\Application as ConsoleApplication;
 use craft\events\ElementEvent;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
@@ -24,33 +23,21 @@ use craft\helpers\UrlHelper;
 use craft\services\Elements;
 use craft\services\Fields as FieldsService;
 use craft\services\Plugins;
-use craft\services\UserPermissions;
 use craft\services\Utilities;
 use craft\web\UrlManager;
 use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\fields\AiSummary;
 use doublesecretagency\sidekick\helpers\AiSummaryHelper;
-use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
-use doublesecretagency\sidekick\services\ActionsService;
-use doublesecretagency\sidekick\services\AltTagService;
 use doublesecretagency\sidekick\services\ChatService;
-use doublesecretagency\sidekick\services\DummyDataService;
-use doublesecretagency\sidekick\services\FileManagementService;
 use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\SseService;
-use doublesecretagency\sidekick\skills\edit\EditTemplates;
-use doublesecretagency\sidekick\skills\edit\SettingsFields;
-use doublesecretagency\sidekick\skills\edit\SettingsFieldsCraft4;
-use doublesecretagency\sidekick\skills\edit\SettingsSections;
-use doublesecretagency\sidekick\skills\edit\SettingsSites;
-use doublesecretagency\sidekick\skills\read\Entries;
-use doublesecretagency\sidekick\skills\read\Fields;
-use doublesecretagency\sidekick\skills\read\FieldsCraft4;
-use doublesecretagency\sidekick\skills\read\Sections;
-use doublesecretagency\sidekick\skills\read\Sites;
-use doublesecretagency\sidekick\skills\read\Templates;
+use doublesecretagency\sidekick\skills\Entries;
+use doublesecretagency\sidekick\skills\Fields;
+use doublesecretagency\sidekick\skills\Sections;
+use doublesecretagency\sidekick\skills\Sites;
+use doublesecretagency\sidekick\skills\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use doublesecretagency\sidekick\utilities\ChatWindowUtility;
 use Twig\Error\LoaderError;
@@ -65,11 +52,7 @@ use yii\base\Exception;
  * Main plugin class for Sidekick.
  * Registers services, custom fields, and user permissions.
  *
- * @property ActionsService $actions
- * @property AltTagService $altTag
  * @property ChatService $chat
- * @property DummyDataService $dummyData
- * @property FileManagementService $fileManagement
  * @property OpenAIService $openAi
  * @property SseService $sse
  */
@@ -86,14 +69,14 @@ class Sidekick extends Plugin
     public static ?Sidekick $plugin = null;
 
     /**
-     * @var bool $hasCpSettings Whether the plugin has a settings page in the control panel.
+     * @var bool Whether the plugin has a settings page in the control panel.
      */
     public bool $hasCpSettings = true;
 
     /**
-     * @var array $skills The complete list of skills available to the plugin.
+     * @var array The complete list of skill sets available to the plugin.
      */
-    private array $_skills = [];
+    private array $_skillSets = [];
 
     /**
      * @var array IDs of elements which have already been parsed.
@@ -323,59 +306,38 @@ class Sidekick extends Plugin
     // ========================================================================= //
 
     /**
-     * Get the list of available skills.
+     * Get the list of available skill sets.
      *
      * @return array
      */
-    public function getSkills(): array
+    public function getSkillSets(): array
     {
-        // If the skills have already been defined, return them
-        if ($this->_skills) {
-            return $this->_skills;
+        // If the skill sets have already been defined, return them
+        if ($this->_skillSets) {
+            return $this->_skillSets;
         }
 
-        // Get the general config
-        $allowAdminChanges = Craft::$app->getConfig()->getGeneral()->allowAdminChanges;
+        // Define the default skill sets
+        $this->_skillSets = [
+            Templates::class,
+            Entries::class,
+            Fields::class,
+            Sections::class,
+            Sites::class,
+        ];
 
-        // Define the default skills
-        $this->_skills[] = Templates::class;
-        $this->_skills[] = Entries::class;
-        $this->_skills[] = Fields::class;
-        $this->_skills[] = Sections::class;
-        $this->_skills[] = Sites::class;
-
-        // If admin changes are allowed
-        if ($allowAdminChanges) {
-            // Append development skills
-            $this->_skills[] = EditTemplates::class;
-            $this->_skills[] = SettingsFields::class;
-            $this->_skills[] = SettingsSections::class;
-            $this->_skills[] = SettingsSites::class;
-        }
-
-        // If running Craft 4
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
-            // Append deprecated skills
-            $this->_skills[] = FieldsCraft4::class;
-            // If admin changes are allowed
-            if ($allowAdminChanges) {
-                // Append development skills
-                $this->_skills[] = SettingsFieldsCraft4::class;
-            }
-        }
-
-        // Give plugins/modules a chance to add custom skills
+        // Give plugins/modules a chance to add custom skill sets
         if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
             // Create a new AddSkillsEvent
             $event = new AddSkillsEvent();
             // Trigger the event
             $this->trigger(self::EVENT_ADD_SKILLS, $event);
             // Append any additional skills
-            $this->_skills = array_merge($this->_skills, $event->skills);
+            $this->_skillSets = array_merge($this->_skillSets, $event->skills);
         }
 
-        // Return the complete list of skills
-        return $this->_skills;
+        // Return the complete list of skill sets
+        return $this->_skillSets;
     }
 
     // ========================================================================= //

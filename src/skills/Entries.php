@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills\read;
+namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\elements\Entry;
@@ -21,7 +21,7 @@ use Throwable;
 /**
  * @category Entries
  */
-class Entries
+class Entries extends BaseSkillSet
 {
     /**
      * Get basic information (id, title, slug) about all entries.

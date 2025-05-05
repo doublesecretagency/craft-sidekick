@@ -9,20 +9,45 @@
  * @copyright Copyright (c) 2025 Double Secret Agency
  */
 
-namespace doublesecretagency\sidekick\skills\edit;
+namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\helpers\Json;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
 /**
  * @category Sections
  */
-class SettingsSections
+class Sections extends BaseSkillSet
 {
+    /**
+     * @inheritdoc
+     */
+    protected function restrictedMethods(): array
+    {
+        // All methods available by default
+        $restrictedMethods = [];
+
+        // Get the general config settings
+        $config = Craft::$app->getConfig()->getGeneral();
+
+        // Methods unavailable when `allowAdminChanges` is false
+        if (!$config->allowAdminChanges) {
+            $restrictedMethods[] = 'createSection';
+            $restrictedMethods[] = 'updateSection';
+            $restrictedMethods[] = 'deleteSection';
+        }
+
+        // Return list of restricted methods
+        return $restrictedMethods;
+    }
+
+    // ========================================================================= //
+
     /**
      * Valid section types.
      *
@@ -35,6 +60,66 @@ class SettingsSections
     ];
 
     // ========================================================================= //
+
+    /**
+     * Get a complete list of existing sections.
+     *
+     * If you are unfamiliar with the existing sections, you MUST call this tool before creating, reading, updating, or deleting sections.
+     * Eagerly call this if an understanding of the current sections is required.
+     *
+     * You may also find it helpful to call this tool before updating an Entry.
+     *
+     * @return SkillResponse
+     */
+    public static function getSections(): SkillResponse
+    {
+        // Initialize sections
+        $sections = [];
+
+        // Get all sections
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            $allSections = Craft::$app->getSections()->getAllSections();
+        } else {
+            // Craft 5+
+            $allSections = Craft::$app->getEntries()->getAllSections();
+        }
+
+        // Loop through each section and format the output
+        foreach ($allSections as $section) {
+
+            // Initialize entry types
+            $entryTypes = [];
+
+            // Get the entry types for the section
+            foreach ($section->getEntryTypes() as $entryType) {
+                // Catalog each entry type
+                $entryTypes[] = [
+                    'ID' => $entryType->id,
+                    'Name' => $entryType->name,
+                    'Handle' => $entryType->handle,
+                    'Field Layout' => $entryType->fieldLayoutId,
+                ];
+            }
+
+            // Catalog each section
+            $sections[] = [
+                'ID' => $section->id,
+                'Name' => $section->name,
+                'Handle' => $section->handle,
+                'Section Type' => $section->type,
+                'Available Entry Types' => $entryTypes,
+            ];
+
+        }
+
+        // Return success message
+        return new SkillResponse([
+            'success' => true,
+            'message' => "Reviewed the existing sections.",
+            'response' => Json::encode($sections)
+        ]);
+    }
 
     /**
      * Create a new section.

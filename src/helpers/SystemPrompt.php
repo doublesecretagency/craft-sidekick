@@ -113,7 +113,7 @@ class SystemPrompt
     private static function _namespaceHashes(): string
     {
         // Get the namespace hashes from the OpenAI instance
-        $hashes = Sidekick::getInstance()?->openAi->skillsHash;
+        $hashes = Sidekick::getInstance()?->openAi->skillSetsHash;
 
         // Json encode the hashes
         $hashes = Json::encode($hashes);
