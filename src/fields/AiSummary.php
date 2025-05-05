@@ -53,9 +53,9 @@ class AiSummary extends Field implements PreviewableFieldInterface
     public string $fieldMode = 'editable';
 
     /**
-     * @var int The minimum number of rows the input should have.
+     * @var int The minimum number of rows the textarea should have.
      */
-    public int $initialRows = 4;
+    public int $initialRows = 3;
 
     /**
      * @var bool Whether to regenerate the summary when an element is saved.
