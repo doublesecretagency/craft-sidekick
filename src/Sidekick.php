@@ -110,19 +110,10 @@ class Sidekick extends Plugin
 
         // Register services
         $this->setComponents([
-            'actions'        => ActionsService::class,
-            'altTag'         => AltTagService::class,
-            'chat'           => ChatService::class,
-            'dummyData'      => DummyDataService::class,
-            'fileManagement' => FileManagementService::class,
-            'openAi'         => OpenAIService::class,
-            'sse'            => SseService::class,
+            'chat'   => ChatService::class,
+            'openAi' => OpenAIService::class,
+            'sse'    => SseService::class,
         ]);
-
-//        // Register console commands
-//        if (Craft::$app instanceof ConsoleApplication) {
-//            $this->controllerNamespace = 'doublesecretagency\sidekick\console';
-//        }
 
         // Register the Twig extension
         Craft::$app->view->registerTwigExtension(new SidekickTwigExtension());
@@ -215,7 +206,6 @@ class Sidekick extends Plugin
     private function _utilitiesLink(): void
     {
         // Gets the right event for registering utilities
-        /** @noinspection PhpUndefinedClassConstantInspection */
         $event = defined('craft\services\Utilities::EVENT_REGISTER_UTILITY_TYPES')
             ? Utilities::EVENT_REGISTER_UTILITY_TYPES  // Craft 4
             : Utilities::EVENT_REGISTER_UTILITIES;     // Craft 5+
