@@ -13,6 +13,7 @@ namespace doublesecretagency\sidekick\utilities;
 
 use Craft;
 use craft\base\Utility;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\Sidekick;
 
 class ChatWindowUtility extends Utility
@@ -71,6 +72,8 @@ class ChatWindowUtility extends Utility
     public static function contentHtml(): string
     {
         // Render as a utility
-        return Craft::$app->getView()->renderTemplate('sidekick/chat/utility');
+        return Craft::$app->getView()->renderTemplate('sidekick/chat/utility', [
+            'skillSets' => SkillsHelper::slideoutSkillsList(),
+        ]);
     }
 }

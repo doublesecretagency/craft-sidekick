@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug preventing Utility view from showing skills list.
+
 ## 0.9.8 - 2025-05-05
 
 ### Changed
