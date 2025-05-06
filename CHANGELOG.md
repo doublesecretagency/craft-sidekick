@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.8 - 2025-05-05
 
 ### Changed
 - Improved entry management skills.
