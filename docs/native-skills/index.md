@@ -48,28 +48,11 @@ For a comprehensive list of what Sidekick can do, click the "i" icon above the c
 
 Sidekick's editing permissions depend on your `allowAdminChanges` setting:
 
-- **`allowAdminChanges` = `false` (Production):** Sidekick primarily has **read-only** access.
-- **`allowAdminChanges` = `true` (Local Development):** Sidekick can **create**, **update**, and **delete** content.
+### `false` (Production)
+Sidekick has **full access** to content, and **read-only** access to settings and templates.
 
-### Templates
-
-- **Production:** Read-only access to the `templates` folder.
-- **Local Development:** Full access—create, update, and delete text-based files and folders.
-
-### Entries
-
-- Full CRUD (Create, Read, Update, Delete) functionality.
-- Deletion actions require confirmation.
-
-### Fields
-
-- **Production:** View existing fields.
-- **Local Development:** Full management capabilities—create, update, delete, and configure fields.
-
-### Sections
-
-- **Production:** View existing sections.
-- **Local Development:** Full management capabilities—create, update, delete, and configure sections, entry types, and field layouts.
+### `true` (Local Development)
+Sidekick has **full access** to content, settings, and templates.
 
 :::tip Need More?
 You can always expand on this basic set of skills with your own [custom skills](/custom-skills/). This is a great way to add functionality that is specific to your project or workflow.

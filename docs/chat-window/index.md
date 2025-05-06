@@ -1,6 +1,6 @@
 ---
 title: "Chat Window | Sidekick plugin for Craft CMS"
-description: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+description: "Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections."
 head:
   - - meta
     - property: "og:type"
@@ -13,7 +13,7 @@ head:
       content: "Chat Window | Sidekick plugin for Craft CMS"
   - - meta
     - property: "og:description"
-      content: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+      content: "Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections."
   - - meta
     - property: "og:image"
       content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/chat-window-example.png"
@@ -28,7 +28,7 @@ head:
       content: "Chat Window | Sidekick plugin for Craft CMS"
   - - meta
     - name: "twitter:description"
-      content: "Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files."
+      content: "Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections."
   - - meta
     - name: "twitter:image"
       content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/chat-window-example.png"
@@ -36,11 +36,9 @@ head:
 
 # Chat Window
 
-In the main sidebar navigation of the control panel, click the **Sidekick** link to open the chat window.
+Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections. In the main sidebar navigation of the control panel, click the **Sidekick** link to open the chat window.
 
 <img class="dropshadow" src="/images/chat-window/chat-window-example.png" alt="Example of the Chat Window in use" style="max-width:737px; margin:20px 0 26px;">
-
-Sidekick offers a powerful chat window directly within the Craft control panel, allowing you to interact with an AI assistant to perform complex operations like manipulating Twig and module files.
 
 ## How it Works
 
