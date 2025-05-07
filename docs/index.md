@@ -16,7 +16,7 @@ head:
       content: "Your AI companion for rapid Craft CMS development."
   - - meta
     - property: "og:image"
-      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png?v=1"
   - - meta
     - name: "twitter:card"
       content: "summary_large_image"
@@ -31,7 +31,7 @@ head:
       content: "Your AI companion for rapid Craft CMS development."
   - - meta
     - name: "twitter:image"
-      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png?v=1"
 
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
@@ -41,7 +41,7 @@ hero:
   text: "plugin for Craft CMS"
   tagline: "Your AI companion for rapid Craft CMS development."
   image:
-    src: /images/meta/sidekick.png
+    src: /images/meta/sidekick.png?v=1
     alt: Sidekick plugin for Craft CMS
   actions:
     - theme: brand
