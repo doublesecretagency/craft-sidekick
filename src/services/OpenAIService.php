@@ -23,7 +23,6 @@ use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
-use doublesecretagency\sidekick\skills\BaseSkillSet;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\RequestException;
 use OpenAI;
@@ -36,9 +35,8 @@ use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredActionFunctionToolCal
 use OpenAI\Responses\Threads\Runs\ThreadRunStreamResponse;
 use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use phpDocumentor\Reflection\DocBlockFactory;
-use ReflectionClass;
 use ReflectionException;
-use ReflectionMethod;
+use Throwable;
 use yii\base\Component;
 use yii\base\Exception;
 
@@ -473,9 +471,6 @@ CONTENT;
             // The thread is no longer running
             $running = false;
 
-            // Save all project config changes
-            Craft::$app->getProjectConfig()->saveModifiedConfigData();
-
             // Get the latest assistant message
             $reply = $this->_getLatestAssistantMessage();
 
@@ -495,6 +490,11 @@ CONTENT;
                 $message = 'Sorry, something has timed out. You may need to clear the conversation and start over.';
             }
 
+//            // If message contains "active thread"
+//            if (str_contains($message, 'active thread')) {
+//                $message = 'We encountered some turbulence. You may need to clear the conversation and start over.';
+//            }
+
             // Compile error message
             $error = new ChatMessage([
                 'role' => ChatMessage::ERROR,
@@ -512,6 +512,24 @@ CONTENT;
                 // Append the error to the OpenAI thread
                 $error->toOpenAiThread();
             }
+        }
+
+        try {
+
+            // Save all project config changes
+            Craft::$app->getProjectConfig()->saveModifiedConfigData();
+
+        } catch (Throwable $e) {
+
+            // Output error message
+            (new ChatMessage([
+                'role' => ChatMessage::ERROR,
+                'message' => "Problem updating the project config. You may need to rebuild the project config manually."
+            ]))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
+
         }
     }
 

@@ -518,7 +518,9 @@ class Fields extends BaseSkillSet
     /**
      * Create a new field layout.
      *
-     * @param string $fieldLayoutConfig JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
+     * See the "Field Layouts" instructions.
+     *
+     * @param string $fieldLayoutConfig JSON-stringified configuration for the field layout.
      * @return SkillResponse
      */
     public static function createFieldLayout(string $fieldLayoutConfig): SkillResponse
@@ -570,8 +572,10 @@ class Fields extends BaseSkillSet
     /**
      * Update an existing field layout with a new configuration.
      *
+     * See the "Field Layouts" instructions.
+     *
      * @param string $fieldLayoutId ID of the field layout to identify.
-     * @param string $newConfig JSON-stringified configuration for the field layout. See the "Field Layout Configs" instructions.
+     * @param string $newConfig JSON-stringified configuration for the field layout.
      * @return SkillResponse
      */
     public static function updateFieldLayout(string $fieldLayoutId, string $newConfig): SkillResponse

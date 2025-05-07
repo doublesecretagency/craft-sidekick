@@ -1,4 +1,4 @@
-# Field Layout Configs
+# Field Layouts
 
 When managing field layouts, the config must follow a **very precise** structure.
 
@@ -72,3 +72,11 @@ This is a standard example of a field layout config:
   ]
 }
 ```
+
+## Before Creating or Updating a Field Layout
+
+You must be 100% confident that you are using the valid `fieldUid` values. If you use the wrong UIDs, the process will only feign success.
+
+**WARNING:** If you have recently created a new field, the UID you generated **may have been overwritten when the new field was saved by the system.
+
+**Please double-check the current UID of every field you intend to add to the field layout!**

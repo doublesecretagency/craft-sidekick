@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Improved field management skills.
+
 ### Fixed
 - Fixed bug preventing Utility view from showing skills list.
 
