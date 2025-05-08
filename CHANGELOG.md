@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added ability to provide [custom prompts](https://plugins.doublesecretagency.com/sidekick/customize/add-prompts) via the `AddPromptsEvent`.
+
 ### Changed
 - Improved field management skills.
 

@@ -25,9 +25,11 @@ use craft\services\Fields as FieldsService;
 use craft\services\Plugins;
 use craft\services\Utilities;
 use craft\web\UrlManager;
+use doublesecretagency\sidekick\events\AddPromptsEvent;
 use doublesecretagency\sidekick\events\AddSkillsEvent;
 use doublesecretagency\sidekick\fields\AiSummary;
 use doublesecretagency\sidekick\helpers\AiSummaryHelper;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\log\RetryFileTarget;
 use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ChatService;
@@ -59,6 +61,11 @@ use yii\base\Exception;
 class Sidekick extends Plugin
 {
     /**
+     * @event AddPromptsEvent The event that is triggered when defining extra instructions for the AI assistant.
+     */
+    public const EVENT_ADD_PROMPTS = 'addPrompts';
+
+    /**
      * @event AddSkillsEvent The event that is triggered when defining extra tools for the AI assistant.
      */
     public const EVENT_ADD_SKILLS = 'addSkills';
@@ -74,9 +81,14 @@ class Sidekick extends Plugin
     public bool $hasCpSettings = true;
 
     /**
+     * @var array The complete list of prompts to be loaded.
+     */
+    private array $_prompts = [];
+
+    /**
      * @var array The complete list of skill sets available to the plugin.
      */
-    private array $_skillSets = [];
+    private array $_skills = [];
 
     /**
      * @var array IDs of elements which have already been parsed.
@@ -306,19 +318,79 @@ class Sidekick extends Plugin
     // ========================================================================= //
 
     /**
+     * Get the list of prompts to load.
+     *
+     * @return array
+     */
+    public function getPrompts(): array
+    {
+        // If the prompts have already been defined, return them
+        if ($this->_prompts) {
+            return $this->_prompts;
+        }
+
+        // Define the default prompts
+        $this->_prompts = [
+            'basic-instructions.md',
+            'general-guidelines.md',
+            'tool-functions.md',
+            'twig-templates.md',
+            'chat-messages.md',
+            'saving-sections.md',
+            'field-layouts.md',
+            'element-configs.md',
+            'generating-uids.md',
+            'namespace-hashes.md',
+        ];
+
+        // Append handling of Matrix fields
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            $this->_prompts[] = 'matrix-fields-c4.md';
+        } else {
+            // Craft 5+
+            $this->_prompts[] = 'matrix-fields-c5.md';
+        }
+
+        // Get the path to the Sidekick plugin
+        $path = Craft::getAlias('@doublesecretagency/sidekick');
+
+        // Convert all prompts so far to a local path
+        foreach ($this->_prompts as &$file) {
+            $file = "{$path}/prompts/{$file}";
+        }
+
+        // Unset to prevent issues
+        unset($file);
+
+        // Give plugins/modules a chance to add custom prompts
+        if ($this->hasEventHandlers(self::EVENT_ADD_PROMPTS)) {
+            // Create a new event
+            $event = new AddPromptsEvent();
+            // Trigger the event
+            $this->trigger(self::EVENT_ADD_PROMPTS, $event);
+            // Append any additional prompts
+            $this->_prompts = array_merge($this->_prompts, $event->prompts);
+        }
+
+        // Return all prompts
+        return $this->_prompts;
+    }
+
+    /**
      * Get the list of available skill sets.
      *
      * @return array
      */
-    public function getSkillSets(): array
+    public function getSkills(): array
     {
         // If the skill sets have already been defined, return them
-        if ($this->_skillSets) {
-            return $this->_skillSets;
+        if ($this->_skills) {
+            return $this->_skills;
         }
 
         // Define the default skill sets
-        $this->_skillSets = [
+        $this->_skills = [
             Templates::class,
             Entries::class,
             Fields::class,
@@ -328,16 +400,16 @@ class Sidekick extends Plugin
 
         // Give plugins/modules a chance to add custom skill sets
         if ($this->hasEventHandlers(self::EVENT_ADD_SKILLS)) {
-            // Create a new AddSkillsEvent
+            // Create a new event
             $event = new AddSkillsEvent();
             // Trigger the event
             $this->trigger(self::EVENT_ADD_SKILLS, $event);
-            // Append any additional skills
-            $this->_skillSets = array_merge($this->_skillSets, $event->skills);
+            // Append any additional skill sets
+            $this->_skills = array_merge($this->_skills, $event->skills);
         }
 
         // Return the complete list of skill sets
-        return $this->_skillSets;
+        return $this->_skills;
     }
 
     // ========================================================================= //

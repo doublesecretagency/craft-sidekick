@@ -18,32 +18,10 @@ use doublesecretagency\sidekick\Sidekick;
 class SystemPrompt
 {
     /**
-     * @var array The list of system prompt files to compile.
-     */
-    private static array $_systemPromptFiles = [
-        'basic-instructions.md',
-        'general-guidelines.md',
-        'tool-functions.md',
-        'twig-templates.md',
-        'chat-messages.md',
-        'saving-sections.md',
-        'field-layouts.md',
-        'element-configs.md',
-        'generating-uids.md',
-        'namespace-hashes.md',
-    ];
-
-    /**
      * Compiles the system prompt from a collection of Markdown files.
      */
     public static function getPrompt(): string
     {
-        // Initialize system prompt
-        $systemPrompt = '';
-
-        // Get the path to the Sidekick plugin
-        $path = Craft::getAlias('@doublesecretagency/sidekick');
-
         /**
          * IMPORTANT:
          *
@@ -53,23 +31,14 @@ class SystemPrompt
          * the DYNAMIC content LAST.
          */
 
-        // Load the most static content first
-        $promptFiles = self::$_systemPromptFiles;
+        // Get all prompts (native and custom)
+        $promptFiles = Sidekick::getInstance()?->getPrompts();
 
-        // Append handling of Matrix fields
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
-            // Craft 4
-            $promptFiles[] = 'matrix-fields-c4.md';
-        } else {
-            // Craft 5+
-            $promptFiles[] = 'matrix-fields-c5.md';
-        }
+        // Initialize system prompt
+        $systemPrompt = '';
 
         // Loop through each prompt file
-        foreach ($promptFiles as $file) {
-
-            // Load the content of each prompt file
-            $filePath = "{$path}/prompts/{$file}";
+        foreach ($promptFiles as $filePath) {
 
             // Ensure the file exists
             if (file_exists($filePath)) {

@@ -197,7 +197,7 @@ CONTENT;
         }
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkillSets() as $skillSet) {
+        foreach (Sidekick::getInstance()?->getSkills() as $skillSet) {
 
             // Split the tool class into parts
             $nameParts = explode('\\', $skillSet);
@@ -690,7 +690,7 @@ CONTENT;
         ];
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkillSets() as $skillSet) {
+        foreach (Sidekick::getInstance()?->getSkills() as $skillSet) {
 
             // Get available tool functions
             $toolFunctions = (new $skillSet())->getToolFunctions();

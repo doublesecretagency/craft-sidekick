@@ -33,7 +33,7 @@ class SkillsHelper
         $docFactory = DocBlockFactory::createInstance();
 
         // Loop through each tool class
-        foreach (Sidekick::getInstance()?->getSkillSets() as $skill) {
+        foreach (Sidekick::getInstance()?->getSkills() as $skill) {
 
             // Defaults to uncategorized
             $category = 'Uncategorized';
