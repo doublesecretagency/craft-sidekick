@@ -7,7 +7,7 @@ head:
       content: "website"
   - - meta
     - property: "og:url"
-      content: "https://plugins.doublesecretagency.com/sidekick/fields/native-skills/"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat/native-skills"
   - - meta
     - property: "og:title"
       content: "Native Skills | Sidekick plugin for Craft CMS"
@@ -22,7 +22,7 @@ head:
       content: "summary_large_image"
   - - meta
     - name: "twitter:url"
-      content: "https://plugins.doublesecretagency.com/sidekick/fields/native-skills/"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat/native-skills"
   - - meta
     - name: "twitter:title"
       content: "Native Skills | Sidekick plugin for Craft CMS"
@@ -36,7 +36,7 @@ head:
 
 # Native Skills
 
-Sidekick boasts a small but powerful set of skills available via the chat window. If you need something beyond what is shown here, it's very easy to create your own [custom skills](/custom-skills/).
+Sidekick boasts a small but powerful set of skills available via the chat window. If you need something beyond what is shown here, it's very easy to create your own [custom skills](/chat/custom-skills).
 
 :::warning See the complete list
 For a comprehensive list of what Sidekick can do, click the "i" icon above the chat window. A slideout will reveal the complete list of available skill sets.
@@ -46,16 +46,16 @@ For a comprehensive list of what Sidekick can do, click the "i" icon above the c
 
 ## Permissions & Capabilities
 
-Sidekick's editing permissions depend on your `allowAdminChanges` setting:
-
-### `false` (Production)
-Sidekick has **full access** to content, and **read-only** access to settings and templates.
+Editing permissions will depend on the `allowAdminChanges` setting in your current environment:
 
 ### `true` (Local Development)
 Sidekick has **full access** to content, settings, and templates.
 
+### `false` (Production)
+Sidekick has **full access** to content, and **read-only** access to settings and templates.
+
 :::tip Need More?
-You can always expand on this basic set of skills with your own [custom skills](/custom-skills/). This is a great way to add functionality that is specific to your project or workflow.
+You can always expand on this basic set of skills with your own [custom skills](/chat/custom-skills). This is a great way to add functionality that is specific to your project or workflow.
 
 Any additional skills provided by a separate plugin or module will automatically be included in the slideout list of skills.
 :::

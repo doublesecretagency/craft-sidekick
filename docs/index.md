@@ -34,34 +34,34 @@ head:
       content: "https://plugins.doublesecretagency.com/sidekick/images/meta/sidekick.png?v=1"
 
 # https://vitepress.dev/reference/default-theme-home-page
-layout: home
+layout: "home"
 
 hero:
   name: "Sidekick"
   text: "plugin for Craft CMS"
   tagline: "Your AI companion for rapid Craft CMS development."
   image:
-    src: /images/meta/sidekick.png?v=1
-    alt: Sidekick plugin for Craft CMS
+    src: "/images/meta/sidekick.png?v=1"
+    alt: "Sidekick plugin for Craft CMS"
   actions:
-    - theme: brand
-      text: Chat Window
-      link: /chat-window/
-    - theme: alt
-      text: Native Skills
-      link: /native-skills/
-    - theme: alt
-      text: Custom Skills
-      link: /custom-skills/
+    - theme: "brand"
+      text: "Chat Window"
+      link: "/chat/how-it-works"
+    - theme: "alt"
+      text: "Native Skills"
+      link: "/chat/native-skills"
+    - theme: "alt"
+      text: "Custom Skills"
+      link: "/chat/custom-skills"
 
 features:
   - icon: 🤖
-    title: Powered by AI
-    details: Powered by OpenAI's ChatGPT, Sidekick is your companion for Craft CMS development.
+    title: "Powered by AI"
+    details: "Powered by OpenAI's ChatGPT, Sidekick is your companion for Craft CMS development."
   - icon: ⚙️
-    title: Tightly Integrated With Craft
-    details: Make changes via a chat window seamlessly integrated into the Craft control panel.
+    title: "Tightly Integrated With Craft"
+    details: "Make changes via a chat window seamlessly integrated into the Craft control panel."
   - icon: 🚀
-    title: Streamlined Rapid Development
-    details: Build complex websites in a fraction of the time using Sidekick's super powers.
+    title: "Streamlined Rapid Development"
+    details: "Build complex websites in a fraction of the time using Sidekick's super powers."
 ---

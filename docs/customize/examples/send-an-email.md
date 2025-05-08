@@ -5,9 +5,7 @@ description: "An example of a custom skill which sends an email to a specified u
 
 # Example: Send an Email
 
-## Sample Conversation
-
-<div class="chat-window">
+<div class="chat-window" style="margin-top:23px">
     <div class="chat-message user-message">
         <div class="sender-column">You:</div>
         <div class="content-column"><p>email Doug to remind him about tomorrow's meeting</p></div>
@@ -22,11 +20,12 @@ description: "An example of a custom skill which sends an email to a specified u
     </div>
 </div>
 
-## Sample Code
-
 ```php
 /**
  * Send an email message to a specified User.
+ *
+ * Write detailed instructions for the AI to learn
+ * how to send an email to the specified user.
  *
  * @param string $user Name of the user to send the email to.
  * @param string $subject Subject line for the outgoing email.
@@ -36,7 +35,7 @@ description: "An example of a custom skill which sends an email to a specified u
 public static function sendEmailMessage(string $user, string $subject, string $body): SkillResponse
 {
     /**
-     * Your custom implementation for sending an email message.
+     * Write your custom implementation for sending an email message.
      * 
      * For example, determine which user is being referenced
      * and send them an email with the provided subject and body.
@@ -59,3 +58,6 @@ public static function sendEmailMessage(string $user, string $subject, string $b
     ]);
 }
 ```
+
+## How to Add Skills
+The snippet above is just an example (obviously). See the [`AddSkillsEvent`](/customize/add-skills) for more detailed instructions.

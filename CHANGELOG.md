@@ -92,10 +92,10 @@
 
 ### Added
 - Integrated with the OpenAI API.
-- Added the AI [chat window](https://plugins.doublesecretagency.com/sidekick/chat-window/) interface.
+- Added the AI [chat window](https://plugins.doublesecretagency.com/sidekick/chat/how-it-works) interface.
 - Added template management skills.
 - Added rudimentary entry and section management skills.
-- Added ability to provide [custom skills](https://plugins.doublesecretagency.com/sidekick/custom-skills/) via the `AddSkillsEvent`.
+- Added ability to provide [custom skills](https://plugins.doublesecretagency.com/sidekick/chat/custom-skills) via the `AddSkillsEvent`.
 - Added documentation.
 
 For more information, please see the [complete documentation...](https://plugins.doublesecretagency.com/sidekick/)

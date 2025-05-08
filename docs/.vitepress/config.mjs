@@ -17,14 +17,25 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       {text: 'Getting Started', link: '/getting-started/'},
-      {text: 'Chat Window', link: '/chat-window/'},
       {
-        text: 'Skills',
+        text: 'Chat Window',
         items: [
           {
             items: [
-              {text: 'Native Skills', link: '/native-skills/'},
-              {text: 'Custom Skills', link: '/custom-skills/'},
+              {text: 'How It Works', link: '/chat/how-it-works'},
+              {text: 'Native Skills', link: '/chat/native-skills'},
+              {text: 'Custom Skills', link: '/chat/custom-skills'},
+            ]
+          }
+        ]
+      },
+      {
+        text: 'Customize',
+        items: [
+          {
+            items: [
+              {text: 'Add Prompts', link: '/customize/add-prompts'},
+              {text: 'Add Skills', link: '/customize/add-skills'},
             ]
           }
         ]
@@ -64,48 +75,32 @@ export default defineConfig({
       ],
 
       // Chat Window
-      '/chat-window/': [
+      '/chat/': [
         {
           text: 'Chat Window',
           items: [
-            {
-              text: 'Overview',
-              link: '/chat-window/',
-              items: [
-                {text: 'How it Works', link: '/chat-window/#how-it-works'},
-                {text: 'Message Types', link: '/chat-window/#message-types'},
-                {text: 'Clearing the Conversation', link: '/chat-window/#clearing-the-conversation'},
-                {text: 'Switching GPT Models', link: '/chat-window/#switching-gpt-models'},
-              ]
-            }
+            {text: 'How It Works', link: '/chat/how-it-works'},
+            {text: 'Native Skills', link: '/chat/native-skills'},
+            {text: 'Custom Skills', link: '/chat/custom-skills'},
           ]
         }
       ],
 
-      // Native Skills
-      '/native-skills/': [
+      // Customize
+      '/customize/': [
         {
-          text: 'Native Skills',
+          text: 'Customize',
           items: [
-            {text: 'Overview', link: '/native-skills/'},
-            {text: 'Permissions & Capabilities', link: '/native-skills/#permissions-capabilities'},
-          ]
-        }
-      ],
-
-      // Custom Skills
-      '/custom-skills/': [
-        {
-          text: 'Custom Skills',
-          items: [
-            {text: 'Overview', link: '/custom-skills/'},
+            {text: 'Add Prompts', link: '/customize/add-prompts'},
             {
-              text: 'Examples',
+              text: 'Add Skills',
+              link: '/customize/add-skills',
               items: [
-                {text: 'Add To Calendar', link: '/custom-skills/examples/add-to-calendar'},
-                {text: 'Send An Email', link: '/custom-skills/examples/send-an-email'}
+                {text: 'Example: Send An Email', link: '/customize/examples/send-an-email'},
+                {text: 'Example: Create a Report', link: '/customize/examples/create-report'},
+                {text: 'Example: Add To Calendar', link: '/customize/examples/add-to-calendar'}
               ]
-            }
+            },
           ]
         }
       ],
@@ -113,7 +108,7 @@ export default defineConfig({
       // Fields
       '/fields/': [
         {
-          text: 'More',
+          text: 'Fields',
           items: [
             {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
           ]

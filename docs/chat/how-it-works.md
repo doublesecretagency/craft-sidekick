@@ -7,7 +7,7 @@ head:
       content: "website"
   - - meta
     - property: "og:url"
-      content: "https://plugins.doublesecretagency.com/sidekick/chat-window/"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat/how-it-works"
   - - meta
     - property: "og:title"
       content: "Chat Window | Sidekick plugin for Craft CMS"
@@ -22,7 +22,7 @@ head:
       content: "summary_large_image"
   - - meta
     - name: "twitter:url"
-      content: "https://plugins.doublesecretagency.com/sidekick/chat-window/"
+      content: "https://plugins.doublesecretagency.com/sidekick/chat/how-it-works"
   - - meta
     - name: "twitter:title"
       content: "Chat Window | Sidekick plugin for Craft CMS"
@@ -39,11 +39,6 @@ head:
 Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections. In the main sidebar navigation of the control panel, click the **Sidekick** link to open the chat window.
 
 <img class="dropshadow" src="/images/chat-window/chat-window-example.png" alt="Example of the Chat Window in use" style="max-width:737px; margin:20px 0 26px;">
-
-## How it Works
-
-- **Sending Messages**: Type your message and **press Enter** to send.
-- **New Lines**: Press **Shift+Enter** to add a new line without sending the message.
 
 ## Message Types
 

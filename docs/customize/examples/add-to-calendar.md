@@ -5,9 +5,7 @@ description: "An example of a custom skill which adds an event to the calendar."
 
 # Example: Add to Calendar
 
-## Sample Conversation
-
-<div class="chat-window">
+<div class="chat-window" style="margin-top:23px">
     <div class="chat-message user-message">
         <div class="sender-column">You:</div>
         <div class="content-column"><p>add Team Meeting to the calendar on Oct 15th at 10</p></div>
@@ -18,15 +16,16 @@ description: "An example of a custom skill which adds an event to the calendar."
     </div>
     <div class="chat-message assistant-message">
         <div class="sender-column">Sidekick:</div>
-        <div class="content-column"><p>I've scheduled the Team Meeting for October 15th at 10:00 am. Can help with anything else?</p></div>
+        <div class="content-column"><p>I've scheduled the Team Meeting for October 15th at 10:00 am. Can I help with anything else?</p></div>
     </div>
 </div>
-
-## Sample Code
 
 ```php
 /**
  * Adds an event to the calendar.
+ * 
+ * Write detailed instructions for the AI to learn
+ * how to add an event to the calendar.
  *
  * @param string $event Description of the event.
  * @param string $datetime Datetime of the event.
@@ -35,7 +34,7 @@ description: "An example of a custom skill which adds an event to the calendar."
 public static function addCalendarEvent(string $event, string $datetime): SkillResponse
 {
     /**
-     * Your custom implementation for adding an event to the calendar.
+     * Write your custom implementation for adding an event to the calendar.
      * 
      * For example, create a new entry in the 'events' section
      * with the provided details.
@@ -58,3 +57,6 @@ public static function addCalendarEvent(string $event, string $datetime): SkillR
     ]);
 }
 ```
+
+## How to Add Skills
+The snippet above is just an example (obviously). See the [`AddSkillsEvent`](/customize/add-skills) for more detailed instructions.
