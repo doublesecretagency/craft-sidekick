@@ -66,7 +66,8 @@ class ChatController extends Controller
         $this->requireAcceptsJson();
 
         // Get the selected AI model from the session
-        $selectedModel = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+//        $selectedModel = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+        $selectedModel = AiModel::DEFAULT; // TEMP: Lock to default model
 
         // Return the selected AI model
         return $this->asJson([
@@ -87,7 +88,8 @@ class ChatController extends Controller
         $this->requirePostRequest();
 
         // Get the selected AI model from the request
-        $selectedModel = Craft::$app->getRequest()->getBodyParam('selectedModel', AiModel::DEFAULT);
+//        $selectedModel = Craft::$app->getRequest()->getBodyParam('selectedModel', AiModel::DEFAULT);
+        $selectedModel = AiModel::DEFAULT; // TEMP: Lock to default model
 
         // Set the selected AI model in the session
         Craft::$app->getSession()->set(Session::AI_MODEL, $selectedModel);

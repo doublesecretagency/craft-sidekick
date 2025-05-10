@@ -242,7 +242,8 @@ CONTENT;
             }
 
             // Get the selected AI model from the session
-            $model = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+//            $model = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+            $model = AiModel::DEFAULT; // TEMP: Lock to default model
 
             // Create a new assistant
             $assistant = $this->_openAiClient->assistants()->create([

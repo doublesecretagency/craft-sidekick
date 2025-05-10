@@ -53,18 +53,20 @@ The chat window displays different types of messages, each color-coded for clari
 
 ## Clearing the Conversation
 
-When you want to start a new topic, use the **Clear Conversation** button to reset the chat.
+<img class="dropshadow" src="/images/chat-window/chat-window-buttons.png" alt="Screenshot of buttons above the Chat Window" style="max-width:196px; margin-top:20px; margin-bottom:20px;">
 
-- Removes the current conversation history.
-- Starts a new session with the assistant.
-- Applies the new GPT model (if it has been switched).
+Clicking the "Clear Conversation" button will **erase the current conversation** and **start a fresh chat**. This is useful when you want to change the subject, or just feel like you need to start over.
 
-<img class="dropshadow" src="/images/chat-window/chat-window-buttons.png" alt="Screenshot of buttons above the Chat Window" style="max-width:314px; margin-top:22px;">
+It's an excellent first step when troubleshooting an issue. Sometimes you have to "turn it off and back on again", and this is how it's done in Sidekick.
 
-## Switching GPT Models
+[//]: # (## Switching GPT Models)
 
-To switch between models, simply click the model button and select your preferred GPT model.
+[//]: # ()
+[//]: # (To switch between models, simply click the model button and select your preferred GPT model.)
 
-:::warning You must "Clear Conversation" to apply the new model
-The new model will not take effect until you clear the conversation.
-:::
+[//]: # ()
+[//]: # (:::warning You must "Clear Conversation" to apply the new model)
+
+[//]: # (The new model will not take effect until you clear the conversation.)
+
+[//]: # (:::)

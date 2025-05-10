@@ -7,6 +7,7 @@
 
 ### Changed
 - Improved field management skills.
+- Locked chat window to the `GPT-4o` model for now.
 
 ### Fixed
 - Fixed bug preventing Utility view from showing skills list.

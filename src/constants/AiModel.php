@@ -26,11 +26,11 @@ class AiModel
      * @const
      */
     public const AVAILABLE = [
-        'gpt-4.5-preview' => 'GPT-4.5 preview',
+//        'gpt-4.5-preview' => 'GPT-4.5 preview',
         'gpt-4o'          => 'GPT-4o',
-        'gpt-4o-mini'     => 'GPT-4o mini',
-        'gpt-4'           => 'GPT-4',
-        'gpt-4-turbo'     => 'GPT-4 Turbo',
-        'gpt-3.5-turbo'   => 'GPT-3.5 Turbo',
+//        'gpt-4o-mini'     => 'GPT-4o mini',
+//        'gpt-4'           => 'GPT-4',
+//        'gpt-4-turbo'     => 'GPT-4 Turbo',
+//        'gpt-3.5-turbo'   => 'GPT-3.5 Turbo',
     ];
 }

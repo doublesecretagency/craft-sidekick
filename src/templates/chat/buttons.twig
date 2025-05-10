@@ -23,12 +23,12 @@
 <div id="button-set">
     {% if (settings.openAiApiKey ?? false) %}
         <div class="btngroup">
-            <select id="ai-model-select" class="btn">
-                {% for option in sidekickChat.aiModelOptions %}
-                    {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}
-                    <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>
-                {% endfor %}
-            </select>
+{#            <select id="ai-model-select" class="btn">#}
+{#                {% for option in sidekickChat.aiModelOptions %}#}
+{#                    {% set selected = (option.value == sidekickChat.aiModelSelected ? 'selected' : '') %}#}
+{#                    <option value="{{ option.value }}" {{ selected }}>{{ option.label }}</option>#}
+{#                {% endfor %}#}
+{#            </select>#}
             <button type="button" id="clear-conversation-button" class="btn secondary">Clear Conversation</button>
         </div>
     {% endif %}

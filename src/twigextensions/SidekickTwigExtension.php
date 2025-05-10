@@ -29,7 +29,8 @@ class SidekickTwigExtension extends AbstractExtension implements GlobalsInterfac
     public function getGlobals(): array
     {
         // Get the selected AI model from the session
-        $selectedModel = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+//        $selectedModel = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
+        $selectedModel = AiModel::DEFAULT; // TEMP: Lock to default model
 
         // Return global variables
         return [
