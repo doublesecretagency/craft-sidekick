@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.9 - 2025-05-09
 
 ### Added
 - Added ability to provide [custom prompts](https://plugins.doublesecretagency.com/sidekick/customize/add-prompts) via the `AddPromptsEvent`.
