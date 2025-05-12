@@ -14,7 +14,7 @@ Sidekick is a fully-integrated AI companion for editing and updating Craft CMS. 
     <img src="https://plugins.doublesecretagency.com/sidekick/images/chat-window/chat-window-example.png" alt="Example of the Chat Window in use" width="737">
 </p>
 
-### Chat Window
+### AI Chat Window
 
 You can talk to Sidekick via the [chat window](https://plugins.doublesecretagency.com/sidekick/chat/how-it-works), using plain language requests to manage code and content. Sidekick boasts a healthy set of [native skills](https://plugins.doublesecretagency.com/sidekick/chat/native-skills), and you can easily add your own [custom skills](https://plugins.doublesecretagency.com/sidekick/chat/custom-skills) with a module or separate plugin.
 
@@ -38,7 +38,7 @@ See the official docs for instructions on [installing the plugin...](https://plu
 
 ## AI Providers
 
-Sidekick currently supports [Open AI](https://openai.com), with planned support for both [Claude](https://github.com/doublesecretagency/craft-sidekick/issues/1) and [Gemini](https://github.com/doublesecretagency/craft-sidekick/issues/2) in the future.
+Sidekick currently supports [OpenAI](https://openai.com), with planned support for both [Claude](https://github.com/doublesecretagency/craft-sidekick/issues/1) and [Gemini](https://github.com/doublesecretagency/craft-sidekick/issues/2) in the future.
 
 ---
 
