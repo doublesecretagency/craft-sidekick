@@ -7,7 +7,7 @@ description: "One of Sidekick's most powerful features is the ability to extend 
 
 One of Sidekick's most powerful features is the ability to extend chat functionality via [custom skills](/chat/custom-skills).
 
-Here's a complete guide to adding your own custom skills to Sidekick...
+Here's a complete guide for adding your own custom skills to Sidekick...
 
 ## Listen to the Event
 

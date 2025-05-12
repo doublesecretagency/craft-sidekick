@@ -1,5 +1,5 @@
 ---
-title: "Add Skills | Sidekick plugin for Craft CMS"
+title: "Add Prompts | Sidekick plugin for Craft CMS"
 description: "To adjust how Sidekick interacts with users, or provide complex directives on a given subject, you can apply custom prompts to guide the AI."
 ---
 
@@ -7,7 +7,7 @@ description: "To adjust how Sidekick interacts with users, or provide complex di
 
 To adjust how Sidekick interacts with users, or provide complex directives on a given subject, you can apply custom prompts to guide the AI.
 
-Here's a complete guide to adding your own custom prompts to Sidekick...
+Here's a complete guide for adding your own custom prompts to Sidekick...
 
 ## Listen to the Event
 
@@ -41,7 +41,7 @@ Add each new prompt file to the existing `$event->prompts` array. You can add as
 You can technically use any text-based file to provide prompts, but Markdown files are preferred.
 :::
 
-## Define the new Prompts
+## Write the new Prompts
 
 Create a Markdown file for each of the prompts you want to add, loading them via the `AddPromptsEvent` shown above.
 
@@ -52,15 +52,19 @@ Within the context of your prompt file, you can give the AI any instructions tha
 ```markdown
 # My Custom Prompt
 
-This is a custom prompt that will be loaded into the AI. It can give the AI any additional instructions it might need.
+This is a custom prompt that will be loaded into the AI.
+It can give the AI any additional instructions it might need.
 
-Within this file, you can specify:
+Within this file, you can specify things like:
+
 - The AI's personality
 - How to handle certain situations
 - How to respond to certain types of questions
 - How to understand certain architectural patterns
+- And more!
 
 This file can be as elaborate as you need it to be.
 
-If you have a lot of custom instructions, you can even break them up into multiple files and load them all via the `AddPromptsEvent` above.
+If you have a lot of custom instructions, you can even break them up
+into multiple files and load them all via the `AddPromptsEvent` (shown above).
 ```

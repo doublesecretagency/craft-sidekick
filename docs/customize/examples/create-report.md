@@ -60,4 +60,5 @@ public static function createReport(string $person, string $topic, string $timef
 ```
 
 ## How to Add Skills
+
 The snippet above is just an example (obviously). See the [`AddSkillsEvent`](/customize/add-skills) for more detailed instructions.

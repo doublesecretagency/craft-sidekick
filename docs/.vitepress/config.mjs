@@ -25,6 +25,7 @@ export default defineConfig({
               {text: 'How It Works', link: '/chat/how-it-works'},
               {text: 'Native Skills', link: '/chat/native-skills'},
               {text: 'Custom Skills', link: '/chat/custom-skills'},
+              {text: 'Custom Prompts', link: '/chat/custom-prompts'},
             ]
           }
         ]
@@ -82,6 +83,7 @@ export default defineConfig({
             {text: 'How It Works', link: '/chat/how-it-works'},
             {text: 'Native Skills', link: '/chat/native-skills'},
             {text: 'Custom Skills', link: '/chat/custom-skills'},
+            {text: 'Custom Prompts', link: '/chat/custom-prompts'},
           ]
         }
       ],
@@ -91,14 +93,22 @@ export default defineConfig({
         {
           text: 'Customize',
           items: [
-            {text: 'Add Prompts', link: '/customize/add-prompts'},
+            {
+              text: 'Add Prompts',
+              link: '/customize/add-prompts',
+              items: [
+                {text: 'eg: Attitude Adjustment', link: '/customize/examples/attitude-adjustment'},
+                {text: 'eg: Describe a Process', link: '/customize/examples/describe-a-process'},
+                {text: 'eg: Explain Architecture', link: '/customize/examples/explain-architecture'},
+              ]
+            },
             {
               text: 'Add Skills',
               link: '/customize/add-skills',
               items: [
-                {text: 'Example: Send An Email', link: '/customize/examples/send-an-email'},
-                {text: 'Example: Create a Report', link: '/customize/examples/create-report'},
-                {text: 'Example: Add To Calendar', link: '/customize/examples/add-to-calendar'}
+                {text: 'eg: Send An Email', link: '/customize/examples/send-an-email'},
+                {text: 'eg: Create a Report', link: '/customize/examples/create-report'},
+                {text: 'eg: Add To Calendar', link: '/customize/examples/add-to-calendar'}
               ]
             },
           ]

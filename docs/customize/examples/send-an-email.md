@@ -60,4 +60,5 @@ public static function sendEmailMessage(string $user, string $subject, string $b
 ```
 
 ## How to Add Skills
+
 The snippet above is just an example (obviously). See the [`AddSkillsEvent`](/customize/add-skills) for more detailed instructions.

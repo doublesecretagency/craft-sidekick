@@ -59,4 +59,5 @@ public static function addCalendarEvent(string $event, string $datetime): SkillR
 ```
 
 ## How to Add Skills
+
 The snippet above is just an example (obviously). See the [`AddSkillsEvent`](/customize/add-skills) for more detailed instructions.
