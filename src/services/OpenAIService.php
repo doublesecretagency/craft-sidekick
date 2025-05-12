@@ -370,6 +370,12 @@ CONTENT;
 
             // Log and throw the error
             $error = $e->getMessage();
+
+            // If trying to add a new message to an active thread
+            if (str_contains($error, "Can't add messages to thread")) {
+                $error = 'We encountered some turbulence. You may need to clear the conversation and start over.';
+            }
+
             Craft::error($error, __METHOD__);
             throw new Exception($error);
 
@@ -490,11 +496,6 @@ CONTENT;
             if (str_contains($message, 'Unable to read from stream')) {
                 $message = 'Sorry, something has timed out. You may need to clear the conversation and start over.';
             }
-
-//            // If message contains "active thread"
-//            if (str_contains($message, 'active thread')) {
-//                $message = 'We encountered some turbulence. You may need to clear the conversation and start over.';
-//            }
 
             // Compile error message
             $error = new ChatMessage([

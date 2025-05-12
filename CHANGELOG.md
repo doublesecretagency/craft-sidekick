@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Improved a critical error message.
+
 ## 0.9.9 - 2025-05-09
 
 ### Added
