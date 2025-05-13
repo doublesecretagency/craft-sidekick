@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Released from beta!
+
 ### Changed
 - Improved a critical error message.
 
