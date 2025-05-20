@@ -47,7 +47,7 @@ export default defineConfig({
           {
             items: [
               {text: '"AI Summary" Field Type', link: '/fields/ai-summary'},
-              {text: 'Troubleshooting', link: '/troubleshooting/'},
+              {text: 'Troubleshooting Tips', link: '/troubleshooting/'},
               {text: 'Disclaimers', link: '/disclaimers/'},
             ]
           }

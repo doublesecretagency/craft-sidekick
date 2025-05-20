@@ -7,6 +7,7 @@
 
 ### Changed
 - Removed unused requirements.
+- Improved field management skills.
 
 ### Fixed
 - Fixed bug which occurred when updating site config.

@@ -1,16 +1,18 @@
-# Troubleshooting
+# Troubleshooting Tips
 
-If you see Sidekick spit out a red "Error" message, don't panic!
+## Don't panic!
 
-Sidekick will review the error message (including a hidden stack trace) to try to get a better sense of what went wrong. If possible, it will automatically make adjustments and try again.
+It's perfectly natural for Sidekick to experience a few missteps along the way. If you see a red "Error" message, don't worry! Sidekick will review the error message (including a hidden stack trace) to try to get a better sense of what went wrong. If possible, it will automatically make adjustments and try again.
+
+## Ask for more information
+
+When reading an error, you can ask Sidekick for additional details. For example, you can say _"show me the stack trace for that error"_ to get a better sense of where the problem is originating from.
+
+If Sidekick failed to add or update something, you can ask _"what JSON config did you use?"_ to see the exact data it tried to save.
 
 ## "Clear Conversation" often helps
 
 Sometimes you need to "turn it off and back on again", which for Sidekick means to **clear the conversation**. If you repeatedly encounter strange errors, try clearing the chat window to get a fresh start.
-
-:::tip "Clear Conversation" to update the model
-When switching between models, you must clear the conversation and start fresh.
-:::
 
 ## Slow down, break requests into smaller pieces
 

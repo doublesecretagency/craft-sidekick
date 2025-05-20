@@ -80,3 +80,7 @@ You must be 100% confident that you are using the valid `fieldUid` values. If yo
 **WARNING:** If you have recently created a new field, the UID you generated **may have been overwritten when the new field was saved by the system.
 
 **Please double-check the current UID of every field you intend to add to the field layout!**
+
+## After Creating or Updating a Field Layout
+
+Once you have created or updated the field layout, **retrieve the same field layout again** to ensure it has all the intended fields. If you have added a new field, make sure it now appears correctly in the layout.

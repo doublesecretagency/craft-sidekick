@@ -336,6 +336,7 @@ class Sidekick extends Plugin
             'tool-functions.md',
             'twig-templates.md',
             'chat-messages.md',
+            'saving-fields.md',
             'saving-sections.md',
             'field-layouts.md',
             'element-configs.md',
