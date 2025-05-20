@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added script to generate GitHub releases.
+
 ### Changed
 - Removed unused requirements.
 
