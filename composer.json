@@ -11,7 +11,6 @@
         "ai",
         "chatgpt",
         "openai",
-        "alt-text",
         "code-generation",
         "dummy-data"
     ],
@@ -29,9 +28,7 @@
     "require": {
         "craftcms/cms": "^4.0|^5.0",
         "openai-php/client": "^0.10",
-        "phpdocumentor/reflection-docblock": "^5.4",
-        "symfony/css-selector": "^6.0",
-        "symfony/dom-crawler": "^6.0"
+        "phpdocumentor/reflection-docblock": "^5.4"
     },
     "autoload": {
         "psr-4": {

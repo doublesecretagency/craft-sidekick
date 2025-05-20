@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Removed unused requirements.
+
 ## 1.0.0 - 2025-05-12
 
 ### Added
