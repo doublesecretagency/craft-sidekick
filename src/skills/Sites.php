@@ -191,17 +191,13 @@ class Sites extends BaseSkillSet
             }
 
             // Update the site with the new configuration
+            $site->groupId = ($config['groupId'] ?? $site->groupId);
             $site->name = ($config['name'] ?? $site->name);
             $site->handle = ($config['handle'] ?? $site->handle);
-            $site->type = ($config['type'] ?? $site->type);
-//            $site->siteSettings = ($config['siteSettings'] ?? $site->siteSettings);
-//            $site->hasUrls = ($config['hasUrls'] ?? $site->hasUrls);
-//            $site->uriFormat = ($config['uriFormat'] ?? $site->uriFormat);
-//            $site->template = ($config['template'] ?? $site->template);
-//            $site->maxLevels = ($config['maxLevels'] ?? $site->maxLevels);
-//            $site->structureId = ($config['structureId'] ?? $site->structureId);
-//            $site->propagationMethod = ($config['propagationMethod'] ?? $site->propagationMethod);
-//            $site->propagationKeyFormat = ($config['propagationKeyFormat'] ?? $site->propagationKeyFormat);
+            $site->language = ($config['language'] ?? $site->language);
+            $site->primary = ($config['primary'] ?? $site->primary);
+            $site->baseUrl = ($config['baseUrl'] ?? $site->baseUrl);
+            $site->enabled = ($config['enabled'] ?? $site->enabled);
 
             // If unable to save the site, return an error response
             if (!Craft::$app->getSites()->saveSite($site)) {

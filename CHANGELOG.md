@@ -8,6 +8,9 @@
 ### Changed
 - Removed unused requirements.
 
+### Fixed
+- Fixed bug which occurred when updating site config.
+
 ## 1.0.0 - 2025-05-12
 
 ### Added
