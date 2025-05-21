@@ -35,11 +35,13 @@ class Templates extends BaseSkillSet
 
         // Methods unavailable when `allowAdminChanges` is false
         if (!$config->allowAdminChanges) {
-            $restrictedMethods[] = 'createFile';
-            $restrictedMethods[] = 'updateFile';
-            $restrictedMethods[] = 'deleteFile';
-            $restrictedMethods[] = 'createDirectory';
-            $restrictedMethods[] = 'deleteDirectory';
+            $restrictedMethods[] = 'getTemplatesFolderStructure';
+            $restrictedMethods[] = 'readTemplateFile';
+            $restrictedMethods[] = 'createTemplateFile';
+            $restrictedMethods[] = 'updateTemplateFile';
+            $restrictedMethods[] = 'deleteTemplateFile';
+            $restrictedMethods[] = 'createTemplateDirectory';
+            $restrictedMethods[] = 'deleteTemplateDirectory';
         }
 
         // Return list of restricted methods

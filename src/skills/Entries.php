@@ -31,7 +31,7 @@ class Entries extends BaseSkillSet
      * @param string $sectionHandle Optional handle of the section to filter by. Set to empty string to get all entries.
      * @return SkillResponse
      */
-    public static function getEntriesInfo(string $sectionHandle): SkillResponse
+    public static function getEntriesOverview(string $sectionHandle): SkillResponse
     {
         // Initialize the query
         $query = Entry::find()->select(['id', 'title', 'slug']);

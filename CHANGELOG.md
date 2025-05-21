@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug to prevent templates from being editable in production.
+
 ## 1.0.1 - 2025-05-21
 
 ### Added

@@ -57,7 +57,7 @@ class Categories extends BaseSkillSet
      * @param string $groupHandle Optional handle of the group to filter by. Set to empty string to get all categories.
      * @return SkillResponse
      */
-    public static function getCategoriesInfo(string $groupHandle): SkillResponse
+    public static function getCategoriesOverview(string $groupHandle): SkillResponse
     {
         // Initialize the query
         $query = Category::find()->select(['id', 'title', 'slug']);
