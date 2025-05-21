@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 - 2025-05-21
 
 ### Added
 - Added category management skills.
