@@ -35,6 +35,7 @@ use doublesecretagency\sidekick\models\Settings;
 use doublesecretagency\sidekick\services\ChatService;
 use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\SseService;
+use doublesecretagency\sidekick\skills\Categories;
 use doublesecretagency\sidekick\skills\Entries;
 use doublesecretagency\sidekick\skills\Fields;
 use doublesecretagency\sidekick\skills\Sections;
@@ -338,6 +339,7 @@ class Sidekick extends Plugin
             'chat-messages.md',
             'saving-fields.md',
             'saving-sections.md',
+            'saving-category-groups.md',
             'field-layouts.md',
             'element-configs.md',
             'generating-uids.md',
@@ -394,6 +396,7 @@ class Sidekick extends Plugin
         $this->_skills = [
             Templates::class,
             Entries::class,
+            Categories::class,
             Fields::class,
             Sections::class,
             Sites::class,

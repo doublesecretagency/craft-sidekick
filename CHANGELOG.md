@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added category management skills.
 - Added script to generate GitHub releases.
 
 ### Changed
@@ -10,7 +11,7 @@
 - Improved field management skills.
 
 ### Fixed
-- Fixed bug which occurred when updating site config.
+- Fixed bug which occurred when updating a site config.
 
 ## 1.0.0 - 2025-05-12
 
