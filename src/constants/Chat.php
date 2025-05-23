@@ -20,15 +20,15 @@ class Chat
      * @const
      */
     public const GREETING_OPTIONS = [
-        // "Click the icon"
-        "Click the icon above to see everything Sidekick can do for your site.",
-        "Click the icon above to see everything Sidekick can do for your site.",
-        "Hey there, I'm Sidekick. Click the icon above to explore my full skill set.",
-        "Hey there, I'm Sidekick. Click the icon above to explore my full skill set.",
-        "Hi, I'm Sidekick. Click the icon above to see how I can assist you.",
-        "Hi, I'm Sidekick. Click the icon above to see how I can assist you.",
-        "Click the icon above to see how Sidekick can help you manage Craft.",
-        "Click the icon above to see how Sidekick can help you manage Craft.",
+        // Available Skills
+        "Click the \"Available Skills\" button to see everything Sidekick can do.",
+        "Click the \"Available Skills\" button to see everything Sidekick can do.",
+        "Hey there, I'm Sidekick. Click the \"Available Skills\" button to explore my full skill set.",
+        "Hey there, I'm Sidekick. Click the \"Available Skills\" button to explore my full skill set.",
+        "Hi, I'm Sidekick. Click the \"Available Skills\" button to see how I can help.",
+        "Hi, I'm Sidekick. Click the \"Available Skills\" button to see how I can help.",
+        "Click the \"Available Skills\" button to see how Sidekick can help manage Craft.",
+        "Click the \"Available Skills\" button to see how Sidekick can help manage Craft.",
         // General greeting
         "Bonjour! Sidekick here, ready to help with your Craft tasks.",
         "Ciao! I'm Sidekick, your assistant for managing Craft.",
@@ -51,6 +51,5 @@ class Chat
         "Good day! I'm Sidekick, how can I streamline your Craft development today?",
         "Salutations! Sidekick here, your partner in managing Craft efficiently.",
         "Namaste. I'm Sidekick, ready to support your Craft projects."
-
     ];
 }

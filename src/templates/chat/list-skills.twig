@@ -4,15 +4,19 @@
             <h1>What can Sidekick do?</h1>
             <p>Here's a complete list of every skill (aka tool function) Sidekick has access to...</p>
             {% for group, skills in (skillSets ?? []) %}
-                <h2>{{ group }}</h2>
-                {% for skill in skills %}
-                    <details>
-                        <summary><h3 title="{{ skill.fullPath }}">{{ skill.name }}</h3></summary>
-                        <div class="description">
-                            {{ skill.description|nl2br|raw }}
-                        </div>
-                    </details>
-                {% endfor %}
+                <details class="outer">
+                    <summary><h2>{{ group }}</h2></summary>
+                    <div>
+                        {% for skill in skills %}
+                            <details class="inner">
+                                <summary><h3 title="{{ skill.fullPath }}">{{ skill.name }}</h3></summary>
+                                <div class="description">
+                                    {{ skill.description|nl2br|raw }}
+                                </div>
+                            </details>
+                        {% endfor %}
+                    </div>
+                </details>
             {% endfor %}
         </section>
     </div>
@@ -38,52 +42,71 @@
     margin-bottom: 0;
 }
 .sidekick-menu h2 {
-    margin: 7px 0 8px;
-    border-top: 1px solid rgba(18, 127, 191, 0.15);
-    padding-top: 14px;
+    flex: auto;
 }
 
-details {
-    padding: 2px 10px 3px 12px;
-    margin-bottom: 1px;
-    border: 1px solid #fff;
-    border-radius: 4px;
-}
-details[open] {
-    background-color: rgba(255, 190, 10, 0.15);
-    border-color: rgba(255, 190, 10, 0.37);
-}
-
-/* Hide the native marker */
-details summary::-webkit-details-marker {
-    display: none;
-}
-details summary::marker { /* for Firefox */
-    content: none;
-}
-
-/* Summary */
-details summary {
+/**
+ * BOTH DETAILS
+ */
+details > summary {
     cursor: pointer;
     display: flex;
     align-items: center;
     padding: 0.25em 0;
 }
-
+/* Hide the native marker */
+details > summary::-webkit-details-marker {
+    display: none;
+}
+details > summary::marker { /* for Firefox */
+    content: none;
+}
 /* Use a chevron */
-details summary::before {
+details > summary::before {
     content: '❯';
     display: inline-block;
+    margin-left: 13px;
     margin-right: 9px;
     transition: transform 0.2s ease;
 }
-
 /* Rotate when details is open */
-details[open] summary::before {
+details[open] > summary::before {
     transform: rotate(90deg);
 }
 
-details .description {
-    padding: 2px 6px 5px 16px;
+/**
+ * OUTER DETAILS
+ */
+details.outer {
+    margin-top: 4px;
+    /*padding-top: 4px;*/
+    /*border-top: 1px solid rgba(18, 127, 191, 0.15);*/
+}
+details.outer > summary {
+    padding-top: 9px;
+    padding-bottom: 9px;
+    border: 1px solid #fff;
+    border-radius: 2px;
+}
+details.outer[open] > summary {
+    background-color: rgba(18, 127, 191, 0.05);
+    border-color: rgba(18, 127, 191, 0.15);
+}
+
+/**
+ * INNER DETAILS
+ */
+details.inner {
+    padding: 2px 10px 3px 12px;
+    margin-top: 1px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+}
+details.inner[open] {
+    background-color: rgba(255, 190, 10, 0.15);
+    border-color: rgba(255, 190, 10, 0.37);
+}
+details.inner > .description {
+    padding: 2px 6px 5px 29px;
 }
 {% endcss %}

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Nested details in skills slideout.
+
 ### Fixed
 - Fixed bug to prevent templates from being editable in production.
 
