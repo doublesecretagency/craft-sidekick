@@ -326,7 +326,7 @@ class Categories extends BaseSkillSet
                 $errors = implode(', ', $categoryGroup->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Invalid site configuration: {$errors}",
+                    'message' => "Invalid category group configuration: {$errors}",
                 ]);
             }
 

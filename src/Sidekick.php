@@ -40,6 +40,7 @@ use doublesecretagency\sidekick\skills\Entries;
 use doublesecretagency\sidekick\skills\Fields;
 use doublesecretagency\sidekick\skills\Sections;
 use doublesecretagency\sidekick\skills\Sites;
+use doublesecretagency\sidekick\skills\Tags;
 use doublesecretagency\sidekick\skills\Templates;
 use doublesecretagency\sidekick\twigextensions\SidekickTwigExtension;
 use doublesecretagency\sidekick\utilities\ChatWindowUtility;
@@ -397,6 +398,7 @@ class Sidekick extends Plugin
             Templates::class,
             Entries::class,
             Categories::class,
+            Tags::class,
             Fields::class,
             Sections::class,
             Sites::class,

@@ -18,7 +18,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 /**
- * @category Templates
+ * @category Twig Templates
  */
 class Templates extends BaseSkillSet
 {

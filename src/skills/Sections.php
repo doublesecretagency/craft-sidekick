@@ -163,7 +163,7 @@ class Sections extends BaseSkillSet
                 $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
-                    'message' => "Invalid site configuration: {$errors}",
+                    'message' => "Invalid section configuration: {$errors}",
                 ]);
             }
 

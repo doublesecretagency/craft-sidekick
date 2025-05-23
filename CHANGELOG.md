@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added tag management skills.
+
 ### Changed
 - Nested details in skills slideout.
 
