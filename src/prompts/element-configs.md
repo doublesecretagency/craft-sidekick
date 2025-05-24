@@ -20,8 +20,6 @@ This is a standard example of an element config:
 {
   // Attributes are core to each element
   "attributes": {
-    "sectionId": 1,
-    "typeId": 1,
     "title": "An Example Entry",
     "slug": "an-example-entry"
   },
@@ -29,6 +27,47 @@ This is a standard example of an element config:
   "fields": {
     "myField": "Content for my field",
     "anotherField": "Content for another field"
+  }
+}
+```
+
+## Additional `attributes`
+
+The `attributes` object shown above includes standard properties.
+
+The `attributes` object can also include additional properties based on the element type. For example, an entry might include properties like `authorId`, `postDate`, and `expiryDate`.
+
+### Entry
+
+```json
+{
+  "attributes": {
+    "sectionId": 1,
+    "typeId": 1,
+    "authorId": 2,
+    "postDate": "2023-10-01T12:00:00Z",
+    "expiryDate": null
+  }
+}
+```
+
+### User
+
+```json
+{
+  "attributes": {
+    "username": "exampleUser",
+    "email": "example@example.com"
+  }
+}
+```
+
+### Category / Tag
+
+```json
+{
+  "attributes": {
+    "groupId": 1 // Only when the category/tag is created, not when it is updated
   }
 }
 ```
