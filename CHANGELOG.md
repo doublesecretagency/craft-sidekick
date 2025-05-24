@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.2 - 2025-05-24
 
 ### Added
 - Added tag management skills.
