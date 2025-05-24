@@ -16,6 +16,7 @@ use craft\base\FieldInterface;
 use craft\helpers\Json;
 use craft\models\FieldGroup;
 use craft\models\FieldLayout;
+use doublesecretagency\sidekick\helpers\FieldLayoutHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
@@ -507,10 +508,13 @@ class Fields extends BaseSkillSet
             ]);
         }
 
+        // Get a description of the field layout
+        $layoutDescription = FieldLayoutHelper::getDescription($fieldLayoutId);
+
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Reviewed field layout {$fieldLayoutId}.",
+            'message' => "Reviewed field layout {$layoutDescription}.",
             'response' => Json::encode($layout->getConfig())
         ]);
     }
@@ -561,10 +565,13 @@ class Fields extends BaseSkillSet
 
         }
 
+        // Get a description of the field layout
+        $layoutDescription = FieldLayoutHelper::getDescription($layout->id);
+
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field layout has been created with ID {$layout->id}.",
+            'message' => "Created field layout {$layoutDescription}.",
 //            'response' => $config,
         ]);
     }
@@ -632,10 +639,13 @@ class Fields extends BaseSkillSet
 
         }
 
+        // Get a description of the field layout
+        $layoutDescription = FieldLayoutHelper::getDescription($layout->id);
+
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Updated field layout {$layout->id}.",
+            'message' => "Updated field layout {$layoutDescription}.",
 //            'response' => $config,
         ]);
     }

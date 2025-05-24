@@ -284,6 +284,7 @@ class Categories extends BaseSkillSet
                 'ID' => $categoryGroup->id,
                 'Name' => $categoryGroup->name,
                 'Handle' => $categoryGroup->handle,
+                'Field Layout ID' => $categoryGroup->getFieldLayout(),
             ];
 
         }

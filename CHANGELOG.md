@@ -7,6 +7,7 @@
 
 ### Changed
 - Nested details in skills slideout.
+- Improved field layout descriptions.
 
 ### Fixed
 - Fixed bug to prevent templates from being editable in production.
