@@ -32,7 +32,7 @@ class Entries extends BaseSkillSet
      * @param string $sectionHandle Optional handle of the section to filter by. Set to empty string to get all entries.
      * @return SkillResponse
      */
-    public static function getEntriesOverview(string $sectionHandle): SkillResponse
+    public static function getAllEntries(string $sectionHandle): SkillResponse
     {
         // Initialize the query
         $query = Entry::find()->select(['id', 'title', 'slug']);
@@ -110,7 +110,7 @@ class Entries extends BaseSkillSet
     /**
      * Create a new entry.
      *
-     * If you do not have a clear understanding of which sections exist, call the `getSections` skill first.
+     * If you do not have a clear understanding of which sections exist, call the `getAllSections` skill first.
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse

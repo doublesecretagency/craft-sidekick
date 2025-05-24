@@ -51,7 +51,7 @@ class Fields extends BaseSkillSet
 
         // Methods unavailable after Craft 4
         if (!VersionHelper::craftBetween('4.0.0', '5.0.0')) {
-            $restrictedMethods[] = 'getAvailableFieldGroups';
+            $restrictedMethods[] = 'getAllFieldGroups';
             $restrictedMethods[] = 'createFieldGroup';
             $restrictedMethods[] = 'deleteFieldGroup';
         }
@@ -72,7 +72,7 @@ class Fields extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getAllExistingFields(): SkillResponse
+    public static function getAllFields(): SkillResponse
     {
         // Fetch all fields
         $allFields = Craft::$app->getFields()->getAllFields();
@@ -80,7 +80,7 @@ class Fields extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Reviewed the existing fields.",
+            'message' => "Reviewed all existing fields.",
             'response' => Json::encode($allFields)
         ]);
     }
@@ -120,10 +120,10 @@ class Fields extends BaseSkillSet
      * Create a new field.
      *
      * Ensure you understand which field types are available before creating a new field.
-     * It's recommended to call `getAvailableFieldTypes` first, if you haven't already.
+     * It's recommended to call `getAllFieldTypes` first, if you haven't already.
      *
      * Craft 4 only: Must specify a `group` or `groupId` in the configuration.
-     * Call `getAvailableFieldGroups` to get a list of available field groups in Craft 4.
+     * Call `getAllFieldGroups` to get a list of available field groups in Craft 4.
      *
      * @param string $fieldType Type of the field (from list of available field types). If not specified, ask for clarification.
      * @param string $fieldConfig JSON-stringified configuration for the field.
@@ -306,7 +306,7 @@ class Fields extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getAvailableFieldGroups(): SkillResponse
+    public static function getAllFieldGroups(): SkillResponse
     {
         // Get all field groups
         $fieldGroups = Craft::$app->getFields()->getAllGroups();
@@ -369,7 +369,7 @@ class Fields extends BaseSkillSet
      *
      * ONLY AVAILABLE IN CRAFT 4.
      *
-     * If you do not have a clear understanding of which field groups exist, call the `getAvailableFieldGroups` skill first.
+     * If you do not have a clear understanding of which field groups exist, call the `getAllFieldGroups` skill first.
      *
      * @param string $groupId ID of the field group to be deleted.
      * @return SkillResponse
@@ -436,7 +436,7 @@ class Fields extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getAvailableFieldTypes(): SkillResponse
+    public static function getAllFieldTypes(): SkillResponse
     {
         // Get available field types
         $availableFieldTypes = Craft::$app->getFields()->getAllFieldTypes();
@@ -453,7 +453,7 @@ class Fields extends BaseSkillSet
      * Get the details of a particular field type.
      *
      * If you are considering creating a new field, you MUST call this tool first.
-     * You will typically run this tool AFTER the `getAvailableFieldTypes` tool.
+     * You will typically run this tool AFTER the `getAllFieldTypes` tool.
      *
      * @param string $fieldType The field type to get details for.
      * @return SkillResponse
@@ -490,7 +490,7 @@ class Fields extends BaseSkillSet
     /**
      * Get details of a specified field layout.
      *
-     * To identify custom fields, you SHOULD also call `getAvailableFieldTypes` (if you haven't already).
+     * To identify custom fields, you SHOULD also call `getAllFieldTypes` (if you haven't already).
      *
      * @param string $fieldLayoutId ID of the field layout to identify.
      * @return SkillResponse

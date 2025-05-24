@@ -58,7 +58,7 @@ class Sites extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getSites(): SkillResponse
+    public static function getAllSites(): SkillResponse
     {
         // Initialize sites
         $sites = [];
@@ -155,7 +155,7 @@ class Sites extends BaseSkillSet
      * Update an existing site with a new configuration.
      *
      * Make sure you understand the EXISTING site configuration before updating.
-     * If needed, you MUST call `getSites` to get the current configuration.
+     * If needed, you MUST call `getAllSites` to get the current configuration.
      *
      * For large updates, ask for confirmation before proceeding.
      *
@@ -286,11 +286,11 @@ class Sites extends BaseSkillSet
      * If you are unfamiliar with the existing site groups, you MUST call this tool before creating, reading, updating, or deleting site groups.
      * Eagerly call this if an understanding of the current site groups are required.
      *
-     * Feel free to also call `getSites` for more information about the sites in each group.
+     * Feel free to also call `getAllSites` for more information about the sites in each group.
      *
      * @return SkillResponse
      */
-    public static function getSiteGroups(): SkillResponse
+    public static function getAllSiteGroups(): SkillResponse
     {
         // Initialize site groups
         $groups = [];
@@ -367,7 +367,7 @@ class Sites extends BaseSkillSet
      * Update an existing site group with a new configuration.
      *
      * Make sure you understand the EXISTING site group configuration before updating.
-     * If needed, you MUST call `getSiteGroups` to get the current configuration.
+     * If needed, you MUST call `getAllSiteGroups` to get the current configuration.
      *
      * For large updates, ask for confirmation before proceeding.
      *

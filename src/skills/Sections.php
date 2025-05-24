@@ -71,7 +71,7 @@ class Sections extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getSections(): SkillResponse
+    public static function getAllSections(): SkillResponse
     {
         // Initialize sections
         $sections = [];
@@ -198,7 +198,7 @@ class Sections extends BaseSkillSet
      * Update an existing section with a new configuration.
      *
      * Make sure you understand the EXISTING section configuration before updating.
-     * If needed, you MUST call `getSections` to get the current configuration.
+     * If needed, you MUST call `getAllSections` to get the current configuration.
      *
      * For large updates, ask for confirmation before proceeding.
      *

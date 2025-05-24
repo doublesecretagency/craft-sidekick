@@ -57,7 +57,7 @@ class Tags extends BaseSkillSet
      * @param string $groupHandle Optional handle of the group to filter by. Set to empty string to get all tags.
      * @return SkillResponse
      */
-    public static function getTagsOverview(string $groupHandle): SkillResponse
+    public static function getAllTags(string $groupHandle): SkillResponse
     {
         // Initialize the query
         $query = Tag::find()->select(['id', 'title', 'slug']);
@@ -135,7 +135,7 @@ class Tags extends BaseSkillSet
     /**
      * Create a new tag.
      *
-     * If you do not have a clear understanding of which tag groups exist, call the `getTagGroups` skill first.
+     * If you do not have a clear understanding of which tag groups exist, call the `getAllTagGroups` skill first.
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
@@ -279,7 +279,7 @@ class Tags extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getTagGroups(): SkillResponse
+    public static function getAllTagGroups(): SkillResponse
     {
         // Initialize tag groups
         $tagGroups = [];
@@ -364,7 +364,7 @@ class Tags extends BaseSkillSet
      * Update an existing tag group with a new configuration.
      *
      * Make sure you understand the EXISTING tag group configuration before updating.
-     * If needed, you MUST call `getTagGroups` to get the current configuration.
+     * If needed, you MUST call `getAllTagGroups` to get the current configuration.
      *
      * For large updates, ask for confirmation before proceeding.
      *

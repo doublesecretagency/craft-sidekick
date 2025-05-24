@@ -58,7 +58,7 @@ class Categories extends BaseSkillSet
      * @param string $groupHandle Optional handle of the group to filter by. Set to empty string to get all categories.
      * @return SkillResponse
      */
-    public static function getCategoriesOverview(string $groupHandle): SkillResponse
+    public static function getAllCategories(string $groupHandle): SkillResponse
     {
         // Initialize the query
         $query = Category::find()->select(['id', 'title', 'slug']);
@@ -136,7 +136,7 @@ class Categories extends BaseSkillSet
     /**
      * Create a new category.
      *
-     * If you do not have a clear understanding of which category groups exist, call the `getCategoryGroups` skill first.
+     * If you do not have a clear understanding of which category groups exist, call the `getAllCategoryGroups` skill first.
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
@@ -280,7 +280,7 @@ class Categories extends BaseSkillSet
      *
      * @return SkillResponse
      */
-    public static function getCategoryGroups(): SkillResponse
+    public static function getAllCategoryGroups(): SkillResponse
     {
         // Initialize category groups
         $categoryGroups = [];
@@ -374,7 +374,7 @@ class Categories extends BaseSkillSet
      * Update an existing category group with a new configuration.
      *
      * Make sure you understand the EXISTING category group configuration before updating.
-     * If needed, you MUST call `getCategoryGroups` to get the current configuration.
+     * If needed, you MUST call `getAllCategoryGroups` to get the current configuration.
      *
      * For large updates, ask for confirmation before proceeding.
      *

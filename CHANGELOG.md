@@ -10,6 +10,7 @@
 - Improved field layout descriptions.
 - Improved retrieved elements descriptions.
 - Improved deleted elements descriptions.
+- Adjusted tool names.
 
 ### Fixed
 - Fixed bug to prevent templates from being editable in production.
