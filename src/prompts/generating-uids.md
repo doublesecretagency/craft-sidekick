@@ -1,6 +1,6 @@
 # How to Generate UUIDs (aka UIDs)
 
-UUIDs (Universally Unique Identifiers), also known as UIDs, are used to uniquely identify many objects within the Craft CMS system. Ensuring that they are used consistently is critical.
+UUIDs (Universally Unique Identifiers), also known as UIDs, are used to uniquely identify many objects within the Craft system. Ensuring that they are used consistently is critical.
 
 If an element (ie: field) is being assigned somewhere (ie: a field layout), it MUST use the correct UUID to properly identify itself.
 

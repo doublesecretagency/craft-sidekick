@@ -12,7 +12,7 @@ The attributes object contains the core properties of the element. These propert
 
 The fields object contains the custom fields defined via the field layout. Each field is represented as a key-value pair, where the key is the field's handle and the value is the content for that field.
 
-You MUST triple-check the JSON structure to ensure it is valid. Any errors in the JSON format can lead to issues when saving or loading the element. There is no room for error in the JSON structure, as it must adhere to the exact specifications required by Craft CMS.
+You MUST triple-check the JSON structure to ensure it is valid. Any errors in the JSON format can lead to issues when saving or loading the element. There is no room for error in the JSON structure, as it must adhere to the exact specifications required by Craft.
 
 This is a standard example of an element config:
 

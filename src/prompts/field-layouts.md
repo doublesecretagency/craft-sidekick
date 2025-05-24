@@ -8,7 +8,7 @@ Each tab can contain multiple elements, which are the fields that will be displa
 
 Each tab and element has a unique identifier (UUID). If a config is being saved for the first time, generate new UUIDs for the tabs and/or elements. If a config is being updated, ensure the UUIDs do not change from their original values. This is crucial for maintaining the integrity of the field layout, as Craft uses these identifiers to track the fields and their relationships.
 
-You MUST triple-check the JSON structure to ensure it is valid. Any errors in the JSON format can lead to issues when saving or loading the field layout. There is no room for error in the JSON structure, as it must adhere to the exact specifications required by Craft CMS.
+You MUST triple-check the JSON structure to ensure it is valid. Any errors in the JSON format can lead to issues when saving or loading the field layout. There is no room for error in the JSON structure, as it must adhere to the exact specifications required by Craft.
 
 This is a standard example of a field layout config:
 

@@ -21,14 +21,14 @@ class Chat
      */
     public const GREETING_OPTIONS = [
         // Available Skills
-        "Click the \"Available Skills\" button to see everything Sidekick can do.",
-        "Click the \"Available Skills\" button to see everything Sidekick can do.",
-        "Hey there, I'm Sidekick. Click the \"Available Skills\" button to explore my full skill set.",
-        "Hey there, I'm Sidekick. Click the \"Available Skills\" button to explore my full skill set.",
-        "Hi, I'm Sidekick. Click the \"Available Skills\" button to see how I can help.",
-        "Hi, I'm Sidekick. Click the \"Available Skills\" button to see how I can help.",
-        "Click the \"Available Skills\" button to see how Sidekick can help manage Craft.",
-        "Click the \"Available Skills\" button to see how Sidekick can help manage Craft.",
+        "Click the **Available Skills** button above to see everything Sidekick can do.",
+        "Click the **Available Skills** button above to see everything Sidekick can do.",
+        "Hey there, I'm Sidekick! Click the **Available Skills** button above to explore what's possible.",
+        "Hey there, I'm Sidekick! Click the **Available Skills** button above to explore what's possible.",
+        "Hi, I'm Sidekick. Click the **Available Skills** button above to see how I can help.",
+        "Hi, I'm Sidekick. Click the **Available Skills** button above to see how I can help.",
+        "Click the **Available Skills** button above to see how Sidekick can help manage Craft.",
+        "Click the **Available Skills** button above to see how Sidekick can help manage Craft.",
         // General greeting
         "Bonjour! Sidekick here, ready to help with your Craft tasks.",
         "Ciao! I'm Sidekick, your assistant for managing Craft.",

@@ -10,6 +10,7 @@
 - Improved field layout descriptions.
 - Improved retrieved elements descriptions.
 - Improved deleted elements descriptions.
+- Adjusted tone and nuances of chat responses.
 - Adjusted tool names.
 
 ### Fixed

@@ -123,9 +123,9 @@ MARKDOWN;
         // Return JSON encoded system data
 return <<<MARKDOWN
 
-# Craft CMS System Configuration
+# Craft System Configuration
 
-The following data represents the current system configuration of Craft CMS:
+The following data represents the current Craft CMS system configuration:
 
 {$data}
 
