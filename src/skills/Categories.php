@@ -128,7 +128,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved category {$categoryId}.",
+            'message' => "Retrieved category \"{$category->title}\".",
             'response' => Json::encode($category)
         ]);
     }

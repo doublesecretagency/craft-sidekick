@@ -102,7 +102,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved entry {$entryId}.",
+            'message' => "Retrieved entry \"{$entry->title}\".",
             'response' => Json::encode($entry)
         ]);
     }

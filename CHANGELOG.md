@@ -8,6 +8,7 @@
 ### Changed
 - Nested details in skills slideout.
 - Improved field layout descriptions.
+- Improved retrieved elements descriptions.
 - Improved deleted elements descriptions.
 
 ### Fixed

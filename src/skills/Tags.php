@@ -127,7 +127,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved tag {$tagId}.",
+            'message' => "Retrieved tag \"{$tag->title}\".",
             'response' => Json::encode($tag)
         ]);
     }
