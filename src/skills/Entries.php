@@ -17,6 +17,7 @@ use craft\helpers\Json;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Entries
@@ -209,9 +210,20 @@ class Entries extends BaseSkillSet
     public static function deleteEntry(string $entryId): SkillResponse
     {
         try {
+            // Get the elements service
+            $elements = Craft::$app->getElements();
+
+            // Get the entry by ID
+            $entry = $elements->getElementById($entryId);
+
+            // If no such entry exists
+            if (!$entry) {
+                // Throw an error message
+                throw new Exception("No matching entry found.");
+            }
 
             // Delete the entry by its ID
-            Craft::$app->getElements()->deleteElementById($entryId);
+            $elements->deleteElementById($entryId);
 
         } catch (Throwable $e) {
 
@@ -226,7 +238,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted entry {$entryId}.",
+            'message' => "Successfully deleted entry \"{$entry->title}\".",
         ]);
     }
 }

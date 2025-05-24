@@ -18,6 +18,7 @@ use craft\models\TagGroup;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Tags
@@ -234,9 +235,20 @@ class Tags extends BaseSkillSet
     public static function deleteTag(string $tagId): SkillResponse
     {
         try {
+            // Get the elements service
+            $elements = Craft::$app->getElements();
+
+            // Get the tag by ID
+            $tag = $elements->getElementById($tagId);
+
+            // If no such tag exists
+            if (!$tag) {
+                // Throw an error message
+                throw new Exception("No matching tag found.");
+            }
 
             // Delete the tag by its ID
-            Craft::$app->getElements()->deleteElementById($tagId);
+            $elements->deleteElementById($tagId);
 
         } catch (Throwable $e) {
 
@@ -251,7 +263,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted tag {$tagId}.",
+            'message' => "Successfully deleted tag \"{$tag->title}\".",
         ]);
     }
 

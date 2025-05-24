@@ -19,6 +19,7 @@ use craft\models\CategoryGroup_SiteSettings;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Categories
@@ -235,9 +236,20 @@ class Categories extends BaseSkillSet
     public static function deleteCategory(string $categoryId): SkillResponse
     {
         try {
+            // Get the elements service
+            $elements = Craft::$app->getElements();
+
+            // Get the category by ID
+            $category = $elements->getElementById($categoryId);
+
+            // If no such category exists
+            if (!$category) {
+                // Throw an error message
+                throw new Exception("No matching category found.");
+            }
 
             // Delete the category by its ID
-            Craft::$app->getElements()->deleteElementById($categoryId);
+            $elements->deleteElementById($categoryId);
 
         } catch (Throwable $e) {
 
@@ -252,7 +264,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted category {$categoryId}.",
+            'message' => "Successfully deleted category \"{$category->title}\".",
         ]);
     }
 
