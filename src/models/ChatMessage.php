@@ -25,7 +25,7 @@ class ChatMessage extends Model
      */
     public const ASSISTANT = 'assistant';
     public const USER = 'user';
-    public const SYSTEM = 'system';
+//    public const SYSTEM = 'system';
     public const TOOL = 'tool';
 
     /**
@@ -33,7 +33,6 @@ class ChatMessage extends Model
      *
      * @const
      */
-//    public const CONVERSATIONAL = 'conversational';
     public const ERROR = 'error';
     public const SUCCESS = 'success';
 

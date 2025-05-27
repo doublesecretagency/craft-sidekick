@@ -389,7 +389,14 @@ CONTENT;
      */
     public function runThread(): void
     {
-        /** @var ThreadRunResponse $run */
+        // Initialize heartbeat
+        $heartbeatCounter = 0;
+
+        // Number of cycles between heartbeats
+        $heartbeatCycles = 5;
+
+        // Get the SSE service
+        $sse = Sidekick::getInstance()->sse;
 
         // Get the runs service
         $service = $this->_openAiClient->threads()->runs();
@@ -409,9 +416,29 @@ CONTENT;
             do {
 
                 // Loop through the stream
+                /** @var ThreadRunStreamResponse $response */
+                /** @var ThreadRunResponse $run */
                 foreach ($stream as $response) {
 
-                    /** @var ThreadRunStreamResponse $response */
+                    // If the SSE connection has been aborted
+                    if (connection_aborted()) {
+
+                        // Log error message
+                        (new ChatMessage([
+                            'role' => ChatMessage::ERROR,
+                            'message' => "SSE connection aborted by the client."
+                        ]))
+                            ->log()
+                            ->toChatHistory();
+
+                        // Exits both foreach and do-while
+                        break 2;
+                    }
+
+                    // Send a heartbeat to keep the SSE connection alive
+                    if (++$heartbeatCounter % $heartbeatCycles === 0) {
+                        $sse->sendHeartbeat();
+                    }
 
                     // If not a delta event
                     if ('thread.message.delta' !== $response->event) {
@@ -480,6 +507,21 @@ CONTENT;
 
             // Get the latest assistant message
             $reply = $this->_getLatestAssistantMessage();
+
+            // If the SSE connection has been aborted
+            if (connection_aborted()) {
+
+                // Log error message
+                (new ChatMessage([
+                    'role' => ChatMessage::ERROR,
+                    'message' => "Unable to append reply, SSE connection aborted."
+                ]))
+                    ->log()
+                    ->toChatHistory();
+
+                // Bail
+                return;
+            }
 
             // Append reply to the chat history
             (new ChatMessage($reply))

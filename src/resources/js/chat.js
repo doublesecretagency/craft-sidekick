@@ -228,6 +228,31 @@ const SidekickChat = {
             });
     },
 
+    // Format a timestamp for display
+    formatTimestamp: function (date = new Date()) {
+        // If the date is not a Date object, convert it
+        const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            timeZoneName: 'short',
+        };
+
+        // Use Intl.DateTimeFormat to format the date
+        const parts = new Intl.DateTimeFormat(undefined, options).formatToParts(date);
+
+        // Extract parts from the formatted date
+        const get = (type) => parts.find(p => p.type === type)?.value || '';
+        const tz = get('timeZoneName');
+
+        // Return formatted timestamp
+        return `${get('year')}-${get('month')}-${get('day')} [${get('hour')}:${get('minute')}:${get('second')} ${get('dayPeriod')}]`;
+    },
+
     // Send message to the server
     sendMessage: function () {
 
@@ -266,18 +291,29 @@ const SidekickChat = {
         // Convert parameters to a query string
         const params = new URLSearchParams({message, greeting});
 
-        // console.log('Opening the connection.');
+        // FOR TESTING PURPOSES ONLY
+        // const eventSource = new EventSource(`/actions/sidekick/chat/test-stream`);
 
         // Create an event source
         const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${params.toString()}`);
 
         // Close the connection when instructed
         eventSource.addEventListener('close', function(event) {
-            // console.log('Closing the connection.');
+            // Log the resolution of the connection
+            console.log(`${that.formatTimestamp()} SSE connection resolved`);
+            // Close the EventSource connection
             eventSource.close();
             // Hide the loader
             that.hideLoader();
         });
+
+        // Store the start time of the SSE connection
+        window._sseStartTime = Date.now();
+
+        // Log the start time
+        eventSource.onopen = function () {
+            console.log(`${that.formatTimestamp()} SSE connection established`);
+        };
 
         // Listen for messages from the server
         eventSource.onmessage = function(event) {
@@ -308,43 +344,59 @@ const SidekickChat = {
             that.greeting = null;
         };
 
-        // If there's an error
+        // Handle errors from the EventSource
         eventSource.onerror = function(error) {
 
+            // Initialize the error object
+            const target = error?.target || {};
+            const readyState = target.readyState;
+            const stateLabel = ['CONNECTING', 'OPEN', 'CLOSED'][readyState] || 'UNKNOWN';
+            const url = target.url || '[unknown]';
 
-            console.error('SSE encountered an error:', error);
+            // Calculate the current time and duration since connection started
+            const now = new Date();
+            const connectedAt = window._sseStartTime
+                ? that.formatTimestamp(new Date(window._sseStartTime))
+                : '[unknown start time]';
+            const duration = window._sseStartTime
+                ? Math.round((Date.now() - window._sseStartTime) / 1000)
+                : '?';
 
-            // Log the connection state (0: CONNECTING, 1: OPEN, 2: CLOSED)
-            const readyState = error.target.readyState;
-            if (readyState === EventSource.CONNECTING) {
-                console.warn('EventSource is reconnecting (readyState = CONNECTING)...');
-            } else if (readyState === EventSource.CLOSED) {
-                console.error('EventSource connection closed. ' +
-                    'This might be due to a server-side error, network issues, or PHP misconfiguration.');
-            } else {
-                console.error('Unexpected EventSource state:', readyState);
-            }
-
-            // // Log the URL for further inspection
-            // console.log('EventSource URL:', error.target.url);
-
-            // // OPTIONAL: Attempt a HEAD request to the same URL to check HTTP status.
-            // // This may provide hints about server-side issues (e.g., 500, 404, CORS issues).
-            // fetch(error.target.url, { method: 'HEAD' })
-            //     .then(response => {
-            //         console.log('Fetch status for SSE endpoint:', response.status, response.statusText);
-            //     })
-            //     .catch(fetchError => {
-            //         console.error('Fetch error while checking SSE endpoint:', fetchError);
-            //     });
+            // Log the error details
+            console.groupCollapsed(`%c[SSE ERROR] State: ${stateLabel} — ${duration}s after connect`, 'color: red; font-weight: bold');
+            console.error(error);
+            console.log('ReadyState:', readyState, `(${stateLabel})`);
+            console.log('EventSource URL:', url);
+            console.log('Connected at:', connectedAt);
+            console.log('Disconnected at:', that.formatTimestamp(now));
+            console.groupEnd();
 
             // Display the error message
             that.appendMessage(
                 that.ROLE.ERROR,
-                'An unknown connection error occurred.'
+                '⚠️ Connection interrupted'
             );
+
             // Hide the loader
             that.hideLoader();
+
+            // If the URL is available and fetch is supported
+            if (url && typeof fetch === 'function') {
+                // Attempt a HEAD request for server-side diagnostics
+                fetch(url, { method: 'HEAD' })
+                    .then(res => {
+                        // Log the response status and headers
+                        console.groupCollapsed(`[SSE Diagnostic] HEAD ${res.status} ${res.statusText}`);
+                        for (const [header, value] of res.headers.entries()) {
+                            console.log(`${header}: ${value}`);
+                        }
+                        console.groupEnd();
+                    })
+                    .catch(fetchError => {
+                        // Log any errors from the HEAD request
+                        console.error('[SSE Diagnostic] HEAD request failed:', fetchError);
+                    });
+            }
         };
 
     },

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- Stability improvements.
 - Softened non-threatening error messages.
 
 ### Fixed

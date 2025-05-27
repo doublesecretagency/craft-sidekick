@@ -241,4 +241,69 @@ class ChatController extends Controller
         // Close the connection
         $sse->closeConnection();
     }
+
+    /**
+     * Stream test messages indefinitely to test SSE flushing and connection stability.
+     *
+     * @return void
+     */
+    public function actionTestStream(): void
+    {
+        // Delay between messages (in seconds)
+        $delay = 10;
+
+        // Get the SSE service
+        $sse = Sidekick::getInstance()?->sse;
+
+        // Start the SSE connection
+        $sse->startConnection();
+
+        // Send initial message
+        (new ChatMessage([
+            'role' => ChatMessage::TOOL,
+            'message' => "[debug] Infinite SSE stream started, running every {$delay} seconds...",
+        ]))
+            ->log()
+            ->toChatHistory()
+            ->toChatWindow();
+
+        // Initialize a counter for the messages
+        $counter = 1;
+
+        // Stream forever (until client disconnects)
+        while (true) {
+
+            // If the client disconnected, stop the loop
+            if (connection_aborted()) {
+                break;
+            }
+
+            // Send test message
+            (new ChatMessage([
+                'role' => ChatMessage::TOOL,
+                'message' => "[tick] #{$counter} — " . date('[Y-m-d] g:i:s A (T)'),
+            ]))
+                ->log()
+                ->toChatHistory()
+                ->toChatWindow();
+
+            // Increment the counter
+            $counter++;
+
+            // Wait between ticks
+            sleep($delay);
+        }
+
+        // Final log before closing
+        (new ChatMessage([
+            'role' => ChatMessage::ERROR,
+            'message' => '[debug] Client disconnected — closing test stream.',
+        ]))
+            ->log()
+            ->toChatHistory()
+            ->toChatWindow();
+
+        // Close connection
+        $sse->closeConnection();
+    }
 }
