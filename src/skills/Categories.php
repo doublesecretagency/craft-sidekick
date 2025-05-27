@@ -90,9 +90,9 @@ class Categories extends BaseSkillSet
 
         // If no results
         if (!$results) {
-            // Return error message
+            // Return success message with no results
             return new SkillResponse([
-                'success' => false,
+                'success' => true,
                 'message' => "No categories found{$inGroup}."
             ]);
         }

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Softened non-threatening error messages.
+
 ### Fixed
 - Fixed bug in tag group deletion.
 
