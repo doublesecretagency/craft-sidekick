@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug in tag group deletion.
+
 ## 1.0.2 - 2025-05-24
 
 ### Added

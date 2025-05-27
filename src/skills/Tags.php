@@ -459,7 +459,7 @@ class Tags extends BaseSkillSet
         // Attempt to delete the tag group
         try {
             // If unable to delete the tag group, return an error response
-            if (!$tagsService->deleteGroup($tagGroup)) {
+            if (!$tagsService->deleteTagGroup($tagGroup)) {
                 $errors = implode(', ', $tagGroup->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
