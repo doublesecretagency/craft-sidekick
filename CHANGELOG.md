@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added "still thinking" messages for long pauses.
+
 ### Changed
 - Stability improvements.
 - Softened non-threatening error messages.

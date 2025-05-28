@@ -83,6 +83,16 @@ class OpenAIService extends Component
     public array $skillSetsHash = [];
 
     /**
+     * @var int The last time a message was sent.
+     */
+    private int $_lastMessageTime = 0;
+
+    /**
+     * @var int Index of the current thinking message.
+     */
+    private int $_thinkingIndex = 0;
+
+    /**
      * Initializes the service.
      *
      * @throws Exception
@@ -389,6 +399,12 @@ CONTENT;
      */
     public function runThread(): void
     {
+        // Initialize detection of message pauses
+        $lastThinkingMessageTime = time();
+        $this->_lastMessageTime = time();
+        $this->_thinkingIndex = 0;
+        $thinkingInterval = 6; // seconds
+
         // Initialize heartbeat
         $heartbeatCounter = 0;
 
@@ -440,14 +456,63 @@ CONTENT;
                         $sse->sendHeartbeat();
                     }
 
-                    // If not a delta event
-                    if ('thread.message.delta' !== $response->event) {
+                    // Get the current time
+                    $currentTime = time();
+
+                    /**
+                     * Deltas indicate normal streaming tokens;
+                     * skip logging them to reduce noise.
+                     */
+
+                    // If just a message delta
+                    if ($response->event === 'thread.message.delta') {
+
+                        // Reset last message time
+                        $this->_lastMessageTime = $currentTime;
+
+                    } else {
+
                         // Log the response event
                         (new ChatMessage([
                             'role' => ChatMessage::TOOL,
                             'message' => "[{$response->event}]",
                         ]))
                             ->log();
+
+                    }
+
+                    // How long has it been since the last message?
+                    $sinceLastMessage  = $currentTime - $this->_lastMessageTime;
+                    $sinceLastThinking = $currentTime - $lastThinkingMessageTime;
+
+                    // If things have been quiet for too long
+                    if (
+                        $sinceLastMessage >= $thinkingInterval &&
+                        $sinceLastThinking >= $thinkingInterval
+                    ) {
+
+                        // Reset the last thinking message time
+                        $lastThinkingMessageTime = $currentTime;
+
+                        // Get index of the last thinking message
+                        $lastIndex = count(Chat::THINKING_MESSAGES) - 1;
+
+                        // Get the next thinking message, sticking with the last one if we go too far
+                        $message = Chat::THINKING_MESSAGES[min($this->_thinkingIndex, $lastIndex)];
+
+                        // If not at the last message
+                        if ($this->_thinkingIndex < $lastIndex) {
+                            // Increment to the next message
+                            $this->_thinkingIndex++;
+                        }
+
+                        // Send a "thinking" message to the chat window
+                        (new ChatMessage([
+                            'role' => ChatMessage::TOOL,
+                            'message' => $message
+                        ]))
+                            ->log()
+                            ->toChatWindow();
                     }
 
                     // Switch based on the event type
@@ -658,6 +723,10 @@ CONTENT;
                 'tool_call_id' => $toolCall->id,
                 'output' => $toolOutput
             ];
+
+            // Reset the thinking index and last message time
+            $this->_thinkingIndex = 0;
+            $this->_lastMessageTime = time();
         }
 
         // Submit the tool outputs back to the OpenAI thread

@@ -52,4 +52,25 @@ class Chat
         "Salutations! Sidekick here, your partner in managing Craft efficiently.",
         "Namaste. I'm Sidekick, ready to support your Craft projects."
     ];
+
+    /**
+     * List of messages to display
+     * when Sidekick is thinking for too long.
+     *
+     * @const
+     */
+    public const THINKING_MESSAGES = [
+        "Thinking...",
+        "Still thinking...",
+        "Still thinking... hang on a sec.",
+        "This is harder than I thought!",
+        "Sorry about the wait, let me see what's taking so long.",
+        "Alright, I'll go talk to the manager.",
+        "This is super embarrassing.",
+        "Oof, I can't believe you're still here. Thanks for your patience.",
+        "No idea what's happening now. Feel free to clear the conversation and start over.",
+        "Something is out of order, sorry about that.",
+        "I'd give up and start again, if I were you. Click the **Clear Conversation** button above.",
+        "Click the **Clear Conversation** button above to start over.",
+    ];
 }
