@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.3 - 2025-05-29
 
 ### Added
 - Added "still thinking" messages for long pauses.
