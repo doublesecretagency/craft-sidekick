@@ -718,6 +718,16 @@ CONTENT;
 
             }
 
+            // Get the size of the tool output
+            $outputSize = mb_strlen($toolOutput, '8bit');
+
+            // Convert the tool name to a namespace format
+            $toolName = substr($toolCall->function->name, 7);
+            $toolName = str_replace('-', '::', $toolName);
+
+            // Log the tool output size
+            Craft::info("Outputting {$outputSize} bytes from `{$toolName}`.", __METHOD__);
+
             // Add the tool output to the array
             $allToolOutputs[] = [
                 'tool_call_id' => $toolCall->id,
@@ -727,6 +737,15 @@ CONTENT;
             // Reset the thinking index and last message time
             $this->_thinkingIndex = 0;
             $this->_lastMessageTime = time();
+        }
+
+        // Get the collected size of all tool outputs
+        $collectedSize = mb_strlen(Json::encode($allToolOutputs), '8bit');
+
+        // If the total size of all outputs exceeds the maximum
+        if ($collectedSize > 524288) { // 512kb in bytes
+            // Log an error message
+            Craft::error("Outputting {$collectedSize} bytes output exceeds maximum 512kb!", __METHOD__);
         }
 
         // Submit the tool outputs back to the OpenAI thread

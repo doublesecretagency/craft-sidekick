@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added logging of tool output sizes.
+
 ## 1.0.3 - 2025-05-29
 
 ### Added
