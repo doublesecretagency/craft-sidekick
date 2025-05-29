@@ -297,6 +297,18 @@ const SidekickChat = {
         // Create an event source
         const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${params.toString()}`);
 
+        // How long to wait before checking
+        // whether the connection is still CONNECTING
+        const patience = 5; // seconds
+
+        // Wait for a moment before checking the connection state
+        setTimeout(() => {
+            // If the connection is still in CONNECTING state
+            if (eventSource.readyState === EventSource.CONNECTING) {
+                console.warn(`[SSE] Still CONNECTING after ${patience} seconds... might be stuck.`);
+            }
+        }, (patience * 1000));
+
         // Close the connection when instructed
         eventSource.addEventListener('close', function(event) {
             // Log the resolution of the connection
