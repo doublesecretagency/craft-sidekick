@@ -4,6 +4,7 @@
 
 ### Added
 - Added logging of tool output sizes.
+- Added entry type management skills for Craft 5.
 
 ## 1.0.3 - 2025-05-29
 

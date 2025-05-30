@@ -82,9 +82,18 @@ class FieldLayoutHelper
      */
     private static function _entryDescription(FieldLayout $layout): string
     {
+        // Set which columns to fetch
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            $columns = ['name','sectionId'];
+        } else {
+            // Craft 5+
+            $columns = ['name'];
+        }
+
         // Fetch matching entry types via a quick DB query
         $entryTypes = (new Query())
-            ->select(['name','sectionId'])
+            ->select($columns)
             ->from('{{%entrytypes}}')
             ->where(['fieldLayoutId' => $layout->id])
             ->all();

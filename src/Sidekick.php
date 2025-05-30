@@ -37,6 +37,7 @@ use doublesecretagency\sidekick\services\OpenAIService;
 use doublesecretagency\sidekick\services\SseService;
 use doublesecretagency\sidekick\skills\Categories;
 use doublesecretagency\sidekick\skills\Entries;
+use doublesecretagency\sidekick\skills\EntryTypes;
 use doublesecretagency\sidekick\skills\Fields;
 use doublesecretagency\sidekick\skills\Sections;
 use doublesecretagency\sidekick\skills\Sites;
@@ -351,9 +352,11 @@ class Sidekick extends Plugin
         if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
             // Craft 4
             $this->_prompts[] = 'matrix-fields-c4.md';
+            $this->_prompts[] = 'entry-types-c4.md';
         } else {
             // Craft 5+
             $this->_prompts[] = 'matrix-fields-c5.md';
+            $this->_prompts[] = 'entry-types-c5.md';
         }
 
         // Get the path to the Sidekick plugin
@@ -401,6 +404,7 @@ class Sidekick extends Plugin
             Tags::class,
             Fields::class,
             Sections::class,
+            EntryTypes::class,
             Sites::class,
         ];
 

@@ -14,6 +14,7 @@ This is a standard example of a field layout config:
 
 ```json
 {
+  "type": "craft\\elements\\Entry", // Always an element type
   "tabs": [
     // Array of tabs
     {
