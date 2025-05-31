@@ -66,7 +66,7 @@ class SystemPrompt
         $systemPrompt .= static::_systemData();
 
         // Log that the system prompt has been compiled
-        Craft::info("Compiled system prompt.", __METHOD__);
+        Craft::info("Compiled the system prompt.", __METHOD__);
 
         // Return the compiled system prompt
         return $systemPrompt;

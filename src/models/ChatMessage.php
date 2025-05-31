@@ -66,24 +66,28 @@ class ChatMessage extends Model
     /**
      * Log the message.
      *
+     * @param $method
      * @return ChatMessage for chaining
      */
-    public function log(): ChatMessage
+    public function log($method): ChatMessage
     {
-        // Compile log message
-        $message = strtoupper($this->role).": {$this->message}";
+        // Set log type
+        $logType = (self::ERROR === $this->role ? 'error' : 'info');
 
-        // Default log type
-        $logType = 'info';
+        // Get the role and message
+        $role = strtoupper($this->role);
+        $message = $this->message;
 
-        // If the message is an error
-        if (self::ERROR === $this->role) {
-            // Log as an error
-            $logType = 'error';
+//        // Whether the message is surrounded by `[]`
+//        $isStep = str_starts_with($this->message, '[') && str_ends_with($this->message, ']');
+
+        // If not an error, add newlines for readability
+        if ($logType !== 'error') {
+            $message = "\n{$role}:\n{$message}";
         }
 
         // Log the message
-        Craft::$logType($message, __METHOD__);
+        Craft::$logType($message, $method);
 
         // Return the message for chaining
         return $this;

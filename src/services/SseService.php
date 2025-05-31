@@ -35,7 +35,7 @@ class SseService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => "SSE connection aborted, message could not be sent. [{$message->message}]",
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory();
 
             // Bail
@@ -57,7 +57,7 @@ class SseService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => "Failed to stream SSE message: {$e->getMessage()}",
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory();
 
         }
@@ -95,7 +95,7 @@ class SseService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => "SSE connection aborted before heartbeat."
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory();
 
             // Bail
@@ -119,7 +119,7 @@ class SseService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => "SSE connection aborted before closure."
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory();
 
             // Bail
@@ -141,7 +141,7 @@ class SseService extends Component
                 'role' => ChatMessage::ERROR,
                 'message' => "Failed to send SSE close event: {$e->getMessage()}"
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory();
 
         }

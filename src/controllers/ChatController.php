@@ -208,7 +208,7 @@ class ChatController extends Controller
                     'role' => ChatMessage::ASSISTANT,
                     'message' => $greeting
                 ]))
-                    ->log()
+                    ->log(__METHOD__)
                     ->toChatHistory()
                     ->toOpenAiThread();
             }
@@ -218,7 +218,7 @@ class ChatController extends Controller
                 'role' => ChatMessage::USER,
                 'message' => $message
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toOpenAiThread();
 
@@ -232,7 +232,7 @@ class ChatController extends Controller
                 'role' => ChatMessage::ERROR,
                 'message' => $e->getMessage()
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
@@ -263,7 +263,7 @@ class ChatController extends Controller
             'role' => ChatMessage::TOOL,
             'message' => "[debug] Infinite SSE stream started, running every {$delay} seconds...",
         ]))
-            ->log()
+            ->log(__METHOD__)
             ->toChatHistory()
             ->toChatWindow();
 
@@ -283,7 +283,7 @@ class ChatController extends Controller
                 'role' => ChatMessage::TOOL,
                 'message' => "[tick] #{$counter} — " . date('[Y-m-d] g:i:s A (T)'),
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
@@ -299,7 +299,7 @@ class ChatController extends Controller
             'role' => ChatMessage::ERROR,
             'message' => '[debug] Client disconnected — closing test stream.',
         ]))
-            ->log()
+            ->log(__METHOD__)
             ->toChatHistory()
             ->toChatWindow();
 

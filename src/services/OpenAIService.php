@@ -270,7 +270,7 @@ CONTENT;
             $session->set(Session::ASSISTANT_ID, $assistant->id);
 
             // Track the assistant
-            Craft::info("Created a new assistant: {$assistant->id}", __METHOD__);
+            Craft::info("Created a new assistant. [{$assistant->id}]", __METHOD__);
 
             // Return the assistant ID
             return $assistant->id;
@@ -317,7 +317,7 @@ CONTENT;
             $session->set(Session::THREAD_ID, $thread->id);
 
             // Track the assistant
-            Craft::info("Created a new thread: {$thread->id}", __METHOD__);
+            Craft::info("Created a new thread. [{$thread->id}]", __METHOD__);
 
             // Return the thread ID
             return $thread->id;
@@ -366,7 +366,7 @@ CONTENT;
         }
 
         // Track the message
-        Craft::info("Appending message to the OpenAI conversation.", __METHOD__);
+//        Craft::info("Appending message to the OpenAI conversation.", __METHOD__);
 
         try {
 
@@ -403,7 +403,7 @@ CONTENT;
         $lastThinkingMessageTime = time();
         $this->_lastMessageTime = time();
         $this->_thinkingIndex = 0;
-        $thinkingInterval = 6; // seconds
+        $thinkingInterval = 7; // seconds
 
         // Initialize heartbeat
         $heartbeatCounter = 0;
@@ -444,7 +444,7 @@ CONTENT;
                             'role' => ChatMessage::ERROR,
                             'message' => "SSE connection aborted by the client."
                         ]))
-                            ->log()
+                            ->log(__METHOD__)
                             ->toChatHistory();
 
                         // Exits both foreach and do-while
@@ -465,19 +465,19 @@ CONTENT;
                      */
 
                     // If just a message delta
-                    if ($response->event === 'thread.message.delta') {
+                    if (in_array($response->event, ['thread.message.delta','thread.run.step.delta'])) {
 
                         // Reset last message time
                         $this->_lastMessageTime = $currentTime;
 
                     } else {
 
-                        // Log the response event
-                        (new ChatMessage([
-                            'role' => ChatMessage::TOOL,
-                            'message' => "[{$response->event}]",
-                        ]))
-                            ->log();
+//                        // Log the response event
+//                        (new ChatMessage([
+//                            'role' => ChatMessage::TOOL,
+//                            'message' => "[{$response->event}]",
+//                        ]))
+//                            ->log(__METHOD__);
 
                     }
 
@@ -511,7 +511,7 @@ CONTENT;
                             'role' => ChatMessage::TOOL,
                             'message' => $message
                         ]))
-                            ->log()
+                            ->log(__METHOD__)
                             ->toChatWindow();
                     }
 
@@ -531,7 +531,7 @@ CONTENT;
                                 'role' => ChatMessage::ERROR,
                                 'message' => 'Run is being cancelled for some reason.'
                             ]))
-                                ->log()
+                                ->log(__METHOD__)
                                 ->toChatHistory()
                                 ->toChatWindow();
                             // Continue
@@ -551,7 +551,7 @@ CONTENT;
                                 'role' => ChatMessage::ERROR,
                                 'message' => "Run unsuccessful. {$error}"
                             ]))
-                                ->log()
+                                ->log(__METHOD__)
                                 ->toChatHistory()
                                 ->toChatWindow();
                             // Break the whole loop
@@ -581,7 +581,7 @@ CONTENT;
                     'role' => ChatMessage::ERROR,
                     'message' => "Unable to append reply, SSE connection aborted."
                 ]))
-                    ->log()
+                    ->log(__METHOD__)
                     ->toChatHistory();
 
                 // Bail
@@ -590,7 +590,7 @@ CONTENT;
 
             // Append reply to the chat history
             (new ChatMessage($reply))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
@@ -612,7 +612,7 @@ CONTENT;
 
             // Log error and append to chat
             $error
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
@@ -635,7 +635,7 @@ CONTENT;
                 'role' => ChatMessage::ERROR,
                 'message' => "Problem updating the project config. You may need to rebuild the project config manually."
             ]))
-                ->log()
+                ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
@@ -691,9 +691,15 @@ CONTENT;
                     'role' => ChatMessage::TOOL,
                     'message' => ($skillResponse->message ?? '[missing tool message]')
                 ]))
-                    ->log()
+                    ->log(__METHOD__)
                     ->toChatHistory()
                     ->toChatWindow();
+
+                // If the tool response contains data
+                if ($skillResponse->response) {
+                    // Log the tool response
+                    Craft::info(Json::decodeIfJson($skillResponse->response), __METHOD__);
+                }
 
                 // Set the tool output
                 $toolOutput = ($skillResponse->response ?? $skillResponse->message);
@@ -705,7 +711,7 @@ CONTENT;
                     'role' => ChatMessage::ERROR,
                     'message' => ($e->getMessage())
                 ]))
-                    ->log()
+                    ->log(__METHOD__)
                     ->toChatHistory()
                     ->toChatWindow();
 
@@ -726,7 +732,7 @@ CONTENT;
             $toolName = str_replace('-', '::', $toolName);
 
             // Log the tool output size
-            Craft::info("Outputting {$outputSize} bytes from `{$toolName}`.", __METHOD__);
+            Craft::info("{$outputSize} bytes output by `{$toolName}`.", __METHOD__);
 
             // Add the tool output to the array
             $allToolOutputs[] = [
@@ -745,7 +751,10 @@ CONTENT;
         // If the total size of all outputs exceeds the maximum
         if ($collectedSize > 524288) { // 512kb in bytes
             // Log an error message
-            Craft::error("Outputting {$collectedSize} bytes output exceeds maximum 512kb!", __METHOD__);
+            Craft::error("Total of {$collectedSize} bytes exceeds the maximum output of 512kb!", __METHOD__);
+        } else {
+            // Log the total size of all tool outputs
+            Craft::info("Total of {$collectedSize} bytes is safe for tool outputs.", __METHOD__);
         }
 
         // Submit the tool outputs back to the OpenAI thread
@@ -766,7 +775,7 @@ CONTENT;
         try {
             // Get the function name and arguments
             $fullName = $toolCall->function->name;
-            $args = json_decode($toolCall->function->arguments, true);
+            $args = Json::decode($toolCall->function->arguments);
 
             // Split the full name into parts
             $nameParts = explode('-', $fullName);
@@ -778,10 +787,33 @@ CONTENT;
             $method = array_pop($nameParts);
             $class = implode('\\', $nameParts);
 
+            // Get the non-namespaced class name
+            $className = array_pop($nameParts);
+
             // If the tool function does not exist, throw an exception
             if (!method_exists($class, $method)) {
-                throw new Exception("Tool method does not exist: {$class}::{$method}");
+                throw new Exception("Tool method does not exist: `{$class}::{$method}`");
             }
+
+            // Compile array for logging
+            $logArgs = [];
+
+            // Loop through each argument
+            foreach ($args as $key => $value) {
+                // Decode the argument if it's a JSON string
+                $logArgs[$key] = Json::decodeIfJson($value);
+            }
+
+            // Denote which tool method is being run
+            Craft::info("Calling tool `{$className}::{$method}`.", __METHOD__);
+
+            // If no parameters, say so
+            if (!$logArgs) {
+                $logArgs = "(no parameters)";
+            }
+
+            // Log the tool arguments
+            Craft::info($logArgs, "{$class}::{$method}");
 
             // Call the tool function
             return $class::$method(...$args);

@@ -258,6 +258,9 @@ class Sidekick extends Plugin
             'categories'  => ['doublesecretagency\sidekick\*'],
             'logFile'     => $logFilePath,
             'logVars'     => [],
+            'prefix'      => function ($message) {
+                return ''; // Remove extraneous information
+            },
             'maxFileSize' => 10240, // 10MB
             'maxLogFiles' => 5,
         ]);

@@ -89,7 +89,7 @@ class ChatService extends Component
     public function addMessage(ChatMessage $message): void
     {
         // Track the message
-        Craft::info("Appending message to the conversation history.", __METHOD__);
+//        Craft::info("Appending message to the conversation history.", __METHOD__);
 
         // Get the existing conversation from the session
         $conversation = $this->getConversation();
