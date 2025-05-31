@@ -8,6 +8,7 @@
 
 ### Changed
 - Improved logging.
+- Include section ID when getting all entries.
 
 ## 1.0.3 - 2025-05-29
 

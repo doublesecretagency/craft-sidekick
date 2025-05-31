@@ -18,6 +18,7 @@ use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
+use yii\base\InvalidConfigException;
 
 /**
  * @category Entries
@@ -35,7 +36,12 @@ class Entries extends BaseSkillSet
     public static function getAllEntries(string $sectionHandle): SkillResponse
     {
         // Initialize the query
-        $query = Entry::find()->select(['id', 'title', 'slug']);
+        $query = Entry::find()->select([
+            'id',
+            'title',
+            'slug',
+            'sectionId'
+        ]);
 
         // If a section handle is provided
         if ($sectionHandle) {
@@ -50,12 +56,14 @@ class Entries extends BaseSkillSet
         $results = [];
 
         // Loop over each entry
+        /** @var Entry $entry */
         foreach ($entries as $entry) {
-            // Append title & slug to results
+            // Append basic details to results
             $results[] = [
-                'id'    => $entry->id,
-                'title' => $entry->title,
-                'slug'  => $entry->slug,
+                'id'        => $entry->id,
+                'title'     => $entry->title,
+                'slug'      => $entry->slug,
+                'sectionId' => $entry->sectionId,
             ];
         }
 
