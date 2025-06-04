@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Compressed results of `getAllFields` to reduce tool output size. ([#3](https://github.com/doublesecretagency/craft-sidekick/issues/3))
+
 ### Fixed
 - Fixed console error.
 

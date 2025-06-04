@@ -17,6 +17,7 @@ use craft\helpers\Json;
 use craft\models\FieldGroup;
 use craft\models\FieldLayout;
 use doublesecretagency\sidekick\helpers\FieldLayoutHelper;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
@@ -70,18 +71,55 @@ class Fields extends BaseSkillSet
      *
      * You may also find it helpful to call this tool before updating an Entry.
      *
+     * Use this tool to get an overview of all fields in the system.
+     * For details on a specific field, use the `getFieldDetails` tool afterward.
+     *
      * @return SkillResponse
      */
     public static function getAllFields(): SkillResponse
     {
         // Fetch all fields
-        $allFields = Craft::$app->getFields()->getAllFields();
+        $fields = Craft::$app->getFields()->getAllFields();
+
+        // Initialize results array
+        $results = [];
+
+        // Loop over each field
+        foreach ($fields as $field) {
+
+            // Get the field data
+            $fieldData = [
+                'id'     => $field->id,
+                'name'   => $field->name,
+                'handle' => $field->handle,
+                'type'   => $field::class,
+                'uid'    => $field->uid,
+            ];
+
+            // If this is Craft 4
+            if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+                // Include the group ID
+                $fieldData['groupId'] = ($field->groupId ?? null);
+            }
+
+            // Append data to results
+            $results[] = $fieldData;
+        }
+
+        // If no results
+        if (!$results) {
+            // Return success message with no results
+            return new SkillResponse([
+                'success' => true,
+                'message' => "No fields found."
+            ]);
+        }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed all existing fields.",
-            'response' => Json::encode($allFields)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
@@ -90,7 +128,7 @@ class Fields extends BaseSkillSet
     /**
      * Get the details of a specific existing field.
      *
-     * If you don't know which fields exist, you MUST call the `getAllExistingFields` tool instead.
+     * If you don't know which fields exist, you MUST call the `getAllFields` tool instead.
      *
      * @param string $fieldHandle Handle of the field to get details for.
      * @return SkillResponse

@@ -60,7 +60,11 @@ class Tags extends BaseSkillSet
     public static function getAllTags(string $groupHandle): SkillResponse
     {
         // Initialize the query
-        $query = Tag::find()->select(['id', 'title', 'slug']);
+        $query = Tag::find()->select([
+            'id',
+            'title',
+            'slug'
+        ]);
 
         // If a group handle is provided
         if ($groupHandle) {

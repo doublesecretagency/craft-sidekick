@@ -61,7 +61,11 @@ class Categories extends BaseSkillSet
     public static function getAllCategories(string $groupHandle): SkillResponse
     {
         // Initialize the query
-        $query = Category::find()->select(['id', 'title', 'slug']);
+        $query = Category::find()->select([
+            'id',
+            'title',
+            'slug'
+        ]);
 
         // If a group handle is provided
         if ($groupHandle) {

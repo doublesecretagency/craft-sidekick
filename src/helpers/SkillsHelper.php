@@ -106,4 +106,56 @@ class SkillsHelper
         // Return the skill sets
         return $skillSets;
     }
+
+    // ========================================================================= //
+
+    /**
+     * Convert a nested array to CSV format.
+     *
+     * @param array $data
+     * @return string
+     */
+    public static function toCsv(array $data): string
+    {
+        // If no data, return an empty string
+        if (!$data) {
+            return '';
+        }
+
+        // Get CSV headers from the first row's keys
+        $headers = array_keys($data[0]);
+
+        // Initialize CSV output
+        $csvOutput = '';
+
+        // Build header row
+        $csvHeaders = array_map(static function ($header) {
+            return '"'.addslashes($header).'"';
+        }, $headers);
+
+        // Append headers to CSV output
+        $csvOutput .= implode(',', $csvHeaders) . "\n";
+
+        // Process each row
+        foreach ($data as $row) {
+
+            // Initialize values
+            $values = [];
+
+            // Loop through each header
+            foreach ($headers as $header) {
+                // Get the corresponding value from the row
+                $value = (isset($row[$header]) ? addslashes($row[$header]) : '');
+                // Escape the value and add it to the values array
+                $values[] = '"'.$value.'"';
+            }
+
+            // Append the row values to the CSV output
+            $csvOutput .= implode(',', $values) . "\n";
+
+        }
+
+        // Return the complete CSV output
+        return $csvOutput;
+    }
 }
