@@ -349,11 +349,33 @@ class Fields extends BaseSkillSet
         // Get all field groups
         $fieldGroups = Craft::$app->getFields()->getAllGroups();
 
+        // Initialize results array
+        $results = [];
+
+        // Loop over each field group
+        foreach ($fieldGroups as $group) {
+            // Append data to results
+            $results[] = [
+                'id'   => $group->id,
+                'name' => $group->name,
+                'uid'  => $group->uid,
+            ];
+        }
+
+        // If no results
+        if (!$results) {
+            // Return success message with no results
+            return new SkillResponse([
+                'success' => true,
+                'message' => "No field groups found."
+            ]);
+        }
+
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing field groups.",
-            'response' => Json::encode($fieldGroups)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
