@@ -17,7 +17,6 @@ const SidekickChat = {
         SYSTEM: 'system',
         TOOL: 'tool',
         ERROR: 'error',
-        SNIPPET: 'snippet',
     },
 
     // Initialize the object
@@ -36,8 +35,8 @@ const SidekickChat = {
             this.chatInput.focus();
         }
 
-        // Load selected AI model
-        this.loadSelectedModel();
+        // // Load selected AI model
+        // this.loadSelectedModel();
 
         // Activate skills slideout
         new this.ListSkills();
@@ -71,12 +70,12 @@ const SidekickChat = {
             });
         }
 
-        // Event listener for model selection change
-        if (this.aiModelSelect) {
-            this.aiModelSelect.addEventListener('change', () => {
-                this.setSelectedModel();
-            });
-        }
+        // // Event listener for model selection change
+        // if (this.aiModelSelect) {
+        //     this.aiModelSelect.addEventListener('change', () => {
+        //         this.setSelectedModel();
+        //     });
+        // }
 
         // Handle Clear Conversation Button Click
         if (this.clearButton) {
@@ -413,36 +412,36 @@ const SidekickChat = {
 
     },
 
-    // Load the selected model from the server
-    loadSelectedModel: function () {
-        fetch('/actions/sidekick/chat/get-selected-model', {
-            headers: {
-                'X-CSRF-Token': Craft.csrfTokenValue,
-                'Accept': 'application/json',
-            },
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    this.aiModelSelect.value = data.selectedModel;
-                }
-            });
-    },
+    // // Load the selected model from the server
+    // loadSelectedModel: function () {
+    //     fetch('/actions/sidekick/chat/get-selected-model', {
+    //         headers: {
+    //             'X-CSRF-Token': Craft.csrfTokenValue,
+    //             'Accept': 'application/json',
+    //         },
+    //     })
+    //         .then((response) => response.json())
+    //         .then((data) => {
+    //             if (data.success) {
+    //                 this.aiModelSelect.value = data.selectedModel;
+    //             }
+    //         });
+    // },
 
-    // Set the selected AI model on the server
-    setSelectedModel: function () {
-        const selectedModel = this.aiModelSelect.value;
-
-        // Update session on the server
-        fetch('/actions/sidekick/chat/set-selected-model', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': Craft.csrfTokenValue,
-            },
-            body: JSON.stringify({ selectedModel }),
-        });
-    },
+    // // Set the selected AI model on the server
+    // setSelectedModel: function () {
+    //     const selectedModel = this.aiModelSelect.value;
+    //
+    //     // Update session on the server
+    //     fetch('/actions/sidekick/chat/set-selected-model', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRF-Token': Craft.csrfTokenValue,
+    //         },
+    //         body: JSON.stringify({ selectedModel }),
+    //     });
+    // },
 
     // Clear the conversation
     clearConversation: function () {

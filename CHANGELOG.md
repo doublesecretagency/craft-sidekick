@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed console error.
+
 ## 1.0.4 - 2025-05-31
 
 ### Added
