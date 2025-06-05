@@ -15,6 +15,7 @@ use Craft;
 use craft\elements\Entry;
 use craft\helpers\Json;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
@@ -39,9 +40,9 @@ class Entries extends BaseSkillSet
         // Initialize the query
         $query = Entry::find()->select([
             'id',
+            'sectionId',
             'title',
-            'slug',
-            'sectionId'
+            'slug'
         ]);
 
         // If a section handle is provided
@@ -62,9 +63,9 @@ class Entries extends BaseSkillSet
             // Append basic details to results
             $results[] = [
                 'id'        => $entry->id,
+                'sectionId' => $entry->sectionId,
                 'title'     => $entry->title,
                 'slug'      => $entry->slug,
-                'sectionId' => $entry->sectionId,
             ];
         }
 
@@ -84,7 +85,7 @@ class Entries extends BaseSkillSet
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed basic info for all entries{$inSection}.",
-            'response' => Json::encode($results)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
