@@ -52,7 +52,7 @@ class Categories extends BaseSkillSet
     // ========================================================================= //
 
     /**
-     * Get basic information about all categories. Optionally specify a group handle to filter the results.
+     * Get basic information about all categories. Optionally specify a group to filter the results.
      *
      * Use this tool to get an overview of all categories in the system.
      * For details on a specific category, use the `getCategory` tool afterward.

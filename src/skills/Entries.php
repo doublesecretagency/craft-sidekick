@@ -26,9 +26,10 @@ use yii\base\InvalidConfigException;
 class Entries extends BaseSkillSet
 {
     /**
-     * Get basic information (id, title, slug) about all entries.
+     * Get basic information about all entries. Optionally specify a section to filter the results.
      *
-     * Optionally specify a section handle to filter the results.
+     * Use this tool to get an overview of all entries in the system.
+     * For details on a specific entry, use the `getEntry` tool afterward.
      *
      * @param string $sectionHandle Optional handle of the section to filter by. Set to empty string to get all entries.
      * @return SkillResponse
@@ -89,6 +90,9 @@ class Entries extends BaseSkillSet
 
     /**
      * Get an entry.
+     *
+     * If you don't know which entries exist, you may find it helpful to call the `getAllEntries` tool instead.
+     * When doing so, if possible, you may also find it helpful to specify the section handle (if it is known).
      *
      * @param string $entryId ID of the entry to retrieve.
      * @return SkillResponse

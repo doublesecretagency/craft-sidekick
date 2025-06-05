@@ -16,6 +16,7 @@ use craft\elements\Tag;
 use craft\helpers\Json;
 use craft\models\TagGroup;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
@@ -50,9 +51,10 @@ class Tags extends BaseSkillSet
     // ========================================================================= //
 
     /**
-     * Get basic information (id, title, slug) about all tags.
+     * Get basic information about all tags. Optionally specify a group to filter the results.
      *
-     * Optionally specify a group handle to filter the results.
+     * Use this tool to get an overview of all tags in the system.
+     * For details on a specific tag, use the `getTag` tool afterward.
      *
      * @param string $groupHandle Optional handle of the group to filter by. Set to empty string to get all tags.
      * @return SkillResponse
@@ -62,6 +64,7 @@ class Tags extends BaseSkillSet
         // Initialize the query
         $query = Tag::find()->select([
             'id',
+            'groupId',
             'title',
             'slug'
         ]);
@@ -79,12 +82,14 @@ class Tags extends BaseSkillSet
         $results = [];
 
         // Loop over each tag
+        /** @var Tag $tag */
         foreach ($tags as $tag) {
-            // Append title & slug to results
+            // Append data to results
             $results[] = [
-                'id'    => $tag->id,
-                'title' => $tag->title,
-                'slug'  => $tag->slug,
+                'id'      => $tag->id,
+                'groupId' => $tag->groupId,
+                'title'   => $tag->title,
+                'slug'    => $tag->slug,
             ];
         }
 
@@ -104,12 +109,14 @@ class Tags extends BaseSkillSet
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed basic info for all tags{$inGroup}.",
-            'response' => Json::encode($results)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
     /**
      * Get a tag.
+     *
+     * If you don't know which tags exist, you MUST call the `getAllTags` tool instead.
      *
      * @param string $tagId ID of the tag to retrieve.
      * @return SkillResponse
