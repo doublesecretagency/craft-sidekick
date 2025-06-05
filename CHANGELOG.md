@@ -7,6 +7,7 @@
 - Compressed results of `getAllFieldGroups` to reduce tool output size.
 - Compressed results of `getAllSites` to reduce tool output size.
 - Compressed results of `getAllSiteGroups` to reduce tool output size.
+- Compressed results of `getAllCategories` to reduce tool output size.
 
 ### Fixed
 - Fixed console error.

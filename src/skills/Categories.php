@@ -17,6 +17,7 @@ use craft\helpers\Json;
 use craft\models\CategoryGroup;
 use craft\models\CategoryGroup_SiteSettings;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
@@ -51,9 +52,10 @@ class Categories extends BaseSkillSet
     // ========================================================================= //
 
     /**
-     * Get basic information (id, title, slug) about all categories.
+     * Get basic information about all categories. Optionally specify a group handle to filter the results.
      *
-     * Optionally specify a group handle to filter the results.
+     * Use this tool to get an overview of all categories in the system.
+     * For details on a specific category, use the `getCategory` tool afterward.
      *
      * @param string $groupHandle Optional handle of the group to filter by. Set to empty string to get all categories.
      * @return SkillResponse
@@ -63,6 +65,7 @@ class Categories extends BaseSkillSet
         // Initialize the query
         $query = Category::find()->select([
             'id',
+            'groupId',
             'title',
             'slug'
         ]);
@@ -80,12 +83,14 @@ class Categories extends BaseSkillSet
         $results = [];
 
         // Loop over each category
+        /** @var Category $category */
         foreach ($categories as $category) {
-            // Append title & slug to results
+            // Append data to results
             $results[] = [
-                'id'    => $category->id,
-                'title' => $category->title,
-                'slug'  => $category->slug,
+                'id'      => $category->id,
+                'groupId' => $category->groupId,
+                'title'   => $category->title,
+                'slug'    => $category->slug,
             ];
         }
 
@@ -105,12 +110,14 @@ class Categories extends BaseSkillSet
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed basic info for all categories{$inGroup}.",
-            'response' => Json::encode($results)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
     /**
      * Get a category.
+     *
+     * If you don't know which categories exist, you MUST call the `getAllCategories` tool instead.
      *
      * @param string $categoryId ID of the category to retrieve.
      * @return SkillResponse
