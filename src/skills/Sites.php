@@ -60,40 +60,36 @@ class Sites extends BaseSkillSet
      */
     public static function getAllSites(): SkillResponse
     {
-        // Initialize sites
-        $sites = [];
-
-        // Fetch all sites
+        // Get all sites
         $allSites = Craft::$app->getSites()->getAllSites();
 
-        // Loop through each site and format the output
-        foreach ($allSites as $site) {
+        // Initialize results array
+        $results = [];
 
-            // Catalog each site
-            $sites[] = [
-                'ID' => $site->id,
-                'UID' => $site->uid,
-                'Group ID' => $site->groupId,
-                'Name' => $site->getName(),
-                'Handle' => $site->handle,
-                'Language' => $site->language,
-                'Locale' => $site->getLocale(),
-                'Primary' => $site->primary,
-                'Has URLs' => $site->hasUrls,
-                'Base URL' => $site->getBaseUrl(),
-                'Sort Order' => $site->sortOrder,
-                'Date Created' => $site->dateCreated,
-                'Date Updated' => $site->dateUpdated,
+        // Loop through each site
+        foreach ($allSites as $site) {
+            // Append data to results
+            $results[] = [
+                'id' => $site->id,
+                'uid' => $site->uid,
+                'groupId' => $site->groupId,
+                'name' => $site->getName(),
+                'handle' => $site->handle,
+                'language' => $site->language,
+                'locale' => $site->getLocale(),
+                'primary' => $site->primary,
+                'hasUrls' => $site->hasUrls,
+                'baseUrl' => $site->getBaseUrl(),
+                'sortOrder' => $site->sortOrder,
                 'isEnabled' => $site->getEnabled(),
             ];
-
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing sites.",
-            'response' => Json::encode($sites)
+            'response' => Json::encode($results)
         ]);
     }
 
