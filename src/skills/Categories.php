@@ -287,36 +287,34 @@ class Categories extends BaseSkillSet
      * If you are unfamiliar with the existing category groups, you MUST call this tool before creating, reading, updating, or deleting category groups.
      * Eagerly call this if an understanding of the current category groups is required.
      *
-     * You may also find it helpful to call this tool before updating an Category.
+     * You may also find it helpful to call this tool before updating a Category.
      *
      * @return SkillResponse
      */
     public static function getAllCategoryGroups(): SkillResponse
     {
-        // Initialize category groups
-        $categoryGroups = [];
-
         // Get all category groups
-        $allCategoryGroups = Craft::$app->getCategories()->getAllGroups();
+        $categoryGroups = Craft::$app->getCategories()->getAllGroups();
 
-        // Loop through each category group and format the output
-        foreach ($allCategoryGroups as $categoryGroup) {
+        // Initialize results array
+        $results = [];
 
-            // Catalog each category group
-            $categoryGroups[] = [
-                'ID' => $categoryGroup->id,
-                'Name' => $categoryGroup->name,
-                'Handle' => $categoryGroup->handle,
-                'Field Layout ID' => $categoryGroup->getFieldLayout(),
+        // Loop through each category group
+        foreach ($categoryGroups as $group) {
+            // Append data to results
+            $results[] = [
+                'id'            => $group->id,
+                'fieldLayoutId' => $group->getFieldLayout()->id,
+                'name'          => $group->name,
+                'handle'        => $group->handle,
             ];
-
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing category groups.",
-            'response' => Json::encode($categoryGroups)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 

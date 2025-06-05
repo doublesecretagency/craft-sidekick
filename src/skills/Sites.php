@@ -71,16 +71,16 @@ class Sites extends BaseSkillSet
         foreach ($allSites as $site) {
             // Append data to results
             $results[] = [
-                'id' => $site->id,
-                'uid' => $site->uid,
-                'groupId' => $site->groupId,
-                'name' => $site->getName(),
-                'handle' => $site->handle,
-                'language' => $site->language,
-                'locale' => $site->getLocale(),
-                'primary' => $site->primary,
-                'hasUrls' => $site->hasUrls,
-                'baseUrl' => $site->getBaseUrl(),
+                'id'        => $site->id,
+                'uid'       => $site->uid,
+                'groupId'   => $site->groupId,
+                'name'      => $site->getName(),
+                'handle'    => $site->handle,
+                'language'  => $site->language,
+                'locale'    => $site->getLocale()->id,
+                'primary'   => $site->primary,
+                'hasUrls'   => $site->hasUrls,
+                'baseUrl'   => $site->getBaseUrl(),
                 'sortOrder' => $site->sortOrder,
                 'isEnabled' => $site->getEnabled(),
             ];
@@ -90,7 +90,7 @@ class Sites extends BaseSkillSet
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing sites.",
-            'response' => Json::encode($results)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
