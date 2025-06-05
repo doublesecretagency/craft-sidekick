@@ -115,6 +115,7 @@ MARKDOWN;
             'Craft CMS edition' => Craft::$app->getEdition(),
             'PHP version' => PHP_VERSION,
             'General Config' => [
+                'cpTrigger' => $generalConfig->cpTrigger,
                 'aliases' => $generalConfig->aliases,
                 'allowAdminChanges' => $generalConfig->allowAdminChanges,
             ]

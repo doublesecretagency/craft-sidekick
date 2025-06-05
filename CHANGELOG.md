@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Made it easier to generate links.
+
 ### Changed
 - Compressed results of `getAllFields` to reduce tool output size. ([#3](https://github.com/doublesecretagency/craft-sidekick/issues/3))
 - Compressed results of `getAllFieldGroups` to reduce tool output size.
