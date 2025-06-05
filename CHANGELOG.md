@@ -6,6 +6,7 @@
 - Compressed results of `getAllFields` to reduce tool output size. ([#3](https://github.com/doublesecretagency/craft-sidekick/issues/3))
 - Compressed results of `getAllFieldGroups` to reduce tool output size.
 - Compressed results of `getAllSites` to reduce tool output size.
+- Compressed results of `getAllSiteGroups` to reduce tool output size.
 
 ### Fixed
 - Fixed console error.

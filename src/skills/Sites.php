@@ -15,6 +15,7 @@ use Craft;
 use craft\helpers\Json;
 use craft\models\Site;
 use craft\models\SiteGroup;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 
@@ -288,30 +289,42 @@ class Sites extends BaseSkillSet
      */
     public static function getAllSiteGroups(): SkillResponse
     {
-        // Initialize site groups
-        $groups = [];
+        // Get all site groups
+        $siteGroups = Craft::$app->getSites()->getAllGroups();
 
-        // Fetch all site groups
-        $allGroups = Craft::$app->getSites()->getAllGroups();
+        // Initialize results array
+        $results = [];
 
-        // Loop through each group and format the output
-        foreach ($allGroups as $group) {
+        // Loop over each site group
+        foreach ($siteGroups as $group) {
 
-            // Catalog each group
-            $groups[] = [
-                'ID' => $group->id,
-                'UID' => $group->uid,
-                'Name' => $group->getName(),
-                'Contains Sites' => $group->getSiteIds(),
+            // Identify which sites are in the group
+            $siteIds = implode(',', $group->getSiteIds());
+
+            // Append data to results
+            $results[] = [
+                'id'      => $group->id,
+                'name'    => $group->getName(),
+                'uid'     => $group->uid,
+                'siteIds' => $siteIds,
             ];
 
+        }
+
+        // If no results
+        if (!$results) {
+            // Return success message with no results
+            return new SkillResponse([
+                'success' => true,
+                'message' => "No site groups found."
+            ]);
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing site groups.",
-            'response' => Json::encode($groups)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
