@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.5 - 2025-06-05
 
 ### Added
 - Made it easier to generate links.
