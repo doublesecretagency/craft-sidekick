@@ -12,6 +12,7 @@
 - Compressed results of `getAllTags` to reduce tool output size.
 - Compressed results of `getAllTagGroups` to reduce tool output size.
 - Compressed results of `getAllEntries` to reduce tool output size.
+- Compressed results of `getAllSections` to reduce tool output size.
 
 ### Fixed
 - Fixed console error.

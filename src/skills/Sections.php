@@ -15,6 +15,7 @@ use Craft;
 use craft\helpers\Json;
 use craft\models\Section;
 use craft\models\Section_SiteSettings;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
@@ -73,51 +74,50 @@ class Sections extends BaseSkillSet
      */
     public static function getAllSections(): SkillResponse
     {
-        // Initialize sections
-        $sections = [];
-
         // Get all sections
         if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
             // Craft 4
-            $allSections = Craft::$app->getSections()->getAllSections();
+            $sections = Craft::$app->getSections()->getAllSections();
         } else {
             // Craft 5+
-            $allSections = Craft::$app->getEntries()->getAllSections();
+            $sections = Craft::$app->getEntries()->getAllSections();
         }
 
-        // Loop through each section and format the output
-        foreach ($allSections as $section) {
+        // Initialize results array
+        $results = [];
+
+        // Loop through each section
+        foreach ($sections as $section) {
 
             // Initialize entry types
             $entryTypes = [];
 
-            // Get the entry types for the section
+            // Loop through entry types in the section
             foreach ($section->getEntryTypes() as $entryType) {
-                // Catalog each entry type
+                // Append each entry type
                 $entryTypes[] = [
-                    'ID' => $entryType->id,
-                    'Name' => $entryType->name,
-                    'Handle' => $entryType->handle,
-                    'Field Layout' => $entryType->fieldLayoutId,
+                    'id'            => $entryType->id,
+                    'fieldLayoutId' => $entryType->fieldLayoutId,
+                    'name'          => $entryType->name,
+                    'handle'        => $entryType->handle,
                 ];
             }
 
-            // Catalog each section
-            $sections[] = [
-                'ID' => $section->id,
-                'Name' => $section->name,
-                'Handle' => $section->handle,
-                'Section Type' => $section->type,
-                'Available Entry Types' => $entryTypes,
+            // Append data to results
+            $results[] = [
+                'id'         => $section->id,
+                'name'       => $section->name,
+                'handle'     => $section->handle,
+                'type'       => $section->type,
+                'entryTypes' => Json::encode($entryTypes),
             ];
-
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing sections.",
-            'response' => Json::encode($sections)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
