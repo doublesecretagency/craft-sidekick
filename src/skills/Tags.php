@@ -292,29 +292,28 @@ class Tags extends BaseSkillSet
      */
     public static function getAllTagGroups(): SkillResponse
     {
-        // Initialize tag groups
-        $tagGroups = [];
-
         // Get all tag groups
-        $allTagGroups = Craft::$app->getTags()->getAllTagGroups();
+        $tagGroups = Craft::$app->getTags()->getAllTagGroups();
 
-        // Loop through each tag group and format the output
-        foreach ($allTagGroups as $tagGroup) {
+        // Initialize results array
+        $results = [];
 
-            // Catalog each tag group
-            $tagGroups[] = [
-                'ID' => $tagGroup->id,
-                'Name' => $tagGroup->name,
-                'Handle' => $tagGroup->handle,
+        // Loop through each tag group
+        foreach ($tagGroups as $group) {
+            // Append data to results
+            $results[] = [
+                'id'            => $group->id,
+                'fieldLayoutId' => $group->getFieldLayout()->id,
+                'name'          => $group->name,
+                'handle'        => $group->handle,
             ];
-
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing tag groups.",
-            'response' => Json::encode($tagGroups)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 

@@ -10,6 +10,7 @@
 - Compressed results of `getAllCategories` to reduce tool output size.
 - Compressed results of `getAllCategoryGroups` to reduce tool output size.
 - Compressed results of `getAllTags` to reduce tool output size.
+- Compressed results of `getAllTagGroups` to reduce tool output size.
 
 ### Fixed
 - Fixed console error.
