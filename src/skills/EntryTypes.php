@@ -16,6 +16,7 @@ use craft\helpers\Json;
 use craft\models\EntryType;
 use craft\models\FieldLayout;
 use craft\models\FieldLayoutTab;
+use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
@@ -67,30 +68,28 @@ class EntryTypes extends BaseSkillSet
      */
     public static function getAllEntryTypes(): SkillResponse
     {
-        // Initialize entry types
-        $entryTypes = [];
-
         // Get all entry types
-        $allEntryTypes = Craft::$app->getEntries()->getAllEntryTypes();
+        $entryTypes = Craft::$app->getEntries()->getAllEntryTypes();
 
-        // Loop through each entry type and format the output
-        foreach ($allEntryTypes as $entryType) {
+        // Initialize results array
+        $results = [];
 
-            // Catalog each entry type
-            $entryTypes[] = [
-                'ID' => $entryType->id,
-                'Name' => $entryType->name,
-                'Handle' => $entryType->handle,
-                'Field Layout' => $entryType->fieldLayoutId,
+        // Loop through each entry type
+        foreach ($entryTypes as $entryType) {
+            // Append data to results
+            $results[] = [
+                'id'            => $entryType->id,
+                'fieldLayoutId' => $entryType->fieldLayoutId,
+                'name'          => $entryType->name,
+                'handle'        => $entryType->handle,
             ];
-
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
             'message' => "Reviewed the existing entry types.",
-            'response' => Json::encode($entryTypes)
+            'response' => SkillsHelper::toCsv($results)
         ]);
     }
 
