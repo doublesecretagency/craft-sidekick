@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added drag handle to resize chat window.
+
 ## 1.0.5 - 2025-06-05
 
 ### Added

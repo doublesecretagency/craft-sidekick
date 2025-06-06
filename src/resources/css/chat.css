@@ -1,18 +1,53 @@
-#chat-input {
-    border: 1px solid #333; /* Dark solid border */
-    padding: 10px;
-    margin-top: 5px;
-    resize: vertical; /* Allow vertical resizing */
-    border-radius: 4px; /* Optional: rounded corners */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 #chat-window {
-    border: 1px solid #ddd;
+    flex: 1 1 auto;
+    min-height: 150px; /* Prevent chat window from collapsing entirely */
     height: 400px;
     overflow-y: auto;
-    margin-bottom: 10px;
     background-color: #f9f9f9;
+    border: 1px solid #ddd;
 }
+
+/* Handle for resizing the chat window */
+#chat-resizer {
+    cursor: row-resize;
+    display: flex;
+    height: 12px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#chat-resizer::before,
+#chat-resizer::after {
+    content: '';
+    display: block;
+    width: 42%;
+    min-width: 80px;
+    max-width: 260px;
+    height: 2px;
+    /*background-color: #e5e5e5;*/
+    margin: 1px 0; /* spacing between & around lines */
+}
+
+/* Chat input area */
+#chat-user-prompt {
+    flex: 0 0 auto;
+}
+
+/* Textarea for user input */
+#chat-input {
+    border: 1px solid #333; /* Dark solid border */
+    padding: 10px;
+    resize: vertical; /* Allow vertical resizing */
+    border-radius: 4px;
+}
+
+/* ========================================================================= */
 
 .form-footer {
     display: flex;
@@ -23,6 +58,8 @@
 .form-footer button {
     margin-right: 10px;
 }
+
+/* ========================================================================= */
 
 /* Chat message container */
 .chat-message {

@@ -2,7 +2,10 @@
 // noinspection JSVoidFunctionReturnValueUsed
 const SidekickChat = {
     // Properties
+    chatContainer: document.getElementById('chat-container'),
     chatWindow: document.getElementById('chat-window'),
+    chatResizer: document.getElementById('chat-resizer'),
+    chatUserPrompt: document.getElementById('chat-user-prompt'),
     chatForm: document.getElementById('chat-form'),
     chatInput: document.getElementById('chat-input'),
     clearButton: document.getElementById('clear-conversation-button'),
@@ -10,6 +13,7 @@ const SidekickChat = {
     aiModelSelect: document.getElementById('ai-model-select'),
     sendButton: null,
     greeting: null,
+    slideout: null,
     MAX_MESSAGE_LENGTH: 1000, // Adjust this limit as needed
     ROLE: {
         ASSISTANT: 'assistant',
@@ -38,6 +42,18 @@ const SidekickChat = {
         // // Load selected AI model
         // this.loadSelectedModel();
 
+        // Initialize height of chat window
+        const startH = this.chatWindow.getBoundingClientRect().height;
+        this.chatWindow.style.height = startH + 'px';
+
+        // Bind "this" for each handler
+        this._onResizeStart = this._onResizeStart.bind(this);
+        this._onResizing    = this._onResizing.bind(this);
+        this._onResizeEnd   = this._onResizeEnd.bind(this);
+
+        // Initialize the resizer
+        this.chatResizer.addEventListener('mousedown', this._onResizeStart);
+
         // Activate skills slideout
         new this.ListSkills();
 
@@ -49,6 +65,49 @@ const SidekickChat = {
             },
         });
     },
+
+    // ========================================================================= //
+
+    // When grabbing the resizer handle
+    _onResizeStart(e) {
+
+        // Prevent default behavior to avoid text selection
+        e.preventDefault();
+
+        // Store the initial mouse position and chat window height
+        this.startY      = e.clientY;
+        this.startHeight = this.chatWindow.getBoundingClientRect().height;
+
+        // Add event listeners for mouse movement and release
+        document.addEventListener('mousemove', this._onResizing);
+        document.addEventListener('mouseup',   this._onResizeEnd, { once: true });
+    },
+
+    // While resizing the chat window
+    _onResizing(e) {
+
+        // Get the difference in mouse position
+        const delta = e.clientY - this.startY;
+        let   newH  = this.startHeight + delta;
+
+        // Minimum height for the chat window
+        const minHeight = 150;
+
+        // Calculate the new height
+        // ensuring it doesn't go below the minimum
+        newH = Math.max(newH, minHeight);
+
+        // Set the new height of the chat window
+        this.chatWindow.style.height = `${newH}px`;
+    },
+
+    // When finished resizing
+    _onResizeEnd() {
+        // Remove the event listeners
+        document.removeEventListener('mousemove', this._onResizing);
+    },
+
+    // ========================================================================= //
 
     // Bind event listeners
     bindEvents: function () {
@@ -101,6 +160,8 @@ const SidekickChat = {
         this.chatInput.disabled = false;
         this.chatInput.focus(); // Refocus the input
     },
+
+    // ========================================================================= //
 
     // Append a message to the chat window
     appendMessage: function (role, message) {
@@ -181,6 +242,8 @@ const SidekickChat = {
         // Scroll to the bottom of the chat window
         this.chatWindow.scrollTop = this.chatWindow.scrollHeight;
     },
+
+    // ========================================================================= //
 
     // Load existing conversation
     loadConversation: function () {
@@ -502,8 +565,7 @@ const SidekickChat = {
         }
     },
 
-    // Global slideout object
-    slideout: null,
+    // ========================================================================= //
 
     // Activate skills slideout
     ListSkills: Garnish.Base.extend({
