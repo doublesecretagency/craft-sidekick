@@ -405,10 +405,10 @@ class Sidekick extends Plugin
             Entries::class,
             Categories::class,
             Tags::class,
-            Fields::class,
             Sections::class,
             EntryTypes::class,
             Sites::class,
+            Fields::class,
         ];
 
         // Give plugins/modules a chance to add custom skill sets

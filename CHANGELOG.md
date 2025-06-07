@@ -5,6 +5,9 @@
 ### Added
 - Added drag handle to resize chat window.
 
+### Changed
+- Moved field tools to the bottom of the skills list.
+
 ## 1.0.5 - 2025-06-05
 
 ### Added
