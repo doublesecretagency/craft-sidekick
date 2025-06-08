@@ -21,18 +21,11 @@ class Session
     public const AI_MODEL = 'sidekickSelectedModel';
 
     /**
-     * Session key for storing the generated assistant ID.
+     * Session key for storing the generated response ID.
      *
      * @const
      */
-    public const ASSISTANT_ID = 'sidekickAssistantId';
-
-    /**
-     * Session key for storing the generated thread ID.
-     *
-     * @const
-     */
-    public const THREAD_ID = 'sidekickThreadId';
+    public const RESPONSE_ID = 'sidekickResponseId';
 
     /**
      * Session key for storing the complete conversation.

@@ -15,6 +15,7 @@ use Craft;
 use craft\errors\MissingComponentException;
 use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\models\ChatMessage;
+use doublesecretagency\sidekick\models\FunctionCall;
 use yii\base\Component;
 
 class ChatService extends Component
@@ -29,9 +30,8 @@ class ChatService extends Component
             // Get the session service
             $session = Craft::$app->getSession();
 
-            // Clear the assistant and thread IDs from the session
-            $session->remove(Session::ASSISTANT_ID);
-            $session->remove(Session::THREAD_ID);
+            // Remove the Responses API ID
+            $session->remove(Session::RESPONSE_ID);
 
             // Clear the conversation from the session
             $session->remove(Session::CHAT_HISTORY);
@@ -82,11 +82,11 @@ class ChatService extends Component
     }
 
     /**
-     * Add a message to the conversation history.
+     * Add a message or tool output to the conversation history.
      *
-     * @param ChatMessage $message
+     * @param ChatMessage|FunctionCall $message
      */
-    public function addMessage(ChatMessage $message): void
+    public function addMessage(ChatMessage|FunctionCall $message): void
     {
         // Track the message
 //        Craft::info("Appending message to the conversation history.", __METHOD__);

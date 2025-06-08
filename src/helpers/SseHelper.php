@@ -50,9 +50,9 @@ class SseHelper
      * Send an event to the client.
      *
      * @param string $event The name of the event.
-     * @param mixed $data The data to send with the event.
+     * @param array|null $data The data to send with the event.
      */
-    public static function event(string $event, $data = []): void
+    public static function event(string $event, ?array $data = []): void
     {
         // Encode the data as JSON
         $json = Json::encode($data);
@@ -93,7 +93,9 @@ class SseHelper
     public static function flush(): void
     {
         // Flush to push it to the client immediately
-        @ob_flush();
+        if (ob_get_length() > 0) {
+            @ob_flush();
+        }
         @flush();
     }
 }

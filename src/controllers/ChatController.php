@@ -209,8 +209,7 @@ class ChatController extends Controller
                     'message' => $greeting
                 ]))
                     ->log(__METHOD__)
-                    ->toChatHistory()
-                    ->toOpenAiThread();
+                    ->toChatHistory();
             }
 
             // Append user message to conversation
@@ -219,11 +218,10 @@ class ChatController extends Controller
                 'message' => $message
             ]))
                 ->log(__METHOD__)
-                ->toChatHistory()
-                ->toOpenAiThread();
+                ->toChatHistory();
 
             // Run the OpenAI thread
-            $openAi->runThread();
+            $openAi->streamResponses();
 
         } catch (Exception $e) {
 
@@ -244,8 +242,6 @@ class ChatController extends Controller
 
     /**
      * Stream test messages indefinitely to test SSE flushing and connection stability.
-     *
-     * @return void
      */
     public function actionTestStream(): void
     {
@@ -260,7 +256,7 @@ class ChatController extends Controller
 
         // Send initial message
         (new ChatMessage([
-            'role' => ChatMessage::TOOL,
+            'role' => ChatMessage::SYSTEM,
             'message' => "[debug] Infinite SSE stream started, running every {$delay} seconds...",
         ]))
             ->log(__METHOD__)
@@ -280,7 +276,7 @@ class ChatController extends Controller
 
             // Send test message
             (new ChatMessage([
-                'role' => ChatMessage::TOOL,
+                'role' => ChatMessage::SYSTEM,
                 'message' => "[tick] #{$counter} — " . date('[Y-m-d] g:i:s A (T)'),
             ]))
                 ->log(__METHOD__)

@@ -6,6 +6,7 @@
 - Added drag handle to resize chat window.
 
 ### Changed
+- Switched to OpenAI's Responses API for improved speed and performance.
 - Moved field tools to the bottom of the skills list.
 
 ## 1.0.5 - 2025-06-05

@@ -10,7 +10,7 @@ description: "An example of a custom skill which adds an event to the calendar."
         <div class="sender-column">You:</div>
         <div class="content-column"><p>add Team Meeting to the calendar on Oct 15th at 10</p></div>
     </div>
-    <div class="chat-message tool-message">
+    <div class="chat-message system-message">
         <div class="sender-column"></div>
         <div class="content-column"><p>The event "Team Meeting" has been added to the calendar for October 15, 2025 at 10:00 AM.</p></div>
     </div>

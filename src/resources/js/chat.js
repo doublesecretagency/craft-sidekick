@@ -194,10 +194,6 @@ const SidekickChat = {
                 sender = null;
                 messageClass = 'system-message';
                 break;
-            case this.ROLE.TOOL:
-                sender = null;
-                messageClass = 'tool-message';
-                break;
             case this.ROLE.ERROR:
                 sender = 'Error';
                 messageClass = 'error-message';

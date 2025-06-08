@@ -10,7 +10,7 @@ description: "An example of a custom skill which creates a report with specified
         <div class="sender-column">You:</div>
         <div class="content-column"><p>create a report about Jeff's sales last month</p></div>
     </div>
-    <div class="chat-message tool-message">
+    <div class="chat-message system-message">
         <div class="sender-column"></div>
         <div class="content-column"><p>A sales report for Jeff for last month has been generated.</p></div>
     </div>

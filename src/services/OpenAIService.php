@@ -18,21 +18,17 @@ use craft\helpers\Json;
 use craft\helpers\UrlHelper;
 use doublesecretagency\sidekick\constants\AiModel;
 use doublesecretagency\sidekick\constants\Chat;
-use doublesecretagency\sidekick\constants\Session;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
+use doublesecretagency\sidekick\models\FunctionCall;
 use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Client as GuzzleClient;
-use GuzzleHttp\Exception\RequestException;
 use OpenAI;
 use OpenAI\Client;
-use OpenAI\Contracts\Resources\ThreadsRunsContract;
-use OpenAI\Responses\StreamResponse;
-use OpenAI\Responses\Threads\Runs\ThreadRunResponse;
-use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredAction;
-use OpenAI\Responses\Threads\Runs\ThreadRunResponseRequiredActionFunctionToolCall;
-use OpenAI\Responses\Threads\Runs\ThreadRunStreamResponse;
+use OpenAI\Responses\Responses\CreateStreamedResponse;
+use OpenAI\Responses\Responses\Output\OutputFunctionToolCall;
+use OpenAI\Responses\Responses\Output\OutputMessage;
 use phpDocumentor\Reflection\DocBlock\Tags\Param;
 use phpDocumentor\Reflection\DocBlockFactory;
 use ReflectionException;
@@ -66,16 +62,6 @@ class OpenAIService extends Component
      * @var Client The OpenAI client for making API requests.
      */
     private Client $_openAiClient;
-
-    /**
-     * @var string|null The assistant ID.
-     */
-    private ?string $_assistantId = null;
-
-    /**
-     * @var string|null The thread ID.
-     */
-    private ?string $_threadId = null;
 
     /**
      * @var array List of skills hashes.
@@ -120,6 +106,11 @@ class OpenAIService extends Component
      */
     private function _setAiClient(): void
     {
+        // If the OpenAI client is already set, bail
+        if (isset($this->_openAiClient)) {
+            return;
+        }
+
         // Get link to the plugin settings page
         $settingsUrl = UrlHelper::cpUrl('settings/plugins/sidekick');
 
@@ -130,71 +121,14 @@ class OpenAIService extends Component
             throw new Exception($error);
         }
 
-        // If the OpenAI client is already set, bail
-        if (isset($this->_openAiClient)) {
-            return;
-        }
-
         // Create a new OpenAI client
         $this->_openAiClient = OpenAI::factory()
             ->withApiKey($this->_apiKey)
             ->withHttpClient(new GuzzleClient([
-                'timeout' => 0,
-                'headers' => [
-                    'OpenAI-Beta' => 'assistants=v2'
-                ]
+                'timeout' => 0
             ]))
             ->make();
     }
-
-    // ========================================================================= //
-
-    /**
-     * Summarize the element.
-     *
-     * @param Element $element
-     * @param string $instructions
-     * @return string
-     */
-    public function summarizeElement(Element $element, string $instructions): string
-    {
-        // Compress the element data
-        $elementData = Json::encode($element);
-
-        /*
-         * @TODO: Permit different column types.
-         *        Copy how it's done in the Plain Text field.
-         *        Max length would be based on selected column type.
-         */
-
-        // Compile the content for the AI
-        $content = <<<CONTENT
-# Instructions
-{$instructions}
-
-## Maximum Response Length
-**IMPORTANT:** Unless otherwise specified, the absolute maximum length of your response must be 240 characters or fewer. Longer text will cause an error when the field is saved.
-
-# Craft CMS Element
-{$elementData}
-CONTENT;
-
-        // Perform the AI query
-        $result = $this->_openAiClient->chat()->create([
-            'model' => 'o4-mini',
-            'messages' => [
-                [
-                    'role' => 'user',
-                    'content' => $content
-                ],
-            ],
-        ]);
-
-        // Return the AI response
-        return ($result->choices[0]->message->content ?? '');
-    }
-
-    // ========================================================================= //
 
     /**
      * Compile the available skills.
@@ -230,175 +164,87 @@ CONTENT;
     // ========================================================================= //
 
     /**
-     * Get the assistant ID.
+     * Parse the conversation for the OpenAI thread.
      *
-     * @return string|null
-     * @throws Exception
+     * @return array
      */
-    private function _getAssistantId(): ?string
+    private function _parseConversation(): array
     {
-        // If assistant ID is already set, return it
-        if ($this->_assistantId) {
-            return $this->_assistantId;
-        }
+        // Get the existing conversation
+        $conversation = Sidekick::getInstance()?->chat->getConversation();
 
-        try {
-            // Get the session service
-            $session = Craft::$app->getSession();
+        // Initialize parsed conversation
+        $parsedConversation = [];
 
-            // If assistant ID exists in the session, return it
-            if ($assistantId = $session->get(Session::ASSISTANT_ID)) {
-                return $assistantId;
+        // Loop through each message in the conversation
+        foreach ($conversation as $i => $message) {
+
+            // If message is a function call
+            if ($message instanceof FunctionCall) {
+
+                // Parse the function call
+                $parsedConversation[] = [
+                    'type'      => 'function_call',
+                    'call_id'   => $message->callId,
+                    'name'      => $message->name,
+                    'arguments' => $message->arguments,
+                ];
+
+                // Parse the function call output
+                $parsedConversation[] = [
+                    'type'    => 'function_call_output',
+                    'call_id' => $message->callId,
+                    'output'  => $message->output,
+                ];
+
+            } else if ($message instanceof ChatMessage) {
+
+                // If message is an error
+                if (ChatMessage::ERROR === $message->role) {
+                    // Consider error to be a user message
+                    $parsedConversation[] = [
+                        'role' => ChatMessage::USER,
+                        'content' => "SYSTEM ERROR: {$message->message}",
+                    ];
+                } else {
+                    // Else convert object to array
+                    $parsedConversation[] = [
+                        'role' => $message->role,
+                        'content' => $message->message,
+                    ];
+                }
+
             }
 
-            // Get the selected AI model from the session
-//            $model = Craft::$app->getSession()->get(Session::AI_MODEL, AiModel::DEFAULT);
-            $model = AiModel::DEFAULT; // TEMP: Lock to default model
-
-            // Create a new assistant
-            $assistant = $this->_openAiClient->assistants()->create([
-                'model' => $model,
-                'name' => 'Sidekick',
-                'instructions' => SystemPrompt::getPrompt(),
-                'tools' => $this->_getTools()
-            ]);
-
-            // Store the assistant ID
-            $this->_assistantId = $assistant->id;
-
-            // Store the assistant ID in the session
-            $session->set(Session::ASSISTANT_ID, $assistant->id);
-
-            // Track the assistant
-            Craft::info("Created a new assistant. [{$assistant->id}]", __METHOD__);
-
-            // Return the assistant ID
-            return $assistant->id;
-
-        } catch (\Exception $e) {
-
-            // Log and throw the error
-            $error = "Unable to create a new assistant. {$e->getMessage()}";
-            Craft::error($error, __METHOD__);
-            throw new Exception($error);
-
         }
+
+        // Return the parsed conversation
+        return $parsedConversation;
     }
 
     /**
-     * Get the thread ID.
-     *
-     * @return string|null
-     * @throws Exception
+     * Send a message to the AI assistant and handle the response.
      */
-    private function _getThreadId(): ?string
+    public function streamResponses(): void
     {
-        // If thread ID is already set, return it
-        if ($this->_threadId) {
-            return $this->_threadId;
-        }
-
-        try {
-            // Get the session service
-            $session = Craft::$app->getSession();
-
-            // If thread ID exists in the session, return it
-            if ($threadId = $session->get(Session::THREAD_ID)) {
-                return $threadId;
-            }
-
-            // Create a new thread
-            $thread = $this->_openAiClient->threads()->create([]);
-
-            // Store the thread ID
-            $this->_threadId = $thread->id;
-
-            // Store the thread ID in the session
-            $session->set(Session::THREAD_ID, $thread->id);
-
-            // Track the assistant
-            Craft::info("Created a new thread. [{$thread->id}]", __METHOD__);
-
-            // Return the thread ID
-            return $thread->id;
-
-        } catch (\Exception $e) {
-
-            // Log and throw the error
-            $error = "Unable to create a new thread. {$e->getMessage()}";
-            Craft::error($error, __METHOD__);
-            throw new Exception($error);
-
-        }
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Initialize the thread.
-     *
-     * @return void
-     * @throws Exception
-     */
-    private function _initThread(): void
-    {
-        // Get the assistant and thread IDs
-        $this->_assistantId = $this->_getAssistantId();
-        $this->_threadId    = $this->_getThreadId();
-    }
-
-    // ========================================================================= //
-
-    /**
-     * Append a message to the current thread.
-     *
-     * @param array $message
-     * @return void
-     * @throws Exception
-     */
-    public function addMessage(array $message): void
-    {
-        // If API key is not set, throw an exception
+        // If API key is not set
         if (!$this->_apiKey) {
-            $error = "OpenAI API key is not set.";
-            Craft::error($error, __METHOD__);
-            throw new Exception($error);
+            // Output error message
+            (new ChatMessage([
+                'role' => ChatMessage::ERROR,
+                'message' => "OpenAI API key is not set."
+            ]))
+                ->log(__METHOD__)
+                ->toChatHistory()
+                ->toChatWindow();
+            // Bail
+            return;
         }
 
-        // Track the message
-//        Craft::info("Appending message to the OpenAI conversation.", __METHOD__);
+        // Don't re-run by default
+        // unless a tool call is made
+        $rerun = false;
 
-        try {
-
-            // Initialize the thread
-            $this->_initThread();
-
-            // Append message to the existing thread
-            $this->_openAiClient->threads()->messages()->create($this->_threadId, $message);
-
-        } catch (RequestException|\Exception $e) {
-
-            // Log and throw the error
-            $error = $e->getMessage();
-
-            // If trying to add a new message to an active thread
-            if (str_contains($error, "Can't add messages to thread")) {
-                $error = 'We encountered some turbulence. You may need to clear the conversation and start over.';
-            }
-
-            Craft::error($error, __METHOD__);
-            throw new Exception($error);
-
-        }
-    }
-
-    /**
-     * Run the thread.
-     *
-     * @throws Exception
-     */
-    public function runThread(): void
-    {
         // Initialize detection of message pauses
         $lastThinkingMessageTime = time();
         $this->_lastMessageTime = time();
@@ -414,213 +260,117 @@ CONTENT;
         // Get the SSE service
         $sse = Sidekick::getInstance()->sse;
 
-        // Get the runs service
-        $service = $this->_openAiClient->threads()->runs();
-
-        // Create a new streaming run
-        $stream = $service->createStreamed($this->_getThreadId(), [
-            'assistant_id' => $this->_getAssistantId(),
-        ]);
-
-        // The thread is running
-        $running = true;
-
-        // Attempt to run the thread
+        // Attempt to run the stream
         try {
 
-            // While the run is not completed
-            do {
+            // Configure the streaming response
+            $streamConfig = [
+                'stream' => true, // Stream responses for SSE
+                'model' => AiModel::DEFAULT, // TEMP: Lock to default model
+                'instructions' => SystemPrompt::getPrompt(),
+                'tools' => $this->_getTools(),
+                'input' => $this->_parseConversation(),
+            ];
 
-                // Loop through the stream
-                /** @var ThreadRunStreamResponse $response */
-                /** @var ThreadRunResponse $run */
-                foreach ($stream as $response) {
+            // Create a new streaming response
+            $stream = $this->_openAiClient->responses()->createStreamed($streamConfig);
 
-                    // If the SSE connection has been aborted
-                    if (connection_aborted()) {
+            // Loop over streaming responses
+            /** @var CreateStreamedResponse $response */
+            foreach ($stream as $response) {
 
-                        // Log error message
-                        (new ChatMessage([
-                            'role' => ChatMessage::ERROR,
-                            'message' => "SSE connection aborted by the client."
-                        ]))
-                            ->log(__METHOD__)
-                            ->toChatHistory();
+                // If the SSE connection has been aborted
+                if (connection_aborted()) {
 
-                        // Exits both foreach and do-while
-                        break 2;
-                    }
+                    // Log error message
+                    (new ChatMessage([
+                        'role' => ChatMessage::ERROR,
+                        'message' => "SSE connection aborted by the client."
+                    ]))
+                        ->log(__METHOD__)
+                        ->toChatHistory();
 
-                    // Send a heartbeat to keep the SSE connection alive
-                    if (++$heartbeatCounter % $heartbeatCycles === 0) {
-                        $sse->sendHeartbeat();
-                    }
-
-                    // Get the current time
-                    $currentTime = time();
-
-                    /**
-                     * Deltas indicate normal streaming tokens;
-                     * skip logging them to reduce noise.
-                     */
-
-                    // If just a message delta
-                    if (in_array($response->event, ['thread.message.delta','thread.run.step.delta'])) {
-
-                        // Reset last message time
-                        $this->_lastMessageTime = $currentTime;
-
-                    } else {
-
-//                        // Log the response event
-//                        (new ChatMessage([
-//                            'role' => ChatMessage::TOOL,
-//                            'message' => "[{$response->event}]",
-//                        ]))
-//                            ->log(__METHOD__);
-
-                    }
-
-                    // How long has it been since the last message?
-                    $sinceLastMessage  = $currentTime - $this->_lastMessageTime;
-                    $sinceLastThinking = $currentTime - $lastThinkingMessageTime;
-
-                    // If things have been quiet for too long
-                    if (
-                        $sinceLastMessage >= $thinkingInterval &&
-                        $sinceLastThinking >= $thinkingInterval
-                    ) {
-
-                        // Reset the last thinking message time
-                        $lastThinkingMessageTime = $currentTime;
-
-                        // Get index of the last thinking message
-                        $lastIndex = count(Chat::THINKING_MESSAGES) - 1;
-
-                        // Get the next thinking message, sticking with the last one if we go too far
-                        $message = Chat::THINKING_MESSAGES[min($this->_thinkingIndex, $lastIndex)];
-
-                        // If not at the last message
-                        if ($this->_thinkingIndex < $lastIndex) {
-                            // Increment to the next message
-                            $this->_thinkingIndex++;
-                        }
-
-                        // Send a "thinking" message to the chat window
-                        (new ChatMessage([
-                            'role' => ChatMessage::TOOL,
-                            'message' => $message
-                        ]))
-                            ->log(__METHOD__)
-                            ->toChatWindow();
-                    }
-
-                    // Switch based on the event type
-                    switch ($response->event) {
-                        case 'thread.run.created':
-                        case 'thread.run.queued':
-                        case 'thread.run.completed':
-                            // Set run and continue looping
-                            $run = $response->response;
-                            break;
-                        case 'thread.run.cancelling':
-                            // Set run
-                            $run = $response->response;
-                            // Output error message
-                            (new ChatMessage([
-                                'role' => ChatMessage::ERROR,
-                                'message' => 'Run is being cancelled for some reason.'
-                            ]))
-                                ->log(__METHOD__)
-                                ->toChatHistory()
-                                ->toChatWindow();
-                            // Continue
-                            break;
-                        case 'thread.run.expired':
-                        case 'thread.run.cancelled':
-                        case 'thread.run.failed':
-                            // The thread is no longer running
-                            $running = false;
-                            // Get the error message
-                            $error = (
-                                $response->response->lastError->message ??
-                                "An unknown error occurred. [{$response->event}]"
-                            );
-                            // Output error message
-                            (new ChatMessage([
-                                'role' => ChatMessage::ERROR,
-                                'message' => "Run unsuccessful. {$error}"
-                            ]))
-                                ->log(__METHOD__)
-                                ->toChatHistory()
-                                ->toChatWindow();
-                            // Break the whole loop
-                            break 3;
-                        case 'thread.run.requires_action':
-                            // Handle the required action
-                            $stream = $this->_handleRequiredAction($run, $response, $service);
-                            // Break the loop
-                            break;
-                    }
+                    // Exits the foreach loop
+                    break;
                 }
 
-            // Until the run is completed
-            } while ($run->status !== 'completed');
+                // Send a heartbeat to keep the SSE connection alive
+                if (++$heartbeatCounter % $heartbeatCycles === 0) {
+                    $sse->sendHeartbeat();
+                }
 
-            // The thread is no longer running
-            $running = false;
+                // Get the current time
+                $currentTime = time();
 
-            // Get the latest assistant message
-            $reply = $this->_getLatestAssistantMessage();
+                // How long has it been since the last message?
+                $sinceLastMessage  = $currentTime - $this->_lastMessageTime;
+                $sinceLastThinking = $currentTime - $lastThinkingMessageTime;
 
-            // If the SSE connection has been aborted
-            if (connection_aborted()) {
+                // If things have been quiet for too long
+                if (
+                    $sinceLastMessage >= $thinkingInterval &&
+                    $sinceLastThinking >= $thinkingInterval
+                ) {
 
-                // Log error message
-                (new ChatMessage([
-                    'role' => ChatMessage::ERROR,
-                    'message' => "Unable to append reply, SSE connection aborted."
-                ]))
-                    ->log(__METHOD__)
-                    ->toChatHistory();
+                    // Reset the last thinking message time
+                    $lastThinkingMessageTime = $currentTime;
 
-                // Bail
-                return;
+                    // Get index of the last thinking message
+                    $lastIndex = count(Chat::THINKING_MESSAGES) - 1;
+
+                    // Get the next thinking message, sticking with the last one if we go too far
+                    $message = Chat::THINKING_MESSAGES[min($this->_thinkingIndex, $lastIndex)];
+
+                    // If not at the last message
+                    if ($this->_thinkingIndex < $lastIndex) {
+                        // Increment to the next message
+                        $this->_thinkingIndex++;
+                    }
+
+                    // Send a "thinking" message to the chat window
+                    (new ChatMessage([
+                        'role' => ChatMessage::SYSTEM,
+                        'message' => $message
+                    ]))
+                        ->log(__METHOD__)
+                        ->toChatHistory()
+                        ->toChatWindow();
+                }
+
+                // Switch based on the event type
+                switch ($response->event) {
+
+                    // Success (text or function call)
+                    case 'response.output_item.done':
+                        $rerun = $this->_handleItemDone($response);
+                        break;
+
+                    // Failed (or incomplete)
+                    case 'response.incomplete':
+                    case 'response.failed':
+//                    case 'error':
+                        $this->_handleFailure($response);
+                        // Break the whole loop
+                        break 2;
+
+                    // Ignore everything else
+                    default:
+                        break;
+                }
+
             }
 
-            // Append reply to the chat history
-            (new ChatMessage($reply))
-                ->log(__METHOD__)
-                ->toChatHistory()
-                ->toChatWindow();
+        } catch (Throwable $e) {
 
-        } catch (\Exception $e) {
-
-            // Get the error message
-            $message = $e->getMessage();
-
-            // If message contains "Unable to read from stream"
-            if (str_contains($message, 'Unable to read from stream')) {
-                $message = 'Sorry, something has timed out. You may need to clear the conversation and start over.';
-            }
-
-            // Compile error message
-            $error = new ChatMessage([
+            // Output error message
+            (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => $message,
-            ]);
-
-            // Log error and append to chat
-            $error
+                'message' => $e->getMessage(),
+            ]))
                 ->log(__METHOD__)
                 ->toChatHistory()
                 ->toChatWindow();
 
-            // If the thread is not running
-            if (!$running) {
-                // Append the error to the OpenAI thread
-                $error->toOpenAiThread();
-            }
         }
 
         try {
@@ -640,145 +390,207 @@ CONTENT;
                 ->toChatWindow();
 
         }
+
+        // If needed, start the next stream from where we left off
+        if ($rerun) {
+            // Start the next stream from where we left off
+            $this->streamResponses();
+        }
     }
 
     // ========================================================================= //
 
     /**
-     * Handle the required action for the thread run.
+     * Handle a fully received item (either plain text or a function call).
      *
-     * @param ThreadRunResponse $run
-     * @param ThreadRunStreamResponse $response
-     * @param ThreadsRunsContract $service
-     * @return StreamResponse
-     * @throws Exception
+     * @param CreateStreamedResponse $response
+     * @return bool
      */
-    private function _handleRequiredAction(ThreadRunResponse $run, ThreadRunStreamResponse $response, ThreadsRunsContract $service): StreamResponse
+    private function _handleItemDone(CreateStreamedResponse $response): bool
     {
-        /** @var ThreadRunResponseRequiredAction $requiredAction */
-        $requiredAction = $response->response->requiredAction;
+        // Get the item from the response
+        $item = ($response->response->item ?? null);
 
-        // If the required action is not a tool output submission
-        if ('submit_tool_outputs' !== $requiredAction->type) {
-            // Cancel the run and throw an exception
-            $service->cancel($run->threadId, $run->id);
-            throw new Exception("Unknown required action type: {$requiredAction->type}");
+        // If no item, bail
+        if (!$item) {
+            return false;
         }
 
-        // Initialize an array to store all tool outputs
-        $allToolOutputs = [];
+        // If the item is a plain text message
+        if ($item->type === 'message') {
+            // Handle a text response
+            $this->_handleTextResponse($item);
+            // Don't re-run the stream
+            return false;
+        }
 
-        // Loop through each tool call
-        foreach ($requiredAction->submitToolOutputs->toolCalls as $toolCall) {
+        // Handle a tool call item
+        $this->_handleToolCall($item);
+        // Re-run the stream
+        return true;
+    }
 
-            try {
+    /**
+     * Handle a text response from the AI.
+     *
+     * @param OutputMessage $item
+     */
+    private function _handleTextResponse(OutputMessage $item): void
+    {
+        // If the SSE connection has been aborted
+        if (connection_aborted()) {
+            // Log error message
+            (new ChatMessage([
+                'role' => ChatMessage::ERROR,
+                'message' => "Unable to append reply, SSE connection aborted."
+            ]))
+                ->log(__METHOD__)
+                ->toChatHistory();
+            // Bail
+            return;
+        }
 
-                // If the tool call is not a function, throw an exception
-                if ('function' !== $toolCall->type) {
-                    throw new Exception("Unknown tool type: {$toolCall->type}");
-                }
+        // Get the AI response
+        $aiResponse = ($item->content[0]->text ?? null);
 
-                // Run the tool
-                $skillResponse = $this->_runTool($toolCall);
+        // Compile AI response message
+        if ($aiResponse) {
+            // Respond with the AI response
+            $responseMessage = [
+                'role' => ChatMessage::ASSISTANT,
+                'message' => $aiResponse
+            ];
+        } else {
+            // Respond with an error message
+            $responseMessage = [
+                'role' => ChatMessage::ERROR,
+                'message' => "No AI response received."
+            ];
+        }
 
-                // If the tool response was not successful, throw an exception
-                if (!$skillResponse->success) {
-                    throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
-                }
+        // Append AI response to the chat history
+        (new ChatMessage($responseMessage))
+            ->log(__METHOD__)
+            ->toChatHistory()
+            ->toChatWindow();
+    }
 
-                // Append the tool output to the chat history
-                (new ChatMessage([
-                    'role' => ChatMessage::TOOL,
-                    'message' => ($skillResponse->message ?? '[missing tool message]')
+    /**
+     * Handle a failure response from the AI.
+     *
+     * @param CreateStreamedResponse $response
+     */
+    private function _handleFailure(CreateStreamedResponse $response): void
+    {
+        // Get the error message
+        $error = (
+            $response->response->lastError->message ??
+            "An unknown error occurred. [{$response->event}]"
+        );
+
+        // Output error message
+        (new ChatMessage([
+            'role' => ChatMessage::ERROR,
+            'message' => "Run unsuccessful. {$error}"
+        ]))
+            ->log(__METHOD__)
+            ->toChatHistory()
+            ->toChatWindow();
+    }
+
+    /**
+     * Handle a tool call response from the AI.
+     *
+     * @param OutputFunctionToolCall $item
+     */
+    private function _handleToolCall(OutputFunctionToolCall $item): void
+    {
+        // If not a tool call, bail
+        if ('function_call' !== $item->type) {
+            return;
+        }
+
+        try {
+
+            // Run the tool
+            $skillResponse = $this->_runTool($item->name, $item->arguments);
+
+            // If the tool response was not successful, throw an exception
+            if (!$skillResponse->success) {
+                throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
+            }
+
+            // Append the tool output to the chat history
+            (new ChatMessage([
+                'role' => ChatMessage::SYSTEM,
+                'message' => ($skillResponse->message ?? '[missing tool message]')
+            ]))
+                ->log(__METHOD__)
+                ->toChatHistory()
+                ->toChatWindow();
+
+            // If the tool response contains data
+            if ($skillResponse->response) {
+
+                // Append output to the chat history
+                (new FunctionCall([
+                    'callId'    => $item->callId,
+                    'name'      => $item->name,
+                    'arguments' => $item->arguments,
+                    'output'    => $skillResponse->response
                 ]))
                     ->log(__METHOD__)
-                    ->toChatHistory()
-                    ->toChatWindow();
-
-                // If the tool response contains data
-                if ($skillResponse->response) {
-                    // Log the tool response
-                    Craft::info(Json::decodeIfJson($skillResponse->response), __METHOD__);
-                }
-
-                // Set the tool output
-                $toolOutput = ($skillResponse->response ?? $skillResponse->message);
-
-            } catch (\Exception $e) {
-
-                // Append the error to the chat history
-                (new ChatMessage([
-                    'role' => ChatMessage::ERROR,
-                    'message' => ($e->getMessage())
-                ]))
-                    ->log(__METHOD__)
-                    ->toChatHistory()
-                    ->toChatWindow();
-
-                // Get the error message and stack trace
-                $message = $e->getMessage();
-                $stackTrace = $e->getTraceAsString();
-
-                // Set the tool output
-                $toolOutput = "{$message}\n\n{$stackTrace}";
+                    ->toChatHistory();
 
             }
 
-            // Get the size of the tool output
-            $outputSize = mb_strlen($toolOutput, '8bit');
+        } catch (Throwable $e) {
 
-            // Convert the tool name to a namespace format
-            $toolName = substr($toolCall->function->name, 7);
-            $toolName = str_replace('-', '::', $toolName);
+            // Get the error message and stack trace
+            $message    = $e->getMessage();
+            $stackTrace = $e->getTraceAsString();
 
-            // Log the tool output size
-            Craft::info("{$outputSize} bytes output by `{$toolName}`.", __METHOD__);
+            // Append the error to the chat history
+            (new ChatMessage([
+                'role' => ChatMessage::ERROR,
+                'message' => $message
+            ]))
+                ->log(__METHOD__)
+                ->toChatHistory()
+                ->toChatWindow();
 
-            // Add the tool output to the array
-            $allToolOutputs[] = [
-                'tool_call_id' => $toolCall->id,
-                'output' => $toolOutput
-            ];
+            // Append the error and stack trace as the function output
+            (new FunctionCall([
+                'callId'    => $item->callId,
+                'name'      => $item->name,
+                'arguments' => $item->arguments,
+                'output'    => "{$message}\n\n{$stackTrace}"
+            ]))
+                ->log(__METHOD__)
+                ->toChatHistory();
 
-            // Reset the thinking index and last message time
-            $this->_thinkingIndex = 0;
-            $this->_lastMessageTime = time();
         }
 
-        // Get the collected size of all tool outputs
-        $collectedSize = mb_strlen(Json::encode($allToolOutputs), '8bit');
-
-        // If the total size of all outputs exceeds the maximum
-        if ($collectedSize > 524288) { // 512kb in bytes
-            // Log an error message
-            Craft::error("Total of {$collectedSize} bytes exceeds the maximum output of 512kb!", __METHOD__);
-        } else {
-            // Log the total size of all tool outputs
-            Craft::info("Total of {$collectedSize} bytes is safe for tool outputs.", __METHOD__);
-        }
-
-        // Submit the tool outputs back to the OpenAI thread
-        return $service->submitToolOutputsStreamed($run->threadId, $run->id, [
-            'tool_outputs' => $allToolOutputs,
-        ]);
+        // Reset the thinking index and last message time
+        $this->_thinkingIndex = 0;
+        $this->_lastMessageTime = time();
     }
 
     /**
      * Run the specified tool call.
      *
-     * @param ThreadRunResponseRequiredActionFunctionToolCall $toolCall
+     * @param string $name
+     * @param string $arguments
      * @return SkillResponse
-     * @throws Exception
      */
-    private function _runTool(ThreadRunResponseRequiredActionFunctionToolCall $toolCall): SkillResponse
+    private function _runTool(string $name, string $arguments): SkillResponse
     {
         try {
-            // Get the function name and arguments
-            $fullName = $toolCall->function->name;
-            $args = Json::decode($toolCall->function->arguments);
+            // Get the function arguments (cast to array)
+            $args = (array) Json::decode($arguments);
 
             // Split the full name into parts
-            $nameParts = explode('-', $fullName);
+            $nameParts = explode('-', $name);
 
             // Convert hash to namespace
             $nameParts[0] = ($this->skillSetsHash[$nameParts[0]] ?? $nameParts[0]);
@@ -818,7 +630,7 @@ CONTENT;
             // Call the tool function
             return $class::$method(...$args);
 
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
 
             // Return error message
             return new SkillResponse([
@@ -842,16 +654,20 @@ CONTENT;
     {
         // Initialize available tools
         $tools = [
-            [
-                'type' => 'code_interpreter',
-            ],
-            [
-                'type' => 'file_search',
-                'file_search' => [
-                    'max_num_results' => 50,
-                ]
-            ]
+//            [
+//                'type' => 'code_interpreter',
+//            ],
+//            [
+//                'type' => 'file_search',
+//                'file_search' => [
+//                    'max_num_results' => 50,
+//                ]
+//            ]
         ];
+
+        /**
+         * TODO: Add MCP tool support here.
+         */
 
         // Loop through each tool class
         foreach (Sidekick::getInstance()?->getSkills() as $skillSet) {
@@ -960,17 +776,15 @@ CONTENT;
         // Return the tool function
         return [
             'type' => 'function',
-            'function' => [
-                'name' => $name,
-                'description' => $description,
-                'strict' => true,
-                'parameters' => [
-                    'type' => 'object',
-                    'properties' => $properties,
-                    'additionalProperties' => false, // For strict mode
-                    'required' => array_keys($parameters), // All parameters required
-                ],
-            ]
+            'strict' => true,
+            'name' => $name,
+            'description' => $description,
+            'parameters' => [
+                'type' => 'object',
+                'properties' => $properties,
+                'additionalProperties' => false, // For strict mode
+                'required' => array_keys($parameters), // All parameters required
+            ],
         ];
     }
 
@@ -1006,47 +820,54 @@ CONTENT;
         ]);
     }
 
+    // ========================================================================= //
+
     /**
-     * Get the latest assistant message.
+     * Summarize the element for the "AI Summary" field type.
      *
-     * @return array
+     * @param Element $element
+     * @param string $instructions
+     * @return string
      */
-    private function _getLatestAssistantMessage(): array
+    public function summarizeElement(Element $element, string $instructions): string
     {
-        try {
+        // Compress the element data
+        $elementData = Json::encode($element);
 
-            // Get the last message from the thread
-            $messages = $this->_openAiClient->threads()->messages()->list($this->_threadId, ['limit' => 1]);
+        /*
+         * @TODO: Permit different column types.
+         *        Copy how it's done in the Plain Text field.
+         *        Max length would be based on selected column type.
+         */
 
-            // Get the last message from the thread
-            $lastMessage = $messages->data[0];
+        // Compile the content for the AI
+        $content = <<<CONTENT
+# Instructions
+{$instructions}
 
-            // If the last message was not from the assistant
-            if (ChatMessage::ASSISTANT !== $lastMessage->role) {
-                // Return an error message
-                return [
-                    'role' => ChatMessage::ERROR,
-                    'message' => 'Unable to load last assistant message.'
-                ];
-            }
+## Maximum Response Length
+**IMPORTANT:** Unless otherwise specified, the absolute maximum length of your response must be 240 characters or fewer. Longer text will cause an error when the field is saved.
 
-            // Get reply from the assistant
-            $reply = $lastMessage->content[0]->text->value;
+# Craft CMS Element
+{$elementData}
+CONTENT;
 
-            // Return the assistant's reply
-            return [
-                'role' => ChatMessage::ASSISTANT,
-                'message' => $reply,
-            ];
+        // Perform the AI query
+        $response = $this->_openAiClient->responses()->create([
+            'model' => 'o4-mini',
+            'input' => [
+                // For a one-off "chat" style completion
+                // embed messages under `input.messages`
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $content
+                    ],
+                ],
+            ],
+        ]);
 
-        } catch (RequestException|\Exception $e) {
-
-            // Return the error message
-            return [
-                'role' => ChatMessage::ERROR,
-                'message' => $e->getMessage(),
-            ];
-
-        }
+        // Return the AI response
+        return ($response->output[0]->content[0]->text ?? '');
     }
 }

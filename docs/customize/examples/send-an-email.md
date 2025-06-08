@@ -10,7 +10,7 @@ description: "An example of a custom skill which sends an email to a specified u
         <div class="sender-column">You:</div>
         <div class="content-column"><p>email Doug to remind him about tomorrow's meeting</p></div>
     </div>
-    <div class="chat-message tool-message">
+    <div class="chat-message system-message">
         <div class="sender-column"></div>
         <div class="content-column"><p>Email sent to doug@example.com with the subject "Reminder about tomorrow's meeting".</p></div>
     </div>

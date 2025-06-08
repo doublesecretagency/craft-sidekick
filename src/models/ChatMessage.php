@@ -24,9 +24,9 @@ class ChatMessage extends Model
      * @const
      */
     public const ASSISTANT = 'assistant';
-    public const USER = 'user';
-//    public const SYSTEM = 'system';
-    public const TOOL = 'tool';
+    public const SYSTEM    = 'system';
+    public const DEVELOPER = 'developer';
+    public const USER      = 'user';
 
     /**
      * Additional message types.
@@ -34,7 +34,6 @@ class ChatMessage extends Model
      * @const
      */
     public const ERROR = 'error';
-    public const SUCCESS = 'success';
 
     // ========================================================================= //
 
@@ -142,8 +141,8 @@ class ChatMessage extends Model
                 $role = $this->role;
                 break;
             case self::ERROR:
-                // Consider error to be a user message
-                $role = self::USER;
+                // Consider error to be a system message
+                $role = self::SYSTEM;
                 $message = "SYSTEM ERROR: {$message}";
                 break;
             default:

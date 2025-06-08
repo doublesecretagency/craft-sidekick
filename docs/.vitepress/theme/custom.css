@@ -64,14 +64,14 @@ img.dropshadow {
     background-color: rgba(18, 127, 191, 0.05);
     border-color: rgba(18, 127, 191, 0.15);
 }
-.chat-message.tool-message .sender-column {
+.chat-message.system-message .sender-column {
     /*font-style: italic;*/
     /*color: rgba(18, 127, 191, 1);*/
     background-color: rgba(18, 127, 191, 0.05);
     border-color: rgba(18, 127, 191, 0.15);
     border-bottom: 0;
 }
-.chat-message.tool-message .content-column {
+.chat-message.system-message .content-column {
     color: rgba(18, 127, 191, 1);
 }
 .chat-message.error-message .sender-column {
