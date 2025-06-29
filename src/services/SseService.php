@@ -93,7 +93,7 @@ class SseService extends Component
             // Log error message
             (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => "SSE connection aborted before heartbeat."
+                'message' => "No connection, unable to send heartbeat."
             ]))
                 ->log(__METHOD__)
                 ->toChatHistory();
@@ -111,18 +111,8 @@ class SseService extends Component
      */
     public function closeConnection(): void
     {
-        // If the connection has already been aborted
+        // If the connection is already closed, bail
         if (connection_aborted()) {
-
-            // Log error message
-            (new ChatMessage([
-                'role' => ChatMessage::ERROR,
-                'message' => "SSE connection aborted before closure."
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory();
-
-            // Bail
             return;
         }
 

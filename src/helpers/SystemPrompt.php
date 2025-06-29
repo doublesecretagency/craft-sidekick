@@ -112,8 +112,10 @@ MARKDOWN;
         // Relevant system data
         $data = Json::encode([
             'Craft CMS version' => Craft::$app->getVersion(),
-            'Craft CMS edition' => Craft::$app->getEdition(),
+            'Craft CMS edition' => Craft::$app->getEditionName(),
             'PHP version' => PHP_VERSION,
+            'System Name' => Craft::$app->getSystemName(),
+            'Is Multi Site?' => Craft::$app->getIsMultiSite(),
             'General Config' => [
                 'cpTrigger' => $generalConfig->cpTrigger,
                 'aliases' => $generalConfig->aliases,

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added awareness of system name.
+- Added awareness of whether system is multisite.
+
 ## 1.0.6 - 2025-06-25
 
 ### Added
