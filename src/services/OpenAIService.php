@@ -22,6 +22,7 @@ use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\FunctionCall;
 use doublesecretagency\sidekick\models\SkillResponse;
+use doublesecretagency\sidekick\models\ToolFunction;
 use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Client as GuzzleClient;
 use OpenAI;
@@ -512,8 +513,8 @@ class OpenAIService extends Component
 
         try {
 
-            // Run the tool
-            $skillResponse = $this->_runTool($item->name, $item->arguments);
+            // Run the tool function with provided arguments
+            $skillResponse = (new ToolFunction($item->name))->run($item->arguments);
 
             // If the tool response was not successful, throw an exception
             if (!$skillResponse->success) {
@@ -574,71 +575,6 @@ class OpenAIService extends Component
         // Reset the thinking index and last message time
         $this->_thinkingIndex = 0;
         $this->_lastMessageTime = time();
-    }
-
-    /**
-     * Run the specified tool call.
-     *
-     * @param string $name
-     * @param string $arguments
-     * @return SkillResponse
-     */
-    private function _runTool(string $name, string $arguments): SkillResponse
-    {
-        try {
-            // Get the function arguments (cast to array)
-            $args = (array) Json::decode($arguments);
-
-            // Split the full name into parts
-            $nameParts = explode('-', $name);
-
-            // Convert hash to namespace
-            $nameParts[0] = ($this->skillSetsHash[$nameParts[0]] ?? $nameParts[0]);
-
-            // Get the method and class names
-            $method = array_pop($nameParts);
-            $class = implode('\\', $nameParts);
-
-            // Get the non-namespaced class name
-            $className = array_pop($nameParts);
-
-            // If the tool function does not exist, throw an exception
-            if (!method_exists($class, $method)) {
-                throw new Exception("Tool method does not exist: `{$class}::{$method}`");
-            }
-
-            // Compile array for logging
-            $logArgs = [];
-
-            // Loop through each argument
-            foreach ($args as $key => $value) {
-                // Decode the argument if it's a JSON string
-                $logArgs[$key] = Json::decodeIfJson($value);
-            }
-
-            // Denote which tool method is being run
-            Craft::info("Calling tool `{$className}::{$method}`.", __METHOD__);
-
-            // If no parameters, say so
-            if (!$logArgs) {
-                $logArgs = "(no parameters)";
-            }
-
-            // Log the tool arguments
-            Craft::info($logArgs, "{$class}::{$method}");
-
-            // Call the tool function
-            return $class::$method(...$args);
-
-        } catch (Throwable $e) {
-
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-
-        }
     }
 
     // ========================================================================= //

@@ -63,8 +63,25 @@ class FunctionCall extends Model
      */
     public function log($method): FunctionCall
     {
-        // Log the tool response
-        Craft::info(Json::decodeIfJson($this->output), $method);
+        // Get the size of the tool output
+        $outputSize = mb_strlen($this->output, '8bit');
+
+        // Get the tool details
+        $tool = new ToolFunction($this->name);
+
+        // Log the tool output size
+        Craft::info("{$outputSize} bytes output by `{$tool->class}::{$tool->method}`.", $method);
+
+        // Get the output results
+        $results = Json::decodeIfJson($this->output);
+
+        // If results are a string, prepend a newline
+        if (is_string($results)) {
+            $results = "\n{$results}";
+        }
+
+        // Log the tool results
+        Craft::info($results, $method);
 
         // Return the tool output for chaining
         return $this;
