@@ -79,7 +79,7 @@ Be wary, automatically generating a summary can lead to notable lag time. The re
 
 By default, automatic summary generation is disabled, allowing you full control to manually generate a summary at your convenience.
 
-Simply click the **Regenerate** button below the field to generate a new summary. It will send a request to the AI service and update your field with the new summary.
+Simply click the **Generate** button below the field to generate a new summary. It will send a request to the AI service and update your field with the new summary.
 
 :::tip Summary Instructions
 To see the field's summary instructions (the directives for the AI service), hover over the "i" icon beneath the field.

@@ -28,7 +28,7 @@
     </div>
     <div style="text-align: right;">
         <div class="ai-waiting" aria-hidden="true" role="status">
-            Regenerating...
+            Generating...
         </div>
         <div class="btngroup">
             <button type="button"
@@ -38,9 +38,9 @@
             </button>
             {% if element.id %}
                 <button type="button"
-                        onclick="sidekickRegenerate('{{ field.name }}', '{{ field.handle|namespaceInputName }}', {{ field.id }}, {{ element.id }})"
+                        onclick="sidekickGenerate('{{ field.name }}', '{{ field.handle|namespaceInputName }}', {{ field.id }}, {{ element.id }})"
                         class="btn small secondary">
-                    Regenerate
+                    Generate
                 </button>
             {% endif %}
         </div>

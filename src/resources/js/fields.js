@@ -28,14 +28,14 @@ function sidekickClear(label, namespace) {
 }
 
 /**
- * Regenerate an AI Summary field.
+ * Generate an AI Summary field.
  *
  * @param label
  * @param namespace
  * @param fieldId
  * @param elementId
  */
-function sidekickRegenerate(label, namespace, fieldId, elementId) {
+function sidekickGenerate(label, namespace, fieldId, elementId) {
 
     // Get the textarea element
     const $textarea = $(`textarea[name="${namespace}"]`);
@@ -53,13 +53,13 @@ function sidekickRegenerate(label, namespace, fieldId, elementId) {
 
     }
 
-    // Get the regenerating message element
-    const $regenerating = $textarea
+    // Get the generating message element
+    const $generating = $textarea
         .closest('.input')
         .find('.ai-waiting');
 
-    // Show the regenerating message
-    $regenerating.addClass('visible');
+    // Show the generating message
+    $generating.addClass('visible');
 
     // Generate a fresh summary
     Craft.sendActionRequest('POST', 'sidekick/ai-summary/generate', {
@@ -69,8 +69,8 @@ function sidekickRegenerate(label, namespace, fieldId, elementId) {
         }
     }).then((response) => {
 
-        // Hide the regenerating message
-        $regenerating.removeClass('visible');
+        // Hide the generating message
+        $generating.removeClass('visible');
 
         // If the request was successful
         if (response.data.success) {
@@ -83,8 +83,8 @@ function sidekickRegenerate(label, namespace, fieldId, elementId) {
 
     }).catch((error) => {
 
-        // Hide the regenerating message
-        $regenerating.removeClass('visible');
+        // Hide the generating message
+        $generating.removeClass('visible');
 
         // Something went wrong, log an error message
         console.error('Request failed:', error);

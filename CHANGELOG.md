@@ -6,6 +6,9 @@
 - Added awareness of system name.
 - Added awareness of whether system is multisite.
 
+### Changed
+- Changed the "Regenerate" button label to "Generate".
+
 ### Fixed
 - Fixed various stability issues.
 

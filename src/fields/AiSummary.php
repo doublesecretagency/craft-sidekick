@@ -58,7 +58,7 @@ class AiSummary extends Field implements PreviewableFieldInterface
     public int $initialRows = 3;
 
     /**
-     * @var bool Whether to regenerate the summary when an element is saved.
+     * @var bool Whether to generate the summary when an element is saved.
      */
     public bool $generateOnSave = false;
 
