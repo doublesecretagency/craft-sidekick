@@ -10,12 +10,14 @@ Each tab and element has a unique identifier (UUID). If a config is being saved 
 
 You MUST triple-check the JSON structure to ensure it is valid. Any errors in the JSON format can lead to issues when saving or loading the field layout. There is no room for error in the JSON structure, as it must adhere to the exact specifications required by Craft.
 
-This is a standard example of a field layout config:
+## Example of a standard field layout config
+
+Root level must contain a `type` (ie: `craft\\elements\\Entry`) and a tabs array. Each tab must have a `name`, `uid`, and an `elements` array containing field layout elements.
 
 ```json
 {
-  "type": "craft\\elements\\Entry", // Always an element type
-  "tabs": [
+  "type": "craft\\elements\\Entry", // Required - Always an element type
+  "tabs": [ // Required
     // Array of tabs
     {
       "name": "Content", // Required

@@ -6,6 +6,9 @@
 - Added awareness of system name.
 - Added awareness of whether system is multisite.
 
+### Fixed
+- Fixed various stability issues.
+
 ## 1.0.6 - 2025-06-25
 
 ### Added

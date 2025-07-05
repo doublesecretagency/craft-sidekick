@@ -33,4 +33,21 @@ class VersionHelper
             version_compare($v, $high, '<')
         );
     }
+
+    /**
+     * Get version-specific service for handling Sections.
+     *
+     * @return object
+     */
+    public static function sectionsService(): object
+    {
+        // If this is Craft 4
+        if (self::craftBetween('4.0.0', '5.0.0')) {
+            // Craft 4
+            return Craft::$app->getSections();
+        }
+
+        // Craft 5+
+        return Craft::$app->getEntries();
+    }
 }

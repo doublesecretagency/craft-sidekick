@@ -13,6 +13,8 @@ namespace doublesecretagency\sidekick\helpers;
 
 use craft\base\ElementInterface;
 use craft\helpers\Json;
+use Exception;
+use RuntimeException;
 
 class ElementsHelper
 {
@@ -36,7 +38,33 @@ class ElementsHelper
 
         // Set core attributes
         foreach (($data['attributes'] ?? []) as $name => $value) {
-            $element->$name = $value;
+
+            // List of date fields
+            $dateFields = [
+                'dateCreated',
+                'dateUpdated',
+                'postDate',
+                'expiryDate',
+            ];
+
+            // If the attribute is a date field
+            if (in_array($name, $dateFields, true)) {
+
+                try {
+                    // Convert valid formats to a DateTime object
+                    $element->$name = new \DateTime($value);
+                } catch (Exception $e) {
+                    // If the date format is invalid, throw an exception
+                    throw new RuntimeException("Invalid date format for `{$name}`: {$value}");
+                }
+
+            } else {
+
+                // By default, set the attribute directly on the element
+                $element->$name = $value;
+
+            }
+
         }
 
         // Set custom fields values

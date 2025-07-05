@@ -1,18 +1,37 @@
 # Matrix Fields (Craft 5+)
 
-In Craft 5, Matrix Blocks were replaced by Entries. So a Matrix field contains multiple Entries, each as its own block. Instead of defining block types within the Matrix Field, you define them as separate Entry Types.
+In Craft CMS 5, Matrix Blocks are implemented as Entries, with their structure defined by global Entry Types. This allows Entry Types to be reused across multiple Matrix Fields, enhancing consistency.
 
-- Matrix Blocks -> Entries
-- Block Types -> Entry Types
+## Key Concepts
 
-Block Types are now Entry Types, and the fields within them are defined as part of the Entry Type.
+- Matrix Blocks → Entries: Blocks within a Matrix Field are stored as nested Entries.
+- Block Types → Entry Types: Block definitions are global Entry Types, not defined within individual Matrix Fields.
 
-## When creating a Matrix Field
+## Preconditions
 
-In Craft 5, you must ensure that the necessary Entry Types are created **before** creating a Matrix Field.
+Before creating a Matrix Field:
+1. Check existing Fields: Identify reusable global fields.
+2. Check existing Entry Types: Verify if suitable Entry Types already exist or create new ones as needed.
 
-Before creating a Matrix Field, you MUST **review all existing entry types**. Determine whether you need to create a new entry type, or if you should be reusing an existing one.
+## Step-by-Step Matrix Field Creation
 
-## No more field groups
+1. Prepare Fields:
+    - Confirm required fields exist globally.
+    - Create new fields if necessary.
+2. Prepare Entry Types:
+    - Review global Entry Types.
+    - Create new Entry Types if needed, defining their field layouts clearly.
+3. Create Matrix Field:
+    - In Craft CMS, navigate to Settings → Fields.
+    - Create a new field of type Matrix.
+    - Select existing Entry Types to use as blocks within this Matrix Field.
+    - Configure Matrix-specific settings (min/max entries, propagation method, view mode).
+    - Save the Matrix Field.
+4. Post-Creation Adjustments:
+    - Fields within Entry Types can be adjusted globally at any time under Settings → Entry Types.
+    - Changes are immediately applied wherever the Entry Type is used.
 
-The concept of "field groups" has been removed. All fields now exist in a global space.
+## Field Groups
+
+- Craft CMS 5 no longer uses field groups. All fields exist in a single global list.
+- Use descriptive field naming conventions for clarity and maintainability.

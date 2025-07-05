@@ -8,6 +8,11 @@ The JSON object consists of two top-level keys called "attributes" and "fields",
 
 The attributes object contains the core properties of the element. These properties are essential for identifying and managing each element.
 
+Includes, but not limited to:
+- `title`: The title of the element.
+- `slug`: A URL-friendly identifier for the element.
+- `id`: The unique identifier for the element (omit when creating, required when updating).
+
 ## `fields`
 
 The fields object contains the custom fields defined via the field layout. Each field is represented as a key-value pair, where the key is the field's handle and the value is the content for that field.

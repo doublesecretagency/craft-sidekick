@@ -113,6 +113,14 @@ class EntryTypes extends BaseSkillSet
                 // Create the field layout
                 $layout = FieldLayout::createFromConfig($config['fieldLayout'] ?? []);
 
+                // If layout is missing a type, return an error response
+                if (!$layout->type) {
+                    return new SkillResponse([
+                        'success' => false,
+                        'message' => "Field layout is missing a type. Type should be specified in the configuration.",
+                    ]);
+                }
+
                 // If unable to save the field layout, return an error response
                 if (!Craft::$app->getFields()->saveLayout($layout, false)) {
                     $errors = implode(', ', $layout->getErrorSummary(true));

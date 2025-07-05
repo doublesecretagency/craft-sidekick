@@ -75,13 +75,7 @@ class Sections extends BaseSkillSet
     public static function getAllSections(): SkillResponse
     {
         // Get all sections
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
-            // Craft 4
-            $sections = Craft::$app->getSections()->getAllSections();
-        } else {
-            // Craft 5+
-            $sections = Craft::$app->getEntries()->getAllSections();
-        }
+        $sections = VersionHelper::sectionsService()->getAllSections();
 
         // Initialize results array
         $results = [];
@@ -168,7 +162,7 @@ class Sections extends BaseSkillSet
             }
 
             // If unable to save the section, return an error response
-            if (!Craft::$app->getSections()->saveSection($section)) {
+            if (!VersionHelper::sectionsService()->saveSection($section)) {
                 $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
@@ -212,7 +206,7 @@ class Sections extends BaseSkillSet
         try {
 
             // Get the section
-            $section = Craft::$app->getSections()->getSectionByHandle($sectionHandle);
+            $section = VersionHelper::sectionsService()->getSectionByHandle($sectionHandle);
 
             // If section doesn't exist, return an error response
             if (!$section) {
@@ -247,7 +241,7 @@ class Sections extends BaseSkillSet
 //            $section->propagationKeyFormat = ($config['propagationKeyFormat'] ?? $section->propagationKeyFormat);
 
             // If unable to save the section, return an error response
-            if (!Craft::$app->getSections()->saveSection($section)) {
+            if (!VersionHelper::sectionsService()->saveSection($section)) {
                 $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,
@@ -286,10 +280,10 @@ class Sections extends BaseSkillSet
     public static function deleteSection(string $handle): SkillResponse
     {
         // Get the sections service
-        $sectionsService = Craft::$app->getSections();
+        $service = VersionHelper::sectionsService();
 
         // Attempt to find the section by its handle
-        $section = $sectionsService->getSectionByHandle($handle);
+        $section = $service->getSectionByHandle($handle);
 
         // If the section doesn't exist, return an error response
         if (!$section) {
@@ -302,7 +296,7 @@ class Sections extends BaseSkillSet
         // Attempt to delete the section
         try {
             // If unable to delete the section, return an error response
-            if (!$sectionsService->deleteSection($section)) {
+            if (!$service->deleteSection($section)) {
                 $errors = implode(', ', $section->getErrorSummary(true));
                 return new SkillResponse([
                     'success' => false,

@@ -51,8 +51,8 @@ class Entries extends BaseSkillSet
             $query->section($sectionHandle);
         }
 
-        // Get all entries
-        $entries = $query->all();
+        // Get all entries (regardless of status)
+        $entries = $query->status(null)->all();
 
         // Initialize results array
         $results = [];

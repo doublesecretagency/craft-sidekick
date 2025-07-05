@@ -106,16 +106,29 @@ class FieldLayoutHelper
         /** @var EntryType $entryType */
         $entryType = $entryTypes[0];
 
-        // Grab the section model
-        $section = Craft::$app->getSections()->getSectionById($entryType['sectionId']);
+        // Basic description
+        $description = "of the {$entryType['name']} entry type";
 
-        // If the section doesn't exist
-        if (!$section) {
-            return "of the {$entryType['name']} entry type with no matching section ({$entryType['sectionId']})";
+        // Craft 4
+        // Include the section name in the description
+        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+
+            // Grab the section model
+            $section = VersionHelper::sectionsService()->getSectionById($entryType['sectionId']);
+
+            // If the section doesn't exist
+            if (!$section) {
+                // Return a description indicating no matching section
+                return "{$description} with no matching section ({$entryType['sectionId']})";
+            }
+
+            // Return the complete description
+            return "{$description} in section \"{$section->name}\"";
         }
 
+        // Craft 5+
         // Return the complete description
-        return "of the {$entryType['name']} entry type in section \"{$section->name}\"";
+        return $description;
     }
 
     /**
