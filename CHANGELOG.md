@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug causing some tool calls to fire multiple times.
+
 ## 1.0.7 - 2025-07-05
 
 ### Added

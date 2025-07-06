@@ -427,6 +427,10 @@ class OpenAIService extends Component
 
         // Handle a tool call item
         $this->_handleToolCall($item);
+
+        // Pause for a second to let the tool finish
+        sleep(1);
+
         // Re-run the stream
         return true;
     }
