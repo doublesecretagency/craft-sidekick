@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.7 - 2025-07-05
 
 ### Added
 - Added awareness of system name.
