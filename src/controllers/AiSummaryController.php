@@ -16,6 +16,7 @@ use craft\web\Controller;
 use doublesecretagency\sidekick\fields\AiSummary;
 use doublesecretagency\sidekick\helpers\AiSummaryHelper;
 use yii\web\BadRequestHttpException;
+use yii\web\MethodNotAllowedHttpException;
 use yii\web\Response;
 
 class AiSummaryController extends Controller
@@ -24,7 +25,8 @@ class AiSummaryController extends Controller
      * Generate fresh content for an AI Summary field.
      *
      * @return Response
-     * @throws BadRequestHttpException
+     * @throws BadRequestHttpException       # Craft 4
+     * @throws MethodNotAllowedHttpException # Craft 5+
      */
     public function actionGenerate(): Response
     {

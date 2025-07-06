@@ -776,8 +776,8 @@ class OpenAIService extends Component
          *        Max length would be based on selected column type.
          */
 
-        // Compile the content for the AI
-        $content = <<<CONTENT
+        // Compile the input for the AI
+        $input = <<<INPUT
 # Instructions
 {$instructions}
 
@@ -786,24 +786,24 @@ class OpenAIService extends Component
 
 # Craft CMS Element
 {$elementData}
-CONTENT;
+INPUT;
 
         // Perform the AI query
         $response = $this->_openAiClient->responses()->create([
-            'model' => 'o4-mini',
-            'input' => [
-                // For a one-off "chat" style completion
-                // embed messages under `input.messages`
-                'messages' => [
-                    [
-                        'role' => 'user',
-                        'content' => $content
-                    ],
-                ],
-            ],
+//            'model' => 'gpt-4o-mini', // Less creative, faster, cheaper
+            'model' => 'o4-mini', // More creative, slower, more expensive
+            'input' => $input,
         ]);
 
-        // Return the AI response
-        return ($response->output[0]->content[0]->text ?? '');
+        // Get only messages from the response output
+        $responseOutputs = array_filter($response->output, static function ($item) {
+            return $item->type === 'message';
+        });
+
+        // Get the first message
+        $message = reset($responseOutputs);
+
+        // Return the response output
+        return ($message->content[0]->text ?? '');
     }
 }

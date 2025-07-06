@@ -10,6 +10,7 @@
 - Changed the "Regenerate" button label to "Generate".
 
 ### Fixed
+- Fixed bug in AI Summary field type.
 - Fixed various stability issues.
 
 ## 1.0.6 - 2025-06-25
