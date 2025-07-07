@@ -117,9 +117,10 @@ MARKDOWN;
             'System Name' => Craft::$app->getSystemName(),
             'Is Multi Site?' => Craft::$app->getIsMultiSite(),
             'General Config' => [
-                'cpTrigger' => $generalConfig->cpTrigger,
                 'aliases' => $generalConfig->aliases,
                 'allowAdminChanges' => $generalConfig->allowAdminChanges,
+                'cpTrigger' => $generalConfig->cpTrigger,
+                'devMode' => $generalConfig->devMode,
             ]
         ]);
 

@@ -507,6 +507,7 @@ class OpenAIService extends Component
      * Handle a tool call response from the AI.
      *
      * @param OutputFunctionToolCall $item
+     * @throws Exception
      */
     private function _handleToolCall(OutputFunctionToolCall $item): void
     {
@@ -515,66 +516,42 @@ class OpenAIService extends Component
             return;
         }
 
-        try {
+        // Run the tool function with provided arguments
+        $response = (new ToolFunction($item->name))->run($item->arguments);
 
-            // Run the tool function with provided arguments
-            $skillResponse = (new ToolFunction($item->name))->run($item->arguments);
-
-            // If the tool response was not successful, throw an exception
-            if (!$skillResponse->success) {
-                throw new Exception($skillResponse->message ?? 'An unknown error occurred.');
-            }
-
-            // Append the tool output to the chat history
-            (new ChatMessage([
+        // If the tool call was successful
+        if ($response->success) {
+            // Set a system response
+            $chatResponse = [
                 'role' => ChatMessage::SYSTEM,
-                'message' => ($skillResponse->message ?? '[missing tool message]')
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory()
-                ->toChatWindow();
-
-            // If the tool response contains data
-            if ($skillResponse->response) {
-
-                // Append output to the chat history
-                (new FunctionCall([
-                    'callId'    => $item->callId,
-                    'name'      => $item->name,
-                    'arguments' => $item->arguments,
-                    'output'    => $skillResponse->response
-                ]))
-                    ->log(__METHOD__)
-                    ->toChatHistory();
-
-            }
-
-        } catch (Throwable $e) {
-
-            // Get the error message and stack trace
-            $message    = $e->getMessage();
-            $stackTrace = $e->getTraceAsString();
-
-            // Append the error to the chat history
-            (new ChatMessage([
+                'message' => ($response->message ?? '[missing tool message]')
+            ];
+        } else {
+            // Set an error response
+            $chatResponse = [
                 'role' => ChatMessage::ERROR,
-                'message' => $message
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory()
-                ->toChatWindow();
-
-            // Append the error and stack trace as the function output
-            (new FunctionCall([
-                'callId'    => $item->callId,
-                'name'      => $item->name,
-                'arguments' => $item->arguments,
-                'output'    => "{$message}\n\n{$stackTrace}"
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory();
-
+                'message' => ($response->message ?? 'An unknown error occurred.')
+            ];
         }
+
+        // Set the tool response
+        $toolResponse = [
+            'callId'    => $item->callId,
+            'name'      => $item->name,
+            'arguments' => $item->arguments,
+            'output'    => $response->response ?? $chatResponse['message'] // Use chat message if no data
+        ];
+
+        // Append the chat response to the chat history
+        (new ChatMessage($chatResponse))
+            ->log(__METHOD__)
+            ->toChatHistory()
+            ->toChatWindow();
+
+        // Append the tool response to the chat history
+        (new FunctionCall($toolResponse))
+            ->log(__METHOD__)
+            ->toChatHistory();
 
         // Reset the thinking index and last message time
         $this->_thinkingIndex = 0;

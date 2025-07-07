@@ -116,10 +116,21 @@ class ToolFunction extends Model
 
         } catch (Throwable $e) {
 
+            // Get trace components
+            $errorType = get_class($e);
+            $file = $e->getFile();
+            $line = $e->getLine();
+            $message = $e->getMessage();
+            $traceString = $e->getTraceAsString();
+
+            // Prepend offending line to the stack trace
+            $stackTrace = "{$errorType} in {$file}({$line}): {$message}\n\n$traceString";
+
             // Return error message
             return new SkillResponse([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'response' => $stackTrace,
             ]);
 
         }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- Added awareness of whether `devMode` is enabled.
+
+### Changed
+- Improved stack traces from tool function calls.
+
 ### Fixed
 - Fixed bug causing some tool calls to fire multiple times.
 
