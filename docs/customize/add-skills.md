@@ -67,23 +67,20 @@ class MyCustomSkills extends BaseSkillSet
     * @param string $foo A parameter for the custom function.
     * @param string $bar Another parameter for the custom function.
     * @return SkillResponse A success or error message.
+    * @throws Exception If something goes wrong.
     */
    public static function mySkillFunction(string $foo, string $bar): SkillResponse
    {
        /**
         * Your custom tool function can do whatever you want.
         * 
-        * It should return an error message if the operation fails,
-        * or a success message if it was successful.
+        * It should throw an exception if the operation fails,
+        * or return a success message if it was successful.
         */
        
-        // If validation fails
+        // If validation fails, throw an exception
         if (!$valid) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to {$foo} with {$bar}."
-            ]);
+            throw new Exception("Unable to {$foo} with {$bar}.");
         }
 
         // Return success message

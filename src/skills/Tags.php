@@ -13,6 +13,8 @@ namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\elements\Tag;
+use craft\errors\ElementNotFoundException;
+use craft\errors\TagGroupNotFoundException;
 use craft\helpers\Json;
 use craft\models\TagGroup;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
@@ -120,6 +122,7 @@ class Tags extends BaseSkillSet
      *
      * @param string $tagId ID of the tag to retrieve.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getTag(string $tagId): SkillResponse
     {
@@ -128,11 +131,7 @@ class Tags extends BaseSkillSet
 
         // If no such tag exists
         if (!$tag) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find tag with the ID {$tagId}."
-            ]);
+            throw new Exception("Can't find tag with the ID {$tagId}.");
         }
 
         // Return success message
@@ -150,6 +149,9 @@ class Tags extends BaseSkillSet
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws ElementNotFoundException
      */
     public static function createTag(string $jsonConfig): SkillResponse
     {
@@ -159,21 +161,9 @@ class Tags extends BaseSkillSet
         // Populate the element
         ElementsHelper::populateElement($tag, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the tag, return an error response
-            if (!Craft::$app->elements->saveElement($tag)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create tag: " . implode(', ', $tag->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the tag. {$e->getMessage()}",
-            ]);
+        // If unable to save the tag, throw an exception
+        if (!Craft::$app->elements->saveElement($tag)) {
+            throw new Exception("Unable to create tag: " . implode(', ', $tag->getErrorSummary(true)));
         }
 
         // Return success message
@@ -190,6 +180,9 @@ class Tags extends BaseSkillSet
      * @param string $tagId ID of the tag to update.
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws ElementNotFoundException
+     * @throws Exception
+     * @throws Throwable
      */
     public static function updateTag(string $tagId, string $jsonConfig): SkillResponse
     {
@@ -198,31 +191,15 @@ class Tags extends BaseSkillSet
 
         // If no such tag exists
         if (!$tag) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find tag with the ID {$tagId}."
-            ]);
+            throw new Exception("Can't find tag with the ID {$tagId}.");
         }
 
         // Populate the element
         ElementsHelper::populateElement($tag, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the tag, return an error response
-            if (!Craft::$app->elements->saveElement($tag)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update tag: " . implode(', ', $tag->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the tag. {$e->getMessage()}",
-            ]);
+        // If unable to save the tag, throw an exception
+        if (!Craft::$app->elements->saveElement($tag)) {
+            throw new Exception("Unable to update tag: " . implode(', ', $tag->getErrorSummary(true)));
         }
 
         // Return success message
@@ -242,34 +219,25 @@ class Tags extends BaseSkillSet
      *
      * @param string $tagId ID of the tag to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteTag(string $tagId): SkillResponse
     {
-        try {
-            // Get the elements service
-            $elements = Craft::$app->getElements();
+        // Get the elements service
+        $elements = Craft::$app->getElements();
 
-            // Get the tag by ID
-            $tag = $elements->getElementById($tagId);
+        // Get the tag by ID
+        $tag = $elements->getElementById($tagId);
 
-            // If no such tag exists
-            if (!$tag) {
-                // Throw an error message
-                throw new Exception("No matching tag found.");
-            }
-
-            // Delete the tag by its ID
-            $elements->deleteElementById($tagId);
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete tag {$tagId}. {$e->getMessage()}",
-            ]);
-
+        // If no such tag exists
+        if (!$tag) {
+            // Throw an error message
+            throw new Exception("No matching tag found.");
         }
+
+        // Delete the tag by its ID
+        $elements->deleteElementById($tagId);
 
         // Return success message
         return new SkillResponse([
@@ -322,44 +290,28 @@ class Tags extends BaseSkillSet
      *
      * @param string $tagGroupConfig JSON-stringified configuration for the `TagGroup` model.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws TagGroupNotFoundException
      */
     public static function createTagGroup(string $tagGroupConfig): SkillResponse
     {
-        // Attempt to create and save the tag group
-        try {
+        // Decode the JSON configurations
+        $tagGroup = Json::decode($tagGroupConfig);
 
-            // Decode the JSON configurations
-            $tagGroup = Json::decode($tagGroupConfig);
+        // Create the tag group
+        $tagGroup = new TagGroup($tagGroup);
 
-            // Create the tag group
-            $tagGroup = new TagGroup($tagGroup);
+        // If the tag group is not valid, throw an exception
+        if (!$tagGroup->validate()) {
+            $errors = implode(', ', $tagGroup->getErrorSummary(true));
+            throw new Exception("Invalid tag group configuration: {$errors}");
+        }
 
-            // If the tag group is not valid, return an error response
-            if (!$tagGroup->validate()) {
-                $errors = implode(', ', $tagGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid tag group configuration: {$errors}",
-                ]);
-            }
-
-            // If unable to save the tag group, return an error response
-            if (!Craft::$app->getTags()->saveTagGroup($tagGroup)) {
-                $errors = implode(', ', $tagGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create tag group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the tag group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the tag group, throw an exception
+        if (!Craft::$app->getTags()->saveTagGroup($tagGroup)) {
+            $errors = implode(', ', $tagGroup->getErrorSummary(true));
+            throw new Exception("Unable to create tag group: {$errors}");
         }
 
         // Return success message
@@ -381,55 +333,36 @@ class Tags extends BaseSkillSet
      * @param string $tagGroupHandle Handle of the tag group to update.
      * @param string $newConfig JSON-stringified configuration for the tag group.
      * @return SkillResponse
+     * @throws Exception
+     * @throws TagGroupNotFoundException
+     * @throws Throwable
      */
     public static function updateTagGroup(string $tagGroupHandle, string $newConfig): SkillResponse
     {
-        // Attempt to update the tag group
-        try {
+        // Get the tag group
+        $tagGroup = Craft::$app->getTags()->getTagGroupByHandle($tagGroupHandle);
 
-            // Get the tag group
-            $tagGroup = Craft::$app->getTags()->getTagGroupByHandle($tagGroupHandle);
+        // If tag group doesn't exist, throw an exception
+        if (!$tagGroup) {
+            throw new Exception("Unable to update, tag group `{$tagGroupHandle}` does not exist.");
+        }
 
-            // If tag group doesn't exist, return an error response
-            if (!$tagGroup) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, tag group `{$tagGroupHandle}` does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // If the configuration was not valid JSON, throw an exception
+        if (!is_array($config)) {
+            throw new Exception("Invalid JSON provided for tag group configuration.");
+        }
 
-            // If the configuration was not valid JSON, return an error response
-            if (!is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON provided for tag group configuration.",
-                ]);
-            }
+        // Update the tag group with the new configuration
+        $tagGroup->name = ($config['name'] ?? $tagGroup->name);
+        $tagGroup->handle = ($config['handle'] ?? $tagGroup->handle);
 
-            // Update the tag group with the new configuration
-            $tagGroup->name = ($config['name'] ?? $tagGroup->name);
-            $tagGroup->handle = ($config['handle'] ?? $tagGroup->handle);
-
-            // If unable to save the tag group, return an error response
-            if (!Craft::$app->getTags()->saveTagGroup($tagGroup)) {
-                $errors = implode(', ', $tagGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update tag group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the tag group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the tag group, throw an exception
+        if (!Craft::$app->getTags()->saveTagGroup($tagGroup)) {
+            $errors = implode(', ', $tagGroup->getErrorSummary(true));
+            throw new Exception("Unable to update tag group: {$errors}");
         }
 
         // Return success message
@@ -449,6 +382,8 @@ class Tags extends BaseSkillSet
      *
      * @param string $handle Tag group to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteTagGroup(string $handle): SkillResponse
     {
@@ -458,30 +393,15 @@ class Tags extends BaseSkillSet
         // Attempt to find the tag group by its handle
         $tagGroup = $tagsService->getTagGroupByHandle($handle);
 
-        // If the tag group doesn't exist, return an error response
+        // If the tag group doesn't exist, throw an exception
         if (!$tagGroup) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Tag group \"{$handle}\" not found.",
-            ]);
+            throw new Exception("Tag group \"{$handle}\" not found.");
         }
 
-        // Attempt to delete the tag group
-        try {
-            // If unable to delete the tag group, return an error response
-            if (!$tagsService->deleteTagGroup($tagGroup)) {
-                $errors = implode(', ', $tagGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete tag group: {$errors}",
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the tag group. {$e->getMessage()}",
-            ]);
+        // If unable to delete the tag group, throw an exception
+        if (!$tagsService->deleteTagGroup($tagGroup)) {
+            $errors = implode(', ', $tagGroup->getErrorSummary(true));
+            throw new Exception("Unable to delete tag group: {$errors}");
         }
 
         // Return success message

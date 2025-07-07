@@ -30,6 +30,7 @@ description: "An example of a custom skill which adds an event to the calendar."
  * @param string $event Description of the event.
  * @param string $datetime Datetime of the event.
  * @return SkillResponse
+ * @throws Exception
  */
 public static function addCalendarEvent(string $event, string $datetime): SkillResponse
 {
@@ -40,13 +41,9 @@ public static function addCalendarEvent(string $event, string $datetime): SkillR
      * with the provided details.
      */
        
-    // If validation fails
+    // If validation fails, throw an exception
     if (!$valid) {
-        // Return error message
-        return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to add {$event} at {$datetime}."
-        ]);
+        throw new Exception("Unable to add {$event} at {$datetime}.");
     }
 
     // Return success message

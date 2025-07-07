@@ -7,6 +7,7 @@
 
 ### Changed
 - Improved stack traces from tool function calls.
+- Restructured tool functions to throw exceptions.
 
 ### Fixed
 - Fixed bug causing some tool calls to fire multiple times.

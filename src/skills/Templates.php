@@ -16,6 +16,7 @@ use doublesecretagency\sidekick\helpers\TemplatesHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use yii\base\Exception;
 
 /**
  * @category Twig Templates
@@ -113,6 +114,7 @@ class Templates extends BaseSkillSet
      * @param string $directory Directory to look in.
      * @param string $file Name of the file to read.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function readTemplateFile(string $directory, string $file): SkillResponse
     {
@@ -121,10 +123,7 @@ class Templates extends BaseSkillSet
 
         // If file doesn't exist, return an error
         if (!file_exists($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to read file, {$directory}/{$file} does not exist."
-            ]);
+            throw new Exception("Unable to read file, {$directory}/{$file} does not exist.");
         }
 
         // Read the file content
@@ -145,6 +144,7 @@ class Templates extends BaseSkillSet
      * @param string $file Name of the file to create.
      * @param string $content Content to include in the file.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function createTemplateFile(string $directory, string $file, string $content): SkillResponse
     {
@@ -153,10 +153,7 @@ class Templates extends BaseSkillSet
 
         // If file already exists, return an error
         if (file_exists($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create file {$directory}/{$file} (already exists)."
-            ]);
+            throw new Exception("Unable to create file {$directory}/{$file} (already exists).");
         }
 
         // Get the directory path
@@ -166,10 +163,7 @@ class Templates extends BaseSkillSet
         if (!is_dir($directoryPath)) {
             // Attempt to create the directory (with check to ensure that it worked)
             if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to create the directory {$directory}."
-                ]);
+                throw new Exception("Unable to create the directory {$directory}.");
             }
         }
 
@@ -178,10 +172,7 @@ class Templates extends BaseSkillSet
 
         // If unable to create the file, return an error
         if ($bytesWritten === false) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create file {$directory}/{$file}."
-            ]);
+            throw new Exception("Unable to create file {$directory}/{$file}.");
         }
 
         // Return success message
@@ -203,6 +194,7 @@ class Templates extends BaseSkillSet
      * @param string $file Name of the file to edit.
      * @param string $content Content to include in the file.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function updateTemplateFile(string $directory, string $file, string $content): SkillResponse
     {
@@ -211,18 +203,12 @@ class Templates extends BaseSkillSet
 
         // If the file doesn't exist, return an error
         if (!file_exists($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update file, {$directory}/{$file} does not exist."
-            ]);
+            throw new Exception("Unable to update file, {$directory}/{$file} does not exist.");
         }
 
         // If not a file, return an error
         if (!is_file($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update, {$directory}/{$file} is not a file."
-            ]);
+            throw new Exception("Unable to update, {$directory}/{$file} is not a file.");
         }
 
         // Write the new content to the file
@@ -230,10 +216,7 @@ class Templates extends BaseSkillSet
 
         // If unable to update the file, return an error
         if ($bytesWritten === false) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to write to file {$directory}/{$file}."
-            ]);
+            throw new Exception("Unable to write to file {$directory}/{$file}.");
         }
 
         // Return success message
@@ -256,6 +239,7 @@ class Templates extends BaseSkillSet
      * @param string $directory The directory of the file to be deleted.
      * @param string $file The name of the file to be deleted.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function deleteTemplateFile(string $directory, string $file): SkillResponse
     {
@@ -264,26 +248,17 @@ class Templates extends BaseSkillSet
 
         // If file does not exist, return an error
         if (!file_exists($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete, no existing file {$directory}/{$file}"
-            ]);
+            throw new Exception("Unable to delete, no existing file {$directory}/{$file}");
         }
 
         // If not a file, return an error
         if (!is_file($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete, {$directory}/{$file} is not a file."
-            ]);
+            throw new Exception("Unable to delete, {$directory}/{$file} is not a file.");
         }
 
         // If unable to delete the file, return an error
         if (!unlink($filePath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Failed to delete file {$directory}/{$file}"
-            ]);
+            throw new Exception("Unable to delete file {$directory}/{$file}");
         }
 
         // Return success message
@@ -302,6 +277,7 @@ class Templates extends BaseSkillSet
      *
      * @param string $directory Directory to create the file in.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function createTemplateDirectory(string $directory): SkillResponse
     {
@@ -321,10 +297,7 @@ class Templates extends BaseSkillSet
 
         // Attempt to create the directory (with check to ensure that it worked)
         if (!mkdir($directoryPath, 0755, true) && !is_dir($directoryPath)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the directory {$directory}."
-            ]);
+            throw new Exception("Unable to create the directory {$directory}.");
         }
 
         // Return success message
@@ -346,6 +319,7 @@ class Templates extends BaseSkillSet
      *
      * @param string $directory The directory to be deleted.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function deleteTemplateDirectory(string $directory): SkillResponse
     {
@@ -354,18 +328,12 @@ class Templates extends BaseSkillSet
 
         // If directory does not exist, return an error
         if (!file_exists($path)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete, no existing directory {$directory}"
-            ]);
+            throw new Exception("Unable to delete, no existing directory {$directory}");
         }
 
         // If not a directory, return an error
         if (!is_dir($path)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete, {$directory} is not a directory."
-            ]);
+            throw new Exception("Unable to delete, {$directory} is not a directory.");
         }
 
         // Check if the directory is empty
@@ -374,18 +342,12 @@ class Templates extends BaseSkillSet
 
         // If the directory is not empty, return an error
         if (!$isEmpty) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Cannot delete, directory {$directory} is not empty."
-            ]);
+            throw new Exception("Cannot delete, directory {$directory} is not empty.");
         }
 
         // If unable to delete the directory, return an error
         if (!rmdir($path)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Failed to delete directory {$directory}"
-            ]);
+            throw new Exception("Unable to delete directory {$directory}");
         }
 
         // Return success message

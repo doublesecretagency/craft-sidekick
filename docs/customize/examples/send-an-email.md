@@ -31,6 +31,7 @@ description: "An example of a custom skill which sends an email to a specified u
  * @param string $subject Subject line for the outgoing email.
  * @param string $body Message body for the outgoing email.
  * @return SkillResponse
+ * @throws Exception
  */
 public static function sendEmailMessage(string $user, string $subject, string $body): SkillResponse
 {
@@ -41,13 +42,9 @@ public static function sendEmailMessage(string $user, string $subject, string $b
      * and send them an email with the provided subject and body.
      */
 
-    // If validation fails
+    // If validation fails, throw an exception
     if (!$valid) {
-        // Return error message
-        return new SkillResponse([
-            'success' => false,
-            'message' => "Unable send an email to {$user} with the subject {$subject}."
-        ]);
+        throw new Exception("Unable send an email to {$user} with the subject {$subject}.");
     }
 
     // Return success message

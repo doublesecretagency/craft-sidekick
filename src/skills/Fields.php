@@ -21,6 +21,7 @@ use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Fields
@@ -132,18 +133,16 @@ class Fields extends BaseSkillSet
      *
      * @param string $fieldHandle Handle of the field to get details for.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getFieldDetails(string $fieldHandle): SkillResponse
     {
         // Get available field types
         $field = Craft::$app->getFields()->getFieldByHandle($fieldHandle);
 
-        // If the field doesn't exist, return an error response
+        // If the field doesn't exist, throw an exception
         if (!$field) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Field `{$fieldHandle}` was not found.",
-            ]);
+            throw new Exception("Field `{$fieldHandle}` was not found.");
         }
 
         // Return success message
@@ -166,44 +165,26 @@ class Fields extends BaseSkillSet
      * @param string $fieldType Type of the field (from list of available field types). If not specified, ask for clarification.
      * @param string $fieldConfig JSON-stringified configuration for the field.
      * @return SkillResponse
+     * @throws Exception|Throwable
      */
     public static function createField(string $fieldType, string $fieldConfig): SkillResponse
     {
-        // Attempt to create and save the field
-        try {
+        // Decode the JSON configuration
+        $config = Json::decode($fieldConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($fieldConfig);
+        // If config is invalid, throw an exception
+        if (!$config || !is_array($config)) {
+            throw new Exception("Invalid field configuration.");
+        }
 
-            // If config is invalid, return an error response
-            if (!$config || !is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid field configuration.",
-                ]);
-            }
+        // Create the field
+        /** @var FieldInterface $fieldType */
+        $field = new $fieldType($config);
 
-            // Create the field
-            /** @var FieldInterface $fieldType */
-            $field = new $fieldType($config);
-
-            // If unable to save the field, return an error response
-            if (!Craft::$app->getFields()->saveField($field)) {
-                $errors = implode(', ', $field->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create field: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the field. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the field, throw an exception
+        if (!Craft::$app->getFields()->saveField($field)) {
+            $errors = implode(', ', $field->getErrorSummary(true));
+            throw new Exception("Unable to create field: {$errors}");
         }
 
         // Return success message
@@ -225,49 +206,31 @@ class Fields extends BaseSkillSet
      * @param string $fieldHandle Handle of the field to update.
      * @param string $newConfig JSON-stringified configuration for the field.
      * @return SkillResponse
+     * @throws Throwable
      */
     public static function updateField(string $fieldHandle, string $newConfig): SkillResponse
     {
-        // Attempt to update the field
-        try {
+        // Get the field
+        $field = Craft::$app->getFields()->getFieldByHandle($fieldHandle);
 
-            // Get the field
-            $field = Craft::$app->getFields()->getFieldByHandle($fieldHandle);
+        // If field doesn't exist, throw an exception
+        if (!$field) {
+            throw new Exception("Unable to update, field `{$fieldHandle}` does not exist.");
+        }
 
-            // If field doesn't exist, return an error response
-            if (!$field) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, field `{$fieldHandle}` does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // Merge the new configuration with the existing field
+        $field->setAttributes($config, false);
 
-            // Merge the new configuration with the existing field
-            $field->setAttributes($config, false);
+//        // Update the settings as well
+//        $field->setSettings($config);
 
-//            // Update the settings as well
-//            $field->setSettings($config);
-
-            // If unable to save the field, return an error response
-            if (!Craft::$app->getFields()->saveField($field)) {
-                $errors = implode(', ', $field->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update field: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the field. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the field, throw an exception
+        if (!Craft::$app->getFields()->saveField($field)) {
+            $errors = implode(', ', $field->getErrorSummary(true));
+            throw new Exception("Unable to update field: {$errors}");
         }
 
         // Return success message
@@ -287,6 +250,7 @@ class Fields extends BaseSkillSet
      *
      * @param string $handle Field to delete.
      * @return SkillResponse
+     * @throws Throwable
      */
     public static function deleteField(string $handle): SkillResponse
     {
@@ -296,33 +260,19 @@ class Fields extends BaseSkillSet
         // Attempt to find the field by its handle
         $field = Craft::$app->getFields()->getFieldByHandle($handle);
 
-        // If the field doesn't exist, return an error response
+        // If the field doesn't exist, throw an exception
         if (!$field) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Field \"{$handle}\" not found.",
-            ]);
+            throw new Exception("Field \"{$handle}\" not found.");
         }
 
-        // Attempt to delete the field
-        try {
-            // If unable to mark field for deletion, return an error response
-            if (!$fieldsService->deleteField($field)) {
-                $errors = implode(', ', $field->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete field: {$errors}",
-                ]);
-            }
-            // Actually delete the field
-            $fieldsService->applyFieldDelete($field->uid);
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the field. {$e->getMessage()}",
-            ]);
+        // If unable to mark field for deletion, throw an exception
+        if (!$fieldsService->deleteField($field)) {
+            $errors = implode(', ', $field->getErrorSummary(true));
+            throw new Exception("Unable to delete field: {$errors}");
         }
+
+        // Actually delete the field
+        $fieldsService->applyFieldDelete($field->uid);
 
         // Return success message
         return new SkillResponse([
@@ -386,34 +336,19 @@ class Fields extends BaseSkillSet
      *
      * @param string $name Name of the field group.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function createFieldGroup(string $name): SkillResponse
     {
-        // Attempt to create the field group
-        try {
+        // Create the field group
+        $fieldGroup = new FieldGroup([
+            'name' => $name,
+        ]);
 
-            // Create the field group
-            $fieldGroup = new FieldGroup([
-                'name' => $name,
-            ]);
-
-            // If unable to save the field group, return an error response
-            if (!Craft::$app->getFields()->saveGroup($fieldGroup)) {
-                $errors = implode(', ', $fieldGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create field group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the field group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the field group, throw an exception
+        if (!Craft::$app->getFields()->saveGroup($fieldGroup)) {
+            $errors = implode(', ', $fieldGroup->getErrorSummary(true));
+            throw new Exception("Unable to create field group: {$errors}");
         }
 
         // Return success message
@@ -433,50 +368,29 @@ class Fields extends BaseSkillSet
      *
      * @param string $groupId ID of the field group to be deleted.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function deleteFieldGroup(string $groupId): SkillResponse
     {
-        // Attempt to delete the field group
-        try {
+        // If group ID is not numeric, throw an exception
+        if (!is_numeric($groupId)) {
+            throw new Exception("Unable to delete field group, invalid ID: {$groupId}");
+        }
 
-            // If group ID is not numeric, return an error response
-            if (!is_numeric($groupId)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to delete field group, invalid ID: {$groupId}",
-                ]);
-            }
+        // Get the fields service
+        $fields = Craft::$app->getFields();
 
-            // Get the fields service
-            $fields = Craft::$app->getFields();
+        // Get the field group by ID
+        $group = $fields->getGroupById($groupId);
 
-            // Get the field group by ID
-            $group = $fields->getGroupById($groupId);
+        // If group does not exist, throw an exception
+        if (!$group) {
+            throw new Exception("Unable to delete, field group does not exist.");
+        }
 
-            // If group does not exist, return an error response
-            if (!$group) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to delete, field group does not exist.",
-                ]);
-            }
-
-            // If unable to delete the field group, return an error response
-            if (!$fields->deleteGroup($group)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete the field group \"{$group->name}\".",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the field group. {$e->getMessage()}",
-            ]);
-
+        // If unable to delete the field group, throw an exception
+        if (!$fields->deleteGroup($group)) {
+            throw new Exception("Unable to delete the field group \"{$group->name}\".");
         }
 
         // Return success message
@@ -522,20 +436,8 @@ class Fields extends BaseSkillSet
     {
         /** @var FieldInterface $fieldType */
 
-        try {
-
-            // Get details about a specific field type
-            $fieldTypeDetails = (new $fieldType())->getSettings();
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to get details of the `{$fieldType}` field type. {$e->getMessage()}",
-            ]);
-
-        }
+        // Get details about a specific field type
+        $fieldTypeDetails = (new $fieldType())->getSettings();
 
         // Return success message
         return new SkillResponse([
@@ -554,18 +456,16 @@ class Fields extends BaseSkillSet
      *
      * @param string $fieldLayoutId ID of the field layout to identify.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getFieldLayout(string $fieldLayoutId): SkillResponse
     {
         // Get the field layout by ID
         $layout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
 
-        // If the layout doesn't exist, return an error response
+        // If the layout doesn't exist, throw an exception
         if (!$layout) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
-            ]);
+            throw new Exception("Field layout with ID \"{$fieldLayoutId}\" not found.");
         }
 
         // Get a description of the field layout
@@ -586,43 +486,25 @@ class Fields extends BaseSkillSet
      *
      * @param string $fieldLayoutConfig JSON-stringified configuration for the field layout.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function createFieldLayout(string $fieldLayoutConfig): SkillResponse
     {
         // Decode the JSON configuration
         $config = Json::decode($fieldLayoutConfig);
 
-        // If the configuration was not valid JSON, return an error response
+        // If the configuration was not valid JSON, throw an exception
         if (!is_array($config)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Invalid JSON provided for field layout configuration.",
-            ]);
+            throw new Exception("Invalid JSON provided for field layout configuration.");
         }
 
-        // Attempt to create and save the field layout
-        try {
+        // Create the field layout
+        $layout = FieldLayout::createFromConfig($config);
 
-            // Create the field layout
-            $layout = FieldLayout::createFromConfig($config);
-
-            // If unable to save the field layout, return an error response
-            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
-                $errors = implode(', ', $layout->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create field layout: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the field layout. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the field layout, throw an exception
+        if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+            $errors = implode(', ', $layout->getErrorSummary(true));
+            throw new Exception("Unable to create field layout: {$errors}");
         }
 
         // Get a description of the field layout
@@ -644,59 +526,38 @@ class Fields extends BaseSkillSet
      * @param string $fieldLayoutId ID of the field layout to identify.
      * @param string $newConfig JSON-stringified configuration for the field layout.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function updateFieldLayout(string $fieldLayoutId, string $newConfig): SkillResponse
     {
         // Get the existing field layout by ID
         $existingLayout = Craft::$app->getFields()->getLayoutById($fieldLayoutId);
 
-        // If the layout doesn't exist, return an error response
+        // If the layout doesn't exist, throw an exception
         if (!$existingLayout) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Field layout with ID \"{$fieldLayoutId}\" not found.",
-            ]);
+            throw new Exception("Field layout with ID \"{$fieldLayoutId}\" not found.");
         }
 
         // Decode the JSON configuration
         $config = Json::decode($newConfig);
 
-        // If the configuration was not valid JSON, return an error response
+        // If the configuration was not valid JSON, throw an exception
         if (!is_array($config)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Invalid JSON provided for field layout configuration.",
-            ]);
+            throw new Exception("Invalid JSON provided for field layout configuration.");
         }
 
-        // Attempt to update and save the field layout
-        try {
+        // Create the field layout
+        $layout = FieldLayout::createFromConfig($config);
 
-            // Create the field layout
-            $layout = FieldLayout::createFromConfig($config);
+        // Set the ID and type of the existing layout
+        $layout->id   = $existingLayout->id;
+        $layout->type = $existingLayout->type;
+        $layout->uid  = $existingLayout->uid;
 
-            // Set the ID and type of the existing layout
-            $layout->id   = $existingLayout->id;
-            $layout->type = $existingLayout->type;
-            $layout->uid  = $existingLayout->uid;
-
-            // If unable to save the field layout, return an error response
-            if (!Craft::$app->getFields()->saveLayout($layout, false)) {
-                $errors = implode(', ', $layout->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update field layout: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the field layout. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the field layout, throw an exception
+        if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+            $errors = implode(', ', $layout->getErrorSummary(true));
+            throw new Exception("Unable to update field layout: {$errors}");
         }
 
         // Get a description of the field layout

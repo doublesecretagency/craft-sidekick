@@ -12,12 +12,14 @@
 namespace doublesecretagency\sidekick\skills;
 
 use Craft;
+use craft\errors\SiteNotFoundException;
 use craft\helpers\Json;
 use craft\models\Site;
 use craft\models\SiteGroup;
 use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Sites
@@ -101,43 +103,27 @@ class Sites extends BaseSkillSet
      *
      * @param string $siteConfig JSON-stringified configuration for the `Site` model.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws SiteNotFoundException
      */
     public static function createSite(string $siteConfig): SkillResponse
     {
-        // Attempt to create and save the site
-        try {
+        // Create the site
+        $site = new Site(
+            Json::decode($siteConfig)
+        );
 
-            // Create the site
-            $site = new Site(
-                Json::decode($siteConfig)
-            );
+        // If the site is not valid, throw an exception
+        if (!$site->validate()) {
+            $errors = implode(', ', $site->getErrorSummary(true));
+            throw new Exception("Invalid site configuration: {$errors}");
+        }
 
-            // If the site is not valid, return an error response
-            if (!$site->validate()) {
-                $errors = implode(', ', $site->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid site configuration: {$errors}",
-                ]);
-            }
-
-            // If unable to save the site, return an error response
-            if (!Craft::$app->getSites()->saveSite($site)) {
-                $errors = implode(', ', $site->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create site: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the site. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the site, throw an exception
+        if (!Craft::$app->getSites()->saveSite($site)) {
+            $errors = implode(', ', $site->getErrorSummary(true));
+            throw new Exception("Unable to create site: {$errors}");
         }
 
         // Return success message
@@ -159,60 +145,41 @@ class Sites extends BaseSkillSet
      * @param string $siteHandle Handle of the site to update.
      * @param string $newConfig JSON-stringified configuration for the site.
      * @return SkillResponse
+     * @throws Exception
+     * @throws SiteNotFoundException
+     * @throws Throwable
      */
     public static function updateSite(string $siteHandle, string $newConfig): SkillResponse
     {
-        // Attempt to update the site
-        try {
+        // Get the site
+        $site = Craft::$app->getSites()->getSiteByHandle($siteHandle);
 
-            // Get the site
-            $site = Craft::$app->getSites()->getSiteByHandle($siteHandle);
+        // If site doesn't exist, throw an exception
+        if (!$site) {
+            throw new Exception("Unable to update, site `{$siteHandle}` does not exist.");
+        }
 
-            // If site doesn't exist, return an error response
-            if (!$site) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, site `{$siteHandle}` does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // If the configuration was not valid JSON, throw an exception
+        if (!is_array($config)) {
+            throw new Exception("Invalid JSON provided for site configuration.");
+        }
 
-            // If the configuration was not valid JSON, return an error response
-            if (!is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON provided for site configuration.",
-                ]);
-            }
+        // Update the site with the new configuration
+        $site->groupId = ($config['groupId'] ?? $site->groupId);
+        $site->name = ($config['name'] ?? $site->name);
+        $site->handle = ($config['handle'] ?? $site->handle);
+        $site->language = ($config['language'] ?? $site->language);
+        $site->primary = ($config['primary'] ?? $site->primary);
+        $site->baseUrl = ($config['baseUrl'] ?? $site->baseUrl);
+        $site->enabled = ($config['enabled'] ?? $site->enabled);
 
-            // Update the site with the new configuration
-            $site->groupId = ($config['groupId'] ?? $site->groupId);
-            $site->name = ($config['name'] ?? $site->name);
-            $site->handle = ($config['handle'] ?? $site->handle);
-            $site->language = ($config['language'] ?? $site->language);
-            $site->primary = ($config['primary'] ?? $site->primary);
-            $site->baseUrl = ($config['baseUrl'] ?? $site->baseUrl);
-            $site->enabled = ($config['enabled'] ?? $site->enabled);
-
-            // If unable to save the site, return an error response
-            if (!Craft::$app->getSites()->saveSite($site)) {
-                $errors = implode(', ', $site->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update site: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the site. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the site, throw an exception
+        if (!Craft::$app->getSites()->saveSite($site)) {
+            $errors = implode(', ', $site->getErrorSummary(true));
+            throw new Exception("Unable to update site: {$errors}");
         }
 
         // Return success message
@@ -232,6 +199,8 @@ class Sites extends BaseSkillSet
      *
      * @param string $handle Site to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteSite(string $handle): SkillResponse
     {
@@ -241,30 +210,15 @@ class Sites extends BaseSkillSet
         // Attempt to find the site by its handle
         $site = $sitesService->getSiteByHandle($handle);
 
-        // If the site doesn't exist, return an error response
+        // If the site doesn't exist, throw an exception
         if (!$site) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Site \"{$handle}\" not found.",
-            ]);
+            throw new Exception("Site \"{$handle}\" not found.");
         }
 
-        // Attempt to delete the site
-        try {
-            // If unable to delete the site, return an error response
-            if (!$sitesService->deleteSite($site)) {
-                $errors = implode(', ', $site->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete site: {$errors}",
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the site. {$e->getMessage()}",
-            ]);
+        // If unable to delete the site, throw an exception
+        if (!$sitesService->deleteSite($site)) {
+            $errors = implode(', ', $site->getErrorSummary(true));
+            throw new Exception("Unable to delete site: {$errors}");
         }
 
         // Return success message
@@ -333,35 +287,20 @@ class Sites extends BaseSkillSet
      *
      * @param string $siteGroupConfig JSON-stringified configuration for the `SiteGroup` model.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function createSiteGroup(string $siteGroupConfig): SkillResponse
     {
-        // Attempt to create and save the site group
-        try {
+        // Decode the JSON configurations
+        $siteGroup = Json::decode($siteGroupConfig);
 
-            // Decode the JSON configurations
-            $siteGroup = Json::decode($siteGroupConfig);
+        // Create the site
+        $group = new SiteGroup($siteGroup);
 
-            // Create the site
-            $group = new SiteGroup($siteGroup);
-
-            // If unable to save the site group, return an error response
-            if (!Craft::$app->getSites()->saveGroup($group)) {
-                $errors = implode(', ', $group->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create site group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the site group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the site group, throw an exception
+        if (!Craft::$app->getSites()->saveGroup($group)) {
+            $errors = implode(', ', $group->getErrorSummary(true));
+            throw new Exception("Unable to create site group: {$errors}");
         }
 
         // Return success message
@@ -383,54 +322,33 @@ class Sites extends BaseSkillSet
      * @param string $siteGroupId ID of the site group to update.
      * @param string $newConfig JSON-stringified configuration for the site.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function updateSiteGroup(string $siteGroupId, string $newConfig): SkillResponse
     {
-        // Attempt to update the site group
-        try {
+        // Get the site group
+        $group = Craft::$app->getSites()->getGroupById($siteGroupId);
 
-            // Get the site group
-            $group = Craft::$app->getSites()->getGroupById($siteGroupId);
+        // If site group doesn't exist, throw an exception
+        if (!$group) {
+            throw new Exception("Unable to update, site group {$siteGroupId} does not exist.");
+        }
 
-            // If site group doesn't exist, return an error response
-            if (!$group) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, site group {$siteGroupId} does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // If the configuration was not valid JSON, throw an exception
+        if (!is_array($config)) {
+            throw new Exception("Invalid JSON provided for site configuration.");
+        }
 
-            // If the configuration was not valid JSON, return an error response
-            if (!is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON provided for site configuration.",
-                ]);
-            }
+        // Update the site group with the new configuration
+        $group->name = ($config['name'] ?? $group->name);
 
-            // Update the site group with the new configuration
-            $group->name = ($config['name'] ?? $group->name);
-
-            // If unable to save the site group, return an error response
-            if (!Craft::$app->getSites()->saveGroup($group)) {
-                $errors = implode(', ', $group->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update site group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the site group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the site group, throw an exception
+        if (!Craft::$app->getSites()->saveGroup($group)) {
+            $errors = implode(', ', $group->getErrorSummary(true));
+            throw new Exception("Unable to update site group: {$errors}");
         }
 
         // Return success message
@@ -452,6 +370,7 @@ class Sites extends BaseSkillSet
      *
      * @param string $groupId ID of site group to delete.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function deleteSiteGroup(string $groupId): SkillResponse
     {
@@ -461,37 +380,19 @@ class Sites extends BaseSkillSet
         // Attempt to find the site group by its ID
         $group = $sitesService->getGroupById($groupId);
 
-        // If the site doesn't exist, return an error response
+        // If the site doesn't exist, throw an exception
         if (!$group) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to find site group with ID {$groupId}.",
-            ]);
+            throw new Exception("Unable to find site group with ID {$groupId}.");
         }
 
-        // If the site group still has sites, return an error response
+        // If the site group still has sites, throw an exception
         if ($sitesService->getSitesByGroupId($groupId)) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete a site group which still has sites assigned to it.",
-            ]);
+            throw new Exception("Unable to delete a site group which still has sites assigned to it.");
         }
 
-        // Attempt to delete the site group
-        try {
-            // If unable to delete the site, return an error response
-            if (!$sitesService->deleteGroup($group)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete site group \"{$group->getName()}\".",
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the site group. {$e->getMessage()}",
-            ]);
+        // If unable to delete the site, throw an exception
+        if (!$sitesService->deleteGroup($group)) {
+            throw new Exception("Unable to delete site group \"{$group->getName()}\".");
         }
 
         // Return success message

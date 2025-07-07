@@ -31,6 +31,7 @@ description: "An example of a custom skill which creates a report with specified
  * @param string $topic Topic of the report (ie: "sales").
  * @param string $timeframe Timeframe for the report to include.
  * @return SkillResponse
+ * @throws Exception
  */
 public static function createReport(string $person, string $topic, string $timeframe): SkillResponse
 {
@@ -41,13 +42,9 @@ public static function createReport(string $person, string $topic, string $timef
      * and generate a relevant report spanning the given timeframe.
      */
 
-    // If validation fails
+    // If validation fails, throw an exception
     if (!$valid) {
-        // Return error message
-        return new SkillResponse([
-            'success' => false,
-            'message' => "Unable to generate a {$topic} report about {$person} spanning {$timeframe}."
-        ]);
+        throw new Exception("Unable to generate a {$topic} report about {$person} spanning {$timeframe}.");
     }
 
     // Return success message

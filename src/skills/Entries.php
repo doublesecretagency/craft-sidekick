@@ -13,13 +13,13 @@ namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\elements\Entry;
+use craft\errors\ElementNotFoundException;
 use craft\helpers\Json;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
 
 /**
  * @category Entries
@@ -97,6 +97,7 @@ class Entries extends BaseSkillSet
      *
      * @param string $entryId ID of the entry to retrieve.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getEntry(string $entryId): SkillResponse
     {
@@ -105,11 +106,7 @@ class Entries extends BaseSkillSet
 
         // If no such entry exists
         if (!$entry) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find entry with the ID {$entryId}."
-            ]);
+            throw new Exception("Can't find entry with the ID {$entryId}.");
         }
 
         // Return success message
@@ -127,6 +124,9 @@ class Entries extends BaseSkillSet
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws ElementNotFoundException
      */
     public static function createEntry(string $jsonConfig): SkillResponse
     {
@@ -136,21 +136,9 @@ class Entries extends BaseSkillSet
         // Populate the element
         ElementsHelper::populateElement($entry, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the entry, return an error response
-            if (!Craft::$app->elements->saveElement($entry)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create entry: " . implode(', ', $entry->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the entry. {$e->getMessage()}",
-            ]);
+        // If unable to save the entry, throw an exception
+        if (!Craft::$app->elements->saveElement($entry)) {
+            throw new Exception("Unable to create entry: " . implode(', ', $entry->getErrorSummary(true)));
         }
 
         // Return success message
@@ -167,6 +155,9 @@ class Entries extends BaseSkillSet
      * @param string $entryId ID of the entry to update.
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws ElementNotFoundException
+     * @throws Exception
+     * @throws Throwable
      */
     public static function updateEntry(string $entryId, string $jsonConfig): SkillResponse
     {
@@ -175,31 +166,15 @@ class Entries extends BaseSkillSet
 
         // If no such entry exists
         if (!$entry) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find entry with the ID {$entryId}."
-            ]);
+            throw new Exception("Can't find entry with the ID {$entryId}.");
         }
 
         // Populate the element
         ElementsHelper::populateElement($entry, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the entry, return an error response
-            if (!Craft::$app->elements->saveElement($entry)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update entry: " . implode(', ', $entry->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the entry. {$e->getMessage()}",
-            ]);
+        // If unable to save the entry, throw an exception
+        if (!Craft::$app->elements->saveElement($entry)) {
+            throw new Exception("Unable to update entry: " . implode(', ', $entry->getErrorSummary(true)));
         }
 
         // Return success message
@@ -219,34 +194,25 @@ class Entries extends BaseSkillSet
      *
      * @param string $entryId ID of the entry to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteEntry(string $entryId): SkillResponse
     {
-        try {
-            // Get the elements service
-            $elements = Craft::$app->getElements();
+        // Get the elements service
+        $elements = Craft::$app->getElements();
 
-            // Get the entry by ID
-            $entry = $elements->getElementById($entryId);
+        // Get the entry by ID
+        $entry = $elements->getElementById($entryId);
 
-            // If no such entry exists
-            if (!$entry) {
-                // Throw an error message
-                throw new Exception("No matching entry found.");
-            }
-
-            // Delete the entry by its ID
-            $elements->deleteElementById($entryId);
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete entry {$entryId}. {$e->getMessage()}",
-            ]);
-
+        // If no such entry exists
+        if (!$entry) {
+            // Throw an error message
+            throw new Exception("No matching entry found.");
         }
+
+        // Delete the entry by its ID
+        $elements->deleteElementById($entryId);
 
         // Return success message
         return new SkillResponse([

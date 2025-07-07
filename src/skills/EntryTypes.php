@@ -12,14 +12,15 @@
 namespace doublesecretagency\sidekick\skills;
 
 use Craft;
+use craft\errors\EntryTypeNotFoundException;
 use craft\helpers\Json;
 use craft\models\EntryType;
 use craft\models\FieldLayout;
-use craft\models\FieldLayoutTab;
 use doublesecretagency\sidekick\helpers\SkillsHelper;
 use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
+use yii\base\Exception;
 
 /**
  * @category Entry Types
@@ -69,7 +70,7 @@ class EntryTypes extends BaseSkillSet
     public static function getAllEntryTypes(): SkillResponse
     {
         // Get all entry types
-        $entryTypes = Craft::$app->getEntries()->getAllEntryTypes();
+        $entryTypes = VersionHelper::sectionsService()->getAllEntryTypes();
 
         // Initialize results array
         $results = [];
@@ -98,80 +99,45 @@ class EntryTypes extends BaseSkillSet
      *
      * @param string $entryTypeConfig JSON-stringified configuration for the `EntryType` model.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws EntryTypeNotFoundException
      */
     public static function createEntryType(string $entryTypeConfig): SkillResponse
     {
-        // Attempt to create and save the entry type
-        try {
+        // Decode the JSON configurations
+        $config = Json::decode($entryTypeConfig);
 
-            // Decode the JSON configurations
-            $config = Json::decode($entryTypeConfig);
+        // Create the field layout
+        $layout = FieldLayout::createFromConfig($config['fieldLayout'] ?? []);
 
-            // Attempt to create and save the field layout
-            try {
+        // If layout is missing a type, throw an exception
+        if (!$layout->type) {
+            throw new Exception("Field layout is missing a type. Type should be specified in the configuration.");
+        }
 
-                // Create the field layout
-                $layout = FieldLayout::createFromConfig($config['fieldLayout'] ?? []);
+        // If unable to save the field layout, throw an exception
+        if (!Craft::$app->getFields()->saveLayout($layout, false)) {
+            $errors = implode(', ', $layout->getErrorSummary(true));
+            throw new Exception("Unable to create field layout: {$errors}");
+        }
 
-                // If layout is missing a type, return an error response
-                if (!$layout->type) {
-                    return new SkillResponse([
-                        'success' => false,
-                        'message' => "Field layout is missing a type. Type should be specified in the configuration.",
-                    ]);
-                }
+        // Set the field layout in the configuration
+        $config['fieldLayout'] = $layout;
 
-                // If unable to save the field layout, return an error response
-                if (!Craft::$app->getFields()->saveLayout($layout, false)) {
-                    $errors = implode(', ', $layout->getErrorSummary(true));
-                    return new SkillResponse([
-                        'success' => false,
-                        'message' => "Failed to create field layout: {$errors}",
-                    ]);
-                }
+        // Create the entry type
+        $entryType = new EntryType($config);
 
-            } catch (Throwable $e) {
+        // If the entry type is not valid, throw an exception
+        if (!$entryType->validate()) {
+            $errors = implode(', ', $entryType->getErrorSummary(true));
+            throw new Exception("Invalid entry type configuration: {$errors}");
+        }
 
-                // Something went wrong, return an error response
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to create the field layout. {$e->getMessage()}",
-                ]);
-
-            }
-
-            // Set the field layout in the configuration
-            $config['fieldLayout'] = $layout;
-
-            // Create the entry type
-            $entryType = new EntryType($config);
-
-            // If the entry type is not valid, return an error response
-            if (!$entryType->validate()) {
-                $errors = implode(', ', $entryType->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid entry type configuration: {$errors}",
-                ]);
-            }
-
-            // If unable to save the entry type, return an error response
-            if (!Craft::$app->getEntries()->saveEntryType($entryType)) {
-                $errors = implode(', ', $entryType->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create entry type: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the entry type. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the entry type, throw an exception
+        if (!VersionHelper::sectionsService()->saveEntryType($entryType)) {
+            $errors = implode(', ', $entryType->getErrorSummary(true));
+            throw new Exception("Unable to create entry type: {$errors}");
         }
 
         // Return success message
@@ -193,55 +159,36 @@ class EntryTypes extends BaseSkillSet
      * @param string $entryTypeHandle Handle of the entry type to update.
      * @param string $newConfig JSON-stringified configuration for the entry type.
      * @return SkillResponse
+     * @throws EntryTypeNotFoundException
+     * @throws Exception
+     * @throws Throwable
      */
     public static function updateEntryType(string $entryTypeHandle, string $newConfig): SkillResponse
     {
-        // Attempt to update the entry type
-        try {
+        // Get the entry type
+        $entryType = VersionHelper::sectionsService()->getEntryTypeByHandle($entryTypeHandle);
 
-            // Get the entry type
-            $entryType = Craft::$app->getEntries()->getEntryTypeByHandle($entryTypeHandle);
+        // If entry type doesn't exist, throw an exception
+        if (!$entryType) {
+            throw new Exception("Unable to update, entry type `{$entryTypeHandle}` does not exist.");
+        }
 
-            // If entry type doesn't exist, return an error response
-            if (!$entryType) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, entry type `{$entryTypeHandle}` does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // If the configuration was not valid JSON, throw an exception
+        if (!is_array($config)) {
+            throw new Exception("Invalid JSON provided for entry type configuration.");
+        }
 
-            // If the configuration was not valid JSON, return an error response
-            if (!is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON provided for entry type configuration.",
-                ]);
-            }
+        // Update the entry type with the new configuration
+        $entryType->name = ($config['name'] ?? $entryType->name);
+        $entryType->handle = ($config['handle'] ?? $entryType->handle);
 
-            // Update the entry type with the new configuration
-            $entryType->name = ($config['name'] ?? $entryType->name);
-            $entryType->handle = ($config['handle'] ?? $entryType->handle);
-
-            // If unable to save the entry type, return an error response
-            if (!Craft::$app->getEntries()->saveEntryType($entryType)) {
-                $errors = implode(', ', $entryType->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update entry type: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the entry type. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the entry type, throw an exception
+        if (!VersionHelper::sectionsService()->saveEntryType($entryType)) {
+            $errors = implode(', ', $entryType->getErrorSummary(true));
+            throw new Exception("Unable to update entry type: {$errors}");
         }
 
         // Return success message
@@ -264,39 +211,26 @@ class EntryTypes extends BaseSkillSet
      *
      * @param string $handle Entry type to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteEntryType(string $handle): SkillResponse
     {
         // Get the entries service
-        $entriesService = Craft::$app->getEntries();
+        $entriesService = VersionHelper::sectionsService();
 
         // Attempt to find the entry type by its handle
         $entryType = $entriesService->getEntryTypeByHandle($handle);
 
-        // If the entry type doesn't exist, return an error response
+        // If the entry type doesn't exist, throw an exception
         if (!$entryType) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Entry type \"{$handle}\" not found.",
-            ]);
+            throw new Exception("Entry type \"{$handle}\" not found.");
         }
 
-        // Attempt to delete the entry type
-        try {
-            // If unable to delete the entry type, return an error response
-            if (!$entriesService->deleteEntryType($entryType)) {
-                $errors = implode(', ', $entryType->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete entry type: {$errors}",
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the entry type. {$e->getMessage()}",
-            ]);
+        // If unable to delete the entry type, throw an exception
+        if (!$entriesService->deleteEntryType($entryType)) {
+            $errors = implode(', ', $entryType->getErrorSummary(true));
+            throw new Exception("Unable to delete entry type: {$errors}");
         }
 
         // Return success message

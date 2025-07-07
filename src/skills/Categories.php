@@ -13,6 +13,8 @@ namespace doublesecretagency\sidekick\skills;
 
 use Craft;
 use craft\elements\Category;
+use craft\errors\CategoryGroupNotFoundException;
+use craft\errors\ElementNotFoundException;
 use craft\helpers\Json;
 use craft\models\CategoryGroup;
 use craft\models\CategoryGroup_SiteSettings;
@@ -121,6 +123,7 @@ class Categories extends BaseSkillSet
      *
      * @param string $categoryId ID of the category to retrieve.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getCategory(string $categoryId): SkillResponse
     {
@@ -129,11 +132,7 @@ class Categories extends BaseSkillSet
 
         // If no such category exists
         if (!$category) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find category with the ID {$categoryId}."
-            ]);
+            throw new Exception("Can't find category with the ID {$categoryId}.");
         }
 
         // Return success message
@@ -151,6 +150,9 @@ class Categories extends BaseSkillSet
      *
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws ElementNotFoundException
      */
     public static function createCategory(string $jsonConfig): SkillResponse
     {
@@ -160,21 +162,9 @@ class Categories extends BaseSkillSet
         // Populate the element
         ElementsHelper::populateElement($category, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the category, return an error response
-            if (!Craft::$app->elements->saveElement($category)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create category: " . implode(', ', $category->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the category. {$e->getMessage()}",
-            ]);
+        // If unable to save the category, throw an exception
+        if (!Craft::$app->elements->saveElement($category)) {
+            throw new Exception("Unable to create category: " . implode(', ', $category->getErrorSummary(true)));
         }
 
         // Return success message
@@ -191,6 +181,9 @@ class Categories extends BaseSkillSet
      * @param string $categoryId ID of the category to update.
      * @param string $jsonConfig JSON-stringified configuration for the element. See the "Element Configs" instructions.
      * @return SkillResponse
+     * @throws ElementNotFoundException
+     * @throws Exception
+     * @throws Throwable
      */
     public static function updateCategory(string $categoryId, string $jsonConfig): SkillResponse
     {
@@ -199,31 +192,15 @@ class Categories extends BaseSkillSet
 
         // If no such category exists
         if (!$category) {
-            // Return error message
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Can't find category with the ID {$categoryId}."
-            ]);
+            throw new Exception("Can't find category with the ID {$categoryId}.");
         }
 
         // Populate the element
         ElementsHelper::populateElement($category, $jsonConfig);
 
-        // Attempt to save the element
-        try {
-            // If unable to save the category, return an error response
-            if (!Craft::$app->elements->saveElement($category)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update category: " . implode(', ', $category->getErrorSummary(true)),
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the category. {$e->getMessage()}",
-            ]);
+        // If unable to save the category, throw an exception
+        if (!Craft::$app->elements->saveElement($category)) {
+            throw new Exception("Unable to update category: " . implode(', ', $category->getErrorSummary(true)));
         }
 
         // Return success message
@@ -243,34 +220,25 @@ class Categories extends BaseSkillSet
      *
      * @param string $categoryId ID of the category to delete.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
      */
     public static function deleteCategory(string $categoryId): SkillResponse
     {
-        try {
-            // Get the elements service
-            $elements = Craft::$app->getElements();
+        // Get the elements service
+        $elements = Craft::$app->getElements();
 
-            // Get the category by ID
-            $category = $elements->getElementById($categoryId);
+        // Get the category by ID
+        $category = $elements->getElementById($categoryId);
 
-            // If no such category exists
-            if (!$category) {
-                // Throw an error message
-                throw new Exception("No matching category found.");
-            }
-
-            // Delete the category by its ID
-            $elements->deleteElementById($categoryId);
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete category {$categoryId}. {$e->getMessage()}",
-            ]);
-
+        // If no such category exists
+        if (!$category) {
+            // Throw an error message
+            throw new Exception("No matching category found.");
         }
+
+        // Delete the category by its ID
+        $elements->deleteElementById($categoryId);
 
         // Return success message
         return new SkillResponse([
@@ -324,51 +292,35 @@ class Categories extends BaseSkillSet
      * @param string $categoryGroupConfig JSON-stringified configuration for the `CategoryGroup` model.
      * @param string $siteSettingsConfig JSON-stringified array of configurations, each for the `CategoryGroup_SiteSettings` model.
      * @return SkillResponse
+     * @throws Exception
+     * @throws Throwable
+     * @throws CategoryGroupNotFoundException
      */
     public static function createCategoryGroup(string $categoryGroupConfig, string $siteSettingsConfig): SkillResponse
     {
-        // Attempt to create and save the category group
-        try {
+        // Decode the JSON configurations
+        $categoryGroup = Json::decode($categoryGroupConfig);
+        $siteSettings  = Json::decode($siteSettingsConfig);
 
-            // Decode the JSON configurations
-            $categoryGroup = Json::decode($categoryGroupConfig);
-            $siteSettings  = Json::decode($siteSettingsConfig);
+        // Create the category group
+        $categoryGroup = new CategoryGroup($categoryGroup);
 
-            // Create the category group
-            $categoryGroup = new CategoryGroup($categoryGroup);
+        // Append site settings
+        $categoryGroup->setSiteSettings(array_map(
+            static fn(array $config) => new CategoryGroup_SiteSettings($config),
+            $siteSettings
+        ));
 
-            // Append site settings
-            $categoryGroup->setSiteSettings(array_map(
-                static fn(array $config) => new CategoryGroup_SiteSettings($config),
-                $siteSettings
-            ));
+        // If the category group is not valid, throw an exception
+        if (!$categoryGroup->validate()) {
+            $errors = implode(', ', $categoryGroup->getErrorSummary(true));
+            throw new Exception("Invalid category group configuration: {$errors}");
+        }
 
-            // If the category group is not valid, return an error response
-            if (!$categoryGroup->validate()) {
-                $errors = implode(', ', $categoryGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid category group configuration: {$errors}",
-                ]);
-            }
-
-            // If unable to save the category group, return an error response
-            if (!Craft::$app->getCategories()->saveGroup($categoryGroup)) {
-                $errors = implode(', ', $categoryGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to create category group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to create the category group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the category group, throw an exception
+        if (!Craft::$app->getCategories()->saveGroup($categoryGroup)) {
+            $errors = implode(', ', $categoryGroup->getErrorSummary(true));
+            throw new Exception("Unable to create category group: {$errors}");
         }
 
         // Return success message
@@ -390,55 +342,36 @@ class Categories extends BaseSkillSet
      * @param string $categoryGroupHandle Handle of the category group to update.
      * @param string $newConfig JSON-stringified configuration for the category group.
      * @return SkillResponse
+     * @throws CategoryGroupNotFoundException
+     * @throws Exception
+     * @throws Throwable
      */
     public static function updateCategoryGroup(string $categoryGroupHandle, string $newConfig): SkillResponse
     {
-        // Attempt to update the category group
-        try {
+        // Get the category group
+        $categoryGroup = Craft::$app->getCategories()->getGroupByHandle($categoryGroupHandle);
 
-            // Get the category group
-            $categoryGroup = Craft::$app->getCategories()->getGroupByHandle($categoryGroupHandle);
+        // If category group doesn't exist, throw an exception
+        if (!$categoryGroup) {
+            throw new Exception("Unable to update, category group `{$categoryGroupHandle}` does not exist.");
+        }
 
-            // If category group doesn't exist, return an error response
-            if (!$categoryGroup) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Unable to update, category group `{$categoryGroupHandle}` does not exist.",
-                ]);
-            }
+        // Decode the JSON configuration
+        $config = Json::decode($newConfig);
 
-            // Decode the JSON configuration
-            $config = Json::decode($newConfig);
+        // If the configuration was not valid JSON, throw an exception
+        if (!is_array($config)) {
+            throw new Exception("Invalid JSON provided for category group configuration.");
+        }
 
-            // If the configuration was not valid JSON, return an error response
-            if (!is_array($config)) {
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Invalid JSON provided for category group configuration.",
-                ]);
-            }
+        // Update the category group with the new configuration
+        $categoryGroup->name = ($config['name'] ?? $categoryGroup->name);
+        $categoryGroup->handle = ($config['handle'] ?? $categoryGroup->handle);
 
-            // Update the category group with the new configuration
-            $categoryGroup->name = ($config['name'] ?? $categoryGroup->name);
-            $categoryGroup->handle = ($config['handle'] ?? $categoryGroup->handle);
-
-            // If unable to save the category group, return an error response
-            if (!Craft::$app->getCategories()->saveGroup($categoryGroup)) {
-                $errors = implode(', ', $categoryGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to update category group: {$errors}",
-                ]);
-            }
-
-        } catch (Throwable $e) {
-
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to update the category group. {$e->getMessage()}",
-            ]);
-
+        // If unable to save the category group, throw an exception
+        if (!Craft::$app->getCategories()->saveGroup($categoryGroup)) {
+            $errors = implode(', ', $categoryGroup->getErrorSummary(true));
+            throw new Exception("Unable to update category group: {$errors}");
         }
 
         // Return success message
@@ -458,6 +391,7 @@ class Categories extends BaseSkillSet
      *
      * @param string $handle Category group to delete.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function deleteCategoryGroup(string $handle): SkillResponse
     {
@@ -467,30 +401,15 @@ class Categories extends BaseSkillSet
         // Attempt to find the category group by its handle
         $categoryGroup = $categoriesService->getGroupByHandle($handle);
 
-        // If the category group doesn't exist, return an error response
+        // If the category group doesn't exist, throw an exception
         if (!$categoryGroup) {
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Category group \"{$handle}\" not found.",
-            ]);
+            throw new Exception("Category group \"{$handle}\" not found.");
         }
 
-        // Attempt to delete the category group
-        try {
-            // If unable to delete the category group, return an error response
-            if (!$categoriesService->deleteGroup($categoryGroup)) {
-                $errors = implode(', ', $categoryGroup->getErrorSummary(true));
-                return new SkillResponse([
-                    'success' => false,
-                    'message' => "Failed to delete category group: {$errors}",
-                ]);
-            }
-        } catch (Throwable $e) {
-            // Something went wrong, return an error response
-            return new SkillResponse([
-                'success' => false,
-                'message' => "Unable to delete the category group. {$e->getMessage()}",
-            ]);
+        // If unable to delete the category group, throw an exception
+        if (!$categoriesService->deleteGroup($categoryGroup)) {
+            $errors = implode(', ', $categoryGroup->getErrorSummary(true));
+            throw new Exception("Unable to delete category group: {$errors}");
         }
 
         // Return success message
