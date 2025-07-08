@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.8 - 2025-07-08
 
 ### Added
 - Added awareness of whether `devMode` is enabled.
