@@ -21,7 +21,7 @@ You can talk to Sidekick via the [chat window](https://plugins.doublesecretagenc
 Sidekick boasts a healthy set of [native skills](https://plugins.doublesecretagency.com/sidekick/chat/native-skills), and you can easily add your own [custom skills](https://plugins.doublesecretagency.com/sidekick/chat/custom-skills) with a module or separate plugin.
 
 <p align="center">
-    <img src="https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png" alt="Screenshot of slideout revealing the complete list of available skill sets" width="832">
+    <img src="https://plugins.doublesecretagency.com/sidekick/images/chat-window/available-skills.png" alt="Screenshot of slideout revealing the complete list of available skill sets" width="775">
 </p>
 
 ---
