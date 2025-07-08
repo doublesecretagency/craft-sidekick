@@ -36,7 +36,9 @@ head:
 
 # Chat Window
 
-Sidekick adds an AI chat window to the Craft control panel for editing Twig files and managing entries, fields, and sections. In the main sidebar navigation of the control panel, click the **Sidekick** link to open the chat window.
+Sidekick adds an AI chat window to the Craft control panel with a wide variety of [skills](/chat/native-skills).
+
+Here's a simple example...
 
 <img class="dropshadow" src="/images/chat-window/chat-window-example.png" alt="Example of the Chat Window in use" style="max-width:737px; margin:20px 0 26px;">
 
@@ -47,13 +49,19 @@ The chat window displays different types of messages, each color-coded for clari
 | Color                                   | Message Type           | Description                           |
 |-----------------------------------------|------------------------|---------------------------------------|
 | Black                                   | **User Messages**      | Your own inputs.                      |
-| Black                                   | **Assistant Messages** | Responses from Sidekick and OpenAI.   |
+| Black                                   | **Assistant Messages** | Responses from the AI agent.          |
 | <span style="color:#127fbf">Blue</span> | **System Messages**    | System actions performed by Sidekick. |
 | <span style="color:#d81e23">Red</span>  | **Error Messages**     | Alerts when something goes wrong.     |
 
-## Clearing the Conversation
+## Buttons Above the Chat Window
 
-<img class="dropshadow" src="/images/chat-window/chat-window-buttons.png" alt="Screenshot of buttons above the Chat Window" style="max-width:196px; margin-top:20px; margin-bottom:20px;">
+<img class="dropshadow" src="/images/chat-window/buttons.png" alt="Screenshot of buttons above the Chat Window" style="max-width:292px; margin-top:20px; margin-bottom:20px;">
+
+### Available Skills
+
+See the [Native Skills](/chat/native-skills) page for a complete list of skills available in the chat window.
+
+### Clear Conversation
 
 Clicking the "Clear Conversation" button will **erase the current conversation** and **start a fresh chat**. This is useful when you want to change the subject, or just feel like you need to start over.
 

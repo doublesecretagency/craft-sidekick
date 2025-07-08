@@ -28,7 +28,8 @@ Event::on(
     
         // Append your custom skill sets
         $event->skills[] = MyCustomSkills::class;
-        $event->skills[] = MyOtherCustomSkills::class; // Add as many as you want
+        $event->skills[] = MyOtherCustomSkills::class;
+        // ... add as many as you want
         
     }
 );

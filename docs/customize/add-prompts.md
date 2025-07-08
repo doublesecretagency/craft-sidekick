@@ -29,7 +29,8 @@ Event::on(
 
         // Append your custom prompts
         $event->prompts[] = "{$path}/prompts/my-custom-prompt.md";
-        $event->prompts[] = "{$path}/prompts/my-other-custom-prompt.md"; // Add as many as you want
+        $event->prompts[] = "{$path}/prompts/my-other-custom-prompt.md";
+        // ... add as many as you want
 
     }
 );

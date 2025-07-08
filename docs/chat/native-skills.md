@@ -16,7 +16,7 @@ head:
       content: "Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections."
   - - meta
     - property: "og:image"
-      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/available-skills.png"
   - - meta
     - name: "twitter:card"
       content: "summary_large_image"
@@ -31,18 +31,20 @@ head:
       content: "Sidekick currently boasts a small but powerful set of skills, like managing templates, entries, and sections."
   - - meta
     - name: "twitter:image"
-      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/skills-slideout.png"
+      content: "https://plugins.doublesecretagency.com/sidekick/images/chat-window/available-skills.png"
 ---
 
 # Native Skills
 
 Sidekick boasts a small but powerful set of skills available via the chat window. If you need something beyond what is shown here, it's very easy to create your own [custom skills](/chat/custom-skills).
 
-:::warning See the complete list
-For a comprehensive list of what Sidekick can do, click the "i" icon above the chat window. A slideout will reveal the complete list of available skill sets.
+:::warning See What's Possible
+For a complete list of what Sidekick can do, click the "Available Skills" button above the chat window.
 :::
 
-<img class="dropshadow" src="/images/chat-window/skills-slideout.png" alt="Screenshot of slideout revealing the complete list of available skill sets" style="max-width:832px">
+<img class="dropshadow" src="/images/chat-window/buttons.png" alt="Screenshot of buttons above the Chat Window" style="max-width:292px; margin-top:20px; margin-bottom:20px;">
+
+<img class="dropshadow" src="/images/chat-window/available-skills.png" alt="Screenshot of slideout revealing the complete list of available skill sets" style="max-width:775px">
 
 ## Permissions & Capabilities
 
