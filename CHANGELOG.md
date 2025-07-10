@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Removed the message size limit.
+
 ## 1.0.8 - 2025-07-08
 
 ### Added

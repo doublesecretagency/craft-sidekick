@@ -14,7 +14,6 @@ const SidekickChat = {
     sendButton: null,
     greeting: null,
     slideout: null,
-    MAX_MESSAGE_LENGTH: 1000, // Adjust this limit as needed
     ROLE: {
         ASSISTANT: 'assistant',
         USER: 'user',
@@ -319,12 +318,6 @@ const SidekickChat = {
 
         // If the message is empty, do nothing
         if (!message) {
-            return;
-        }
-
-        // If the message is too long, alert the user
-        if (message.length > this.MAX_MESSAGE_LENGTH) {
-            alert('Your message is too long. Please shorten it.');
             return;
         }
 
