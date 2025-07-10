@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added error message identifiers.
+
 ### Changed
 - Removed the message size limit.
 

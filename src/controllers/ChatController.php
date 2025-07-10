@@ -228,7 +228,7 @@ class ChatController extends Controller
             // Append error to the chat history
             (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => $e->getMessage()
+                'message' => 'Cannot send the chat message. '.$e->getMessage()
             ]))
                 ->log(__METHOD__)
                 ->toChatHistory()

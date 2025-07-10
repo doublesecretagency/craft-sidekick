@@ -366,7 +366,7 @@ class OpenAIService extends Component
             // Output error message
             (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => $e->getMessage(),
+                'message' => 'Streaming issue: '.$e->getMessage(),
             ]))
                 ->log(__METHOD__)
                 ->toChatHistory()
