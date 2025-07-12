@@ -4,6 +4,7 @@
 
 ### Added
 - Added error message identifiers.
+- Added stack trace for streaming issues.
 
 ### Changed
 - Changed formatting of tool responses.

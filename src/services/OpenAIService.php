@@ -364,10 +364,27 @@ class OpenAIService extends Component
 
         } catch (Throwable $e) {
 
+            // Get trace components
+            $errorType = get_class($e);
+            $file = $e->getFile();
+            $line = $e->getLine();
+            $message = $e->getMessage();
+            $traceString = $e->getTraceAsString();
+
+            // Rephrase this specific error message:
+            // "Your input exceeds the context window of this model. Please adjust your input and try again."
+            if (str_contains($message, 'input exceeds the context window of this model')) {
+                $message = "Too much data for the AI model. You may need to \"Clear Conversation\" to get a fresh start.";
+            }
+
+            // Prepend offending line to the stack trace
+            $stackTrace = "{$errorType} in {$file}({$line}): {$message}\n\n$traceString";
+
             // Output error message
             (new ChatMessage([
                 'role' => ChatMessage::ERROR,
-                'message' => 'Streaming issue: '.$e->getMessage(),
+                'message' => "Streaming issue: {$message}",
+                'response' => $stackTrace,
             ]))
                 ->log(__METHOD__)
                 ->toChatHistory()
@@ -407,6 +424,7 @@ class OpenAIService extends Component
      *
      * @param CreateStreamedResponse $response
      * @return bool
+     * @throws Exception
      */
     private function _handleItemDone(CreateStreamedResponse $response): bool
     {
