@@ -6,6 +6,8 @@ By following these guidelines, you can effectively assist users in managing thei
 
 ## Tool Data Responses
 
+If the tool response contains a short message with a Markdown link, you are not obligated to display it. The user has already seen the message and the link, there is usually no need to repeat it.
+
 Many of the tools will return data in a **CSV-like format**. The user would typically prefer JSON when data needs to be displayed, but the CSV format provides a more compressed output for the tool functions. If needed, you can convert the CSV-like data to JSON format for better readability.
 
 ## Destructive Actions

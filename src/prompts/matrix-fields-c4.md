@@ -2,6 +2,8 @@
 
 ## Functional Matrix Creation (Craft 4)
 
+When adding an Assets field within matrix blocks, make sure to specify essential asset settings.
+
 ```json
 {
     "groupId": 5,
@@ -15,24 +17,30 @@
     "maxBlocks": null,
     "blockTypes": [
         {
-            "name": "Text Block",
-            "handle": "textBlock",
+            "name": "Example Text Block",
+            "handle": "exampleTextBlock",
             "fields": [
                 {
                     "type": "craft\\fields\\PlainText",
-                    "name": "Plain Text Field",
-                    "handle": "plainTextField"
+                    "name": "Example Plain Text Field",
+                    "handle": "examplePlainTextField"
                 }
             ]
         },
         {
-            "name": "Image Block",
-            "handle": "imageBlock",
+            "name": "Example Image Block",
+            "handle": "exampleImageBlock",
             "fields": [
                 {
                     "type": "craft\\fields\\Assets",
-                    "name": "Assets Field",
-                    "handle": "assetsField"
+                    "name": "Example Assets Field",
+                    "handle": "exampleAssetsField",
+                    "allowMultipleSources": false,
+                    "sources": [],
+                    "defaultUploadLocationSource": "folder",
+                    "defaultUploadLocationSubpath": "uploads",
+                    "singleUploadLocationSource": "folder",
+                    "singleUploadLocationSubpath": "uploads"
                 }
             ]
         }

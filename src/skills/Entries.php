@@ -88,8 +88,8 @@ class Entries extends BaseSkillSet
         // If a section was specified
         if ($sectionHandle) {
             // Append section link to error/success messages
-            $sectionUrl = UrlHelper::cpUrl("entries/{$section->handle}");
-            $inSection = " in section > [$section->name]($sectionUrl)";
+            $editUrl = UrlHelper::cpUrl("entries/{$section->handle}");
+            $inSection = " in section > [$section->name]($editUrl)";
         }
 
         // If no results

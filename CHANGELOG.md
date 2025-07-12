@@ -7,6 +7,7 @@
 - Added stack trace for streaming issues.
 
 ### Changed
+- Improved support for Matrix in Craft 4.
 - Changed formatting of tool responses.
 - Removed the message size limit.
 - Adjusted thinking message resets.

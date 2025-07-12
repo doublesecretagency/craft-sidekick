@@ -129,7 +129,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site created > {$site->name} (`{$site->handle}`)",
+            'message' => "Site created > {$site->name} [`{$site->handle}`]",
 //            'response' => $config,
         ]);
     }

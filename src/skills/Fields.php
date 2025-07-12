@@ -14,6 +14,7 @@ namespace doublesecretagency\sidekick\skills;
 use Craft;
 use craft\base\FieldInterface;
 use craft\helpers\Json;
+use craft\helpers\UrlHelper;
 use craft\models\FieldGroup;
 use craft\models\FieldLayout;
 use doublesecretagency\sidekick\helpers\FieldLayoutHelper;
@@ -187,10 +188,13 @@ class Fields extends BaseSkillSet
             throw new Exception("Unable to create field: {$errors}");
         }
 
+        // Set URL for editing the field in the control panel
+        $editUrl = UrlHelper::cpUrl("settings/fields/edit/{$field->id}");
+
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field \"{$field->name}\" with handle \"{$field->handle}\" of type \"{$fieldType}\" has been created.",
+            'message' => "Field created > [{$field->name}]({$editUrl}) [`{$field->handle}`]",
 //            'response' => $config,
         ]);
     }
@@ -233,10 +237,13 @@ class Fields extends BaseSkillSet
             throw new Exception("Unable to update field: {$errors}");
         }
 
+        // Set URL for editing the field in the control panel
+        $editUrl = UrlHelper::cpUrl("settings/fields/edit/{$field->id}");
+
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field \"{$field->name}\" has been updated.",
+            'message' => "Field updated > [{$field->name}]({$editUrl}) [`{$field->handle}`]",
 //            'response' => $config,
         ]);
     }
@@ -277,7 +284,7 @@ class Fields extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Field \"{$field->name}\" has been deleted.",
+            'message' => "Field deleted > {$field->name}",
 //            'response' => $config,
         ]);
     }
