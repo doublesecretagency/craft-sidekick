@@ -248,9 +248,10 @@ class OpenAIService extends Component
 
         // Initialize detection of message pauses
         $lastThinkingMessageTime = time();
-        $this->_lastMessageTime = time();
-        $this->_thinkingIndex = 0;
         $thinkingInterval = 7; // seconds
+
+        // Reset the thinking time
+        $this->_resetThinkingTime();
 
         // Initialize heartbeat
         $heartbeatCounter = 0;
@@ -478,6 +479,9 @@ class OpenAIService extends Component
             ->log(__METHOD__)
             ->toChatHistory()
             ->toChatWindow();
+
+        // Reset the thinking time
+        $this->_resetThinkingTime();
     }
 
     /**
@@ -501,6 +505,9 @@ class OpenAIService extends Component
             ->log(__METHOD__)
             ->toChatHistory()
             ->toChatWindow();
+
+        // Reset the thinking time
+        $this->_resetThinkingTime();
     }
 
     /**
@@ -553,12 +560,20 @@ class OpenAIService extends Component
             ->log(__METHOD__)
             ->toChatHistory();
 
-        // Reset the thinking index and last message time
-        $this->_thinkingIndex = 0;
-        $this->_lastMessageTime = time();
+        // Reset the thinking time
+        $this->_resetThinkingTime();
     }
 
     // ========================================================================= //
+
+    /**
+     * Reset the thinking index and last message time.
+     */
+    public function _resetThinkingTime(): void
+    {
+        $this->_thinkingIndex = 0;
+        $this->_lastMessageTime = time();
+    }
 
     /**
      * Available functions for the API to call.

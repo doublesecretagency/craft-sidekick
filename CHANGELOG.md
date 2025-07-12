@@ -8,6 +8,7 @@
 ### Changed
 - Changed formatting of tool responses.
 - Removed the message size limit.
+- Adjusted thinking message resets.
 
 ## 1.0.8 - 2025-07-08
 
