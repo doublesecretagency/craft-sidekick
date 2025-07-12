@@ -35,6 +35,28 @@ class VersionHelper
     }
 
     /**
+     * Whether Craft is version 4.x.
+     *
+     * @return bool
+     */
+    public static function isCraft4(): bool
+    {
+        return self::craftBetween('4.0.0', '5.0.0');
+    }
+
+    /**
+     * Whether Craft is version 5.x.
+     *
+     * @return bool
+     */
+    public static function isCraft5(): bool
+    {
+        return self::craftBetween('5.0.0', '6.0.0');
+    }
+
+    // ========================================================================= //
+
+    /**
      * Get version-specific service for handling Sections.
      *
      * @return object
@@ -42,7 +64,7 @@ class VersionHelper
     public static function sectionsService(): object
     {
         // If this is Craft 4
-        if (self::craftBetween('4.0.0', '5.0.0')) {
+        if (self::isCraft4()) {
             // Craft 4
             return Craft::$app->getSections();
         }

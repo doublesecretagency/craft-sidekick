@@ -83,7 +83,7 @@ class FieldLayoutHelper
     private static function _entryDescription(FieldLayout $layout): string
     {
         // Set which columns to fetch
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+        if (VersionHelper::isCraft4()) {
             // Craft 4
             $columns = ['name','sectionId'];
         } else {
@@ -111,7 +111,7 @@ class FieldLayoutHelper
 
         // Craft 4
         // Include the section name in the description
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+        if (VersionHelper::isCraft4()) {
 
             // Grab the section model
             $section = VersionHelper::sectionsService()->getSectionById($entryType['sectionId']);

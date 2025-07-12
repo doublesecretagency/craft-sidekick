@@ -46,7 +46,7 @@ class EntryTypes extends BaseSkillSet
         }
 
         // Methods unavailable in Craft 4
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+        if (VersionHelper::isCraft4()) {
             $restrictedMethods[] = 'getAllEntryTypes';
             $restrictedMethods[] = 'createEntryType';
             $restrictedMethods[] = 'updateEntryType';

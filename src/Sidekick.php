@@ -352,7 +352,7 @@ class Sidekick extends Plugin
         ];
 
         // Append handling of Matrix fields
-        if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+        if (VersionHelper::isCraft4()) {
             // Craft 4
             $this->_prompts[] = 'matrix-fields-c4.md';
             $this->_prompts[] = 'entry-types-c4.md';

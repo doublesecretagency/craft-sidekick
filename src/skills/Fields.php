@@ -52,7 +52,7 @@ class Fields extends BaseSkillSet
         }
 
         // Methods unavailable after Craft 4
-        if (!VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+        if (!VersionHelper::isCraft4()) {
             $restrictedMethods[] = 'getAllFieldGroups';
             $restrictedMethods[] = 'createFieldGroup';
             $restrictedMethods[] = 'deleteFieldGroup';
@@ -98,7 +98,7 @@ class Fields extends BaseSkillSet
             ];
 
             // If this is Craft 4
-            if (VersionHelper::craftBetween('4.0.0', '5.0.0')) {
+            if (VersionHelper::isCraft4()) {
                 // Include the group ID
                 $fieldData['groupId'] = ($field->groupId ?? null);
             }
