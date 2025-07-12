@@ -137,7 +137,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved tag \"{$tag->title}\".",
+            'message' => "Tag read > {$tag->title}",
             'response' => Json::encode($tag)
         ]);
     }
@@ -169,7 +169,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Tag \"{$tag->title}\" has been created.",
+            'message' => "Tag created > {$tag->title}",
 //            'response' => $config,
         ]);
     }
@@ -205,7 +205,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Tag \"{$tag->title}\" has been updated.",
+            'message' => "Tag updated > {$tag->title}",
 //            'response' => $config,
         ]);
     }
@@ -242,7 +242,7 @@ class Tags extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted tag \"{$tag->title}\".",
+            'message' => "Tag deleted > {$tag->title}",
         ]);
     }
 

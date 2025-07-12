@@ -15,8 +15,10 @@ use Craft;
 use craft\elements\Entry;
 use craft\errors\ElementNotFoundException;
 use craft\helpers\Json;
+use craft\helpers\UrlHelper;
 use doublesecretagency\sidekick\helpers\ElementsHelper;
 use doublesecretagency\sidekick\helpers\SkillsHelper;
+use doublesecretagency\sidekick\helpers\VersionHelper;
 use doublesecretagency\sidekick\models\SkillResponse;
 use Throwable;
 use yii\base\Exception;
@@ -34,6 +36,7 @@ class Entries extends BaseSkillSet
      *
      * @param string $sectionHandle Optional handle of the section to filter by. Set to empty string to get all entries.
      * @return SkillResponse
+     * @throws Exception
      */
     public static function getAllEntries(string $sectionHandle): SkillResponse
     {
@@ -47,6 +50,15 @@ class Entries extends BaseSkillSet
 
         // If a section handle is provided
         if ($sectionHandle) {
+
+            // Get the section
+            $section = VersionHelper::sectionsService()->getSectionByHandle($sectionHandle);
+
+            // If no such section exists, throw an error
+            if (!$section) {
+                throw new Exception("No section found with the handle \"{$sectionHandle}\".");
+            }
+
             // Filter the query by that section
             $query->section($sectionHandle);
         }
@@ -69,22 +81,30 @@ class Entries extends BaseSkillSet
             ];
         }
 
-        // Optionally append section handle to error/success messages
-        $inSection = ($sectionHandle ? " in section \"{$sectionHandle}\"" : '');
+        // By default, no section is specified,
+        // so end the message with a period
+        $inSection = '.';
+
+        // If a section was specified
+        if ($sectionHandle) {
+            // Append section link to error/success messages
+            $sectionUrl = UrlHelper::cpUrl("entries/{$section->handle}");
+            $inSection = " in section > [$section->name]($sectionUrl)";
+        }
 
         // If no results
         if (!$results) {
             // Return success message with no results
             return new SkillResponse([
                 'success' => true,
-                'message' => "No entries found{$inSection}."
+                'message' => "No entries found{$inSection}"
             ]);
         }
 
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Reviewed basic info for all entries{$inSection}.",
+            'message' => "Reviewed basic info for all entries{$inSection}",
             'response' => SkillsHelper::toCsv($results)
         ]);
     }
@@ -112,7 +132,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved entry \"{$entry->title}\".",
+            'message' => "Entry read > [{$entry->title}]({$entry->getCpEditUrl()})",
             'response' => Json::encode($entry)
         ]);
     }
@@ -144,7 +164,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Entry \"{$entry->title}\" has been created.",
+            'message' => "Entry created > [{$entry->title}]({$entry->getCpEditUrl()})",
 //            'response' => $config,
         ]);
     }
@@ -180,7 +200,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Entry \"{$entry->title}\" has been updated.",
+            'message' => "Entry updated > [{$entry->title}]({$entry->getCpEditUrl()})",
 //            'response' => $config,
         ]);
     }
@@ -217,7 +237,7 @@ class Entries extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted entry \"{$entry->title}\".",
+            'message' => "Entry deleted > {$entry->title}",
         ]);
     }
 }

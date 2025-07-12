@@ -6,6 +6,7 @@
 - Added error message identifiers.
 
 ### Changed
+- Changed formatting of tool responses.
 - Removed the message size limit.
 
 ## 1.0.8 - 2025-07-08

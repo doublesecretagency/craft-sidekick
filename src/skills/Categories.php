@@ -138,7 +138,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Retrieved category \"{$category->title}\".",
+            'message' => "Category read > [{$category->title}]({$category->getCpEditUrl()})",
             'response' => Json::encode($category)
         ]);
     }
@@ -170,7 +170,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Category \"{$category->title}\" has been created.",
+            'message' => "Category created > [{$category->title}]({$category->getCpEditUrl()})",
 //            'response' => $config,
         ]);
     }
@@ -206,7 +206,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Category \"{$category->title}\" has been updated.",
+            'message' => "Category updated > [{$category->title}]({$category->getCpEditUrl()})",
 //            'response' => $config,
         ]);
     }
@@ -243,7 +243,7 @@ class Categories extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Successfully deleted category \"{$category->title}\".",
+            'message' => "Category deleted > {$category->title}",
         ]);
     }
 

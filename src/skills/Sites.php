@@ -129,7 +129,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site \"{$site->name}\" with handle \"{$site->handle}\" has been created.",
+            'message' => "Site created > {$site->name} (`{$site->handle}`)",
 //            'response' => $config,
         ]);
     }
@@ -185,7 +185,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site \"{$site->name}\" has been updated.",
+            'message' => "Site updated > {$site->name}",
 //            'response' => $config,
         ]);
     }
@@ -224,7 +224,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site \"{$site->name}\" has been deleted.",
+            'message' => "Site deleted > {$site->name}",
 //            'response' => $config,
         ]);
     }
@@ -306,7 +306,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site group \"{$group->getName()}\" has been created.",
+            'message' => "Site group created > {$group->getName()}",
 //            'response' => $config,
         ]);
     }
@@ -354,7 +354,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site group \"{$group->getName()}\" has been updated.",
+            'message' => "Site group updated > {$group->getName()}",
 //            'response' => $config,
         ]);
     }
@@ -398,7 +398,7 @@ class Sites extends BaseSkillSet
         // Return success message
         return new SkillResponse([
             'success' => true,
-            'message' => "Site group \"{$group->name}\" has been deleted.",
+            'message' => "Site group deleted > {$group->getName()}",
 //            'response' => $config,
         ]);
     }
