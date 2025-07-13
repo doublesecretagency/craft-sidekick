@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.9 - 2025-07-12
 
 ### Added
 - Added error message identifiers.
