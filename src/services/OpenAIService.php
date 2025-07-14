@@ -55,9 +55,9 @@ class OpenAIService extends Component
     private const HASH_LENGTH = 6;
 
     /**
-     * @var string The API key for OpenAI.
+     * @var string|null The API key for OpenAI.
      */
-    private string $_apiKey;
+    private ?string $_apiKey = null;
 
     /**
      * @var Client The OpenAI client for making API requests.
@@ -90,6 +90,11 @@ class OpenAIService extends Component
 
         // Retrieve the OpenAI API key from plugin settings or environment variables
         $this->_apiKey = App::parseEnv(Sidekick::getInstance()?->getSettings()->openAiApiKey ?? '');
+
+        // If the API key is not set, throw an exception
+        if (!$this->_apiKey) {
+            throw new Exception('Unable to use OpenAI, the API key is missing.');
+        }
 
         // Set the AI client
         $this->_setAiClient();

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed bug in AI Summary field type when API key is not set.
+
 ## 1.0.9 - 2025-07-12
 
 ### Added
