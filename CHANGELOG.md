@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+- Added instructions for saving/updating categories.
+
 ### Fixed
 - Fixed bug in AI Summary field type when API key is not set.
 

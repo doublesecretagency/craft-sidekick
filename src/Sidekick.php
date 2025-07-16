@@ -344,6 +344,7 @@ class Sidekick extends Plugin
             'chat-messages.md',
             'saving-fields.md',
             'saving-sections.md',
+            'saving-categories.md',
             'saving-category-groups.md',
             'field-layouts.md',
             'element-configs.md',
