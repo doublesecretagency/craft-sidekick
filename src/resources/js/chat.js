@@ -363,7 +363,7 @@ const SidekickChat = {
         // Close the connection when instructed
         eventSource.addEventListener('close', function(event) {
             // Log the resolution of the connection
-            console.log(`${that.formatTimestamp()} SSE connection resolved`);
+            // console.log(`${that.formatTimestamp()} SSE connection resolved`);
             // Close the EventSource connection
             eventSource.close();
             // Hide the loader
@@ -375,7 +375,7 @@ const SidekickChat = {
 
         // Log the start time
         eventSource.onopen = function () {
-            console.log(`${that.formatTimestamp()} SSE connection established`);
+            // console.log(`${that.formatTimestamp()} SSE connection established`);
         };
 
         // Listen for messages from the server
