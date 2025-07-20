@@ -21,7 +21,6 @@ use doublesecretagency\sidekick\constants\Chat;
 use doublesecretagency\sidekick\helpers\SystemPrompt;
 use doublesecretagency\sidekick\models\ChatMessage;
 use doublesecretagency\sidekick\models\FunctionCall;
-use doublesecretagency\sidekick\models\SkillResponse;
 use doublesecretagency\sidekick\models\ToolFunction;
 use doublesecretagency\sidekick\Sidekick;
 use GuzzleHttp\Client as GuzzleClient;
@@ -389,14 +388,14 @@ class OpenAIService extends Component
                 $message = "We encountered a bit of turbulence. It might be nothing, please wait a moment and try again. If you encounter persistent issues, feel free to \"Clear Conversation\" and start fresh.";
             }
 
-            // Prepend offending line to the stack trace
-            $stackTrace = "{$errorType} in {$file}({$line}): {$message}\n\n$traceString";
+//            // Prepend offending line to the stack trace
+//            $stackTrace = "{$errorType} in {$file}({$line}): {$message}\n\n$traceString";
 
             // Output error message
             (new ChatMessage([
                 'role' => ChatMessage::ERROR,
                 'message' => "Streaming issue: {$message}",
-                'response' => $stackTrace,
+//                'response' => $stackTrace, // SkillResponse only
             ]))
                 ->log(__METHOD__)
                 ->toChatHistory()
