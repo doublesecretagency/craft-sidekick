@@ -19,18 +19,4 @@ class Session
      * @const
      */
     public const AI_MODEL = 'sidekickSelectedModel';
-
-    /**
-     * Session key for storing the generated response ID.
-     *
-     * @const
-     */
-    public const RESPONSE_ID = 'sidekickResponseId';
-
-    /**
-     * Session key for storing the complete conversation.
-     *
-     * @const
-     */
-    public const CHAT_HISTORY = 'sidekickConversation';
 }

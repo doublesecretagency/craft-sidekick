@@ -186,37 +186,38 @@ class OpenAIService extends Component
         foreach ($conversation as $i => $message) {
 
             // If message is a function call
-            if ($message instanceof FunctionCall) {
+            if ($message['callId'] ?? false) {
 
                 // Parse the function call
                 $parsedConversation[] = [
                     'type'      => 'function_call',
-                    'call_id'   => $message->callId,
-                    'name'      => $message->name,
-                    'arguments' => $message->arguments,
+                    'call_id'   => ($message['callId'] ?? null),
+                    'name'      => ($message['name'] ?? null),
+                    'arguments' => ($message['arguments'] ?? null),
                 ];
 
                 // Parse the function call output
                 $parsedConversation[] = [
                     'type'    => 'function_call_output',
-                    'call_id' => $message->callId,
-                    'output'  => $message->output,
+                    'call_id' => ($message['callId'] ?? null),
+                    'output'  => ($message['output'] ?? null),
                 ];
 
-            } else if ($message instanceof ChatMessage) {
+            // Else a valid array message
+            } else if (is_array($message)) {
 
                 // If message is an error
-                if (ChatMessage::ERROR === $message->role) {
+                if (ChatMessage::ERROR === $message['role']) {
                     // Consider error to be a user message
                     $parsedConversation[] = [
                         'role' => ChatMessage::USER,
-                        'content' => "SYSTEM ERROR: {$message->message}",
+                        'content' => "SYSTEM ERROR: {$message['message']}",
                     ];
                 } else {
                     // Else convert object to array
                     $parsedConversation[] = [
-                        'role' => $message->role,
-                        'content' => $message->message,
+                        'role' => $message['role'],
+                        'content' => $message['message'],
                     ];
                 }
 

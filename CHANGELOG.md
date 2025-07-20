@@ -5,6 +5,9 @@
 ### Added
 - Added instructions for saving/updating categories.
 
+### Changed
+- Chat history is now saved via Yii cache, instead of the session.
+
 ### Fixed
 - Fixed bug in AI Summary field type when API key is not set.
 
