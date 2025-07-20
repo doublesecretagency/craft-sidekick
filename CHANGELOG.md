@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.10 - 2025-07-19
 
 ### Added
 - Added instructions for saving/updating categories.
