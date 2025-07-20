@@ -7,6 +7,7 @@
 
 ### Changed
 - Chat history is now saved via Yii cache, instead of the session.
+- Masked vague OpenAI error message with clarifying instructions.
 
 ### Fixed
 - Fixed bug in AI Summary field type when API key is not set.

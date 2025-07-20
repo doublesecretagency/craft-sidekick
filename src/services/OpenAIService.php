@@ -377,10 +377,16 @@ class OpenAIService extends Component
             $message = $e->getMessage();
             $traceString = $e->getTraceAsString();
 
-            // Rephrase this specific error message:
+            // Rephrase this specific OpenAI error message:
             // "Your input exceeds the context window of this model. Please adjust your input and try again."
             if (str_contains($message, 'input exceeds the context window of this model')) {
                 $message = "Too much data for the AI model. You may need to \"Clear Conversation\" to get a fresh start.";
+            }
+
+            // Rephrase this specific OpenAI error message:
+            // "An error occurred while processing the request."
+            if (str_contains($message, 'An error occurred while processing the request')) {
+                $message = "We encountered a bit of turbulence. It might be nothing, please wait a moment and try again. If you encounter persistent issues, feel free to \"Clear Conversation\" and start fresh.";
             }
 
             // Prepend offending line to the stack trace
