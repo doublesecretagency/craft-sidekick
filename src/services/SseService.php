@@ -27,20 +27,20 @@ class SseService extends Component
      */
     public function sendMessage(ChatMessage $message): void
     {
-        // If the connection has been aborted
-        if (connection_aborted()) {
-
-            // Log the error message
-            (new ChatMessage([
-                'role' => ChatMessage::ERROR,
-                'message' => "SSE connection aborted, message could not be sent. [{$message->message}]",
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory();
-
-            // Bail
-            return;
-        }
+//        // If the connection has been aborted
+//        if (connection_aborted()) {
+//
+//            // Log the error message
+//            (new ChatMessage([
+//                'role' => ChatMessage::ERROR,
+//                'message' => "SSE connection aborted, message could not be sent. [{$message->message}]",
+//            ]))
+//                ->log(__METHOD__)
+//                ->toChatHistory();
+//
+//            // Bail
+//            return;
+//        }
 
         try {
 
@@ -87,20 +87,20 @@ class SseService extends Component
      */
     public function sendHeartbeat(): void
     {
-        // If the connection has already been aborted
-        if (connection_aborted()) {
-
-            // Log error message
-            (new ChatMessage([
-                'role' => ChatMessage::ERROR,
-                'message' => "No connection, unable to send heartbeat."
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory();
-
-            // Bail
-            return;
-        }
+//        // If the connection has already been aborted
+//        if (connection_aborted()) {
+//
+//            // Log error message
+//            (new ChatMessage([
+//                'role' => ChatMessage::ERROR,
+//                'message' => "No connection, unable to send heartbeat."
+//            ]))
+//                ->log(__METHOD__)
+//                ->toChatHistory();
+//
+//            // Bail
+//            return;
+//        }
 
         // Send a heartbeat
         Sse::comment('heartbeat');

@@ -287,20 +287,20 @@ class OpenAIService extends Component
             /** @var CreateStreamedResponse $response */
             foreach ($stream as $response) {
 
-                // If the SSE connection has been aborted
-                if (connection_aborted()) {
-
-                    // Log error message
-                    (new ChatMessage([
-                        'role' => ChatMessage::ERROR,
-                        'message' => "SSE connection aborted by the client."
-                    ]))
-                        ->log(__METHOD__)
-                        ->toChatHistory();
-
-                    // Exits the foreach loop
-                    break;
-                }
+//                // If the SSE connection has been aborted
+//                if (connection_aborted()) {
+//
+//                    // Log error message
+//                    (new ChatMessage([
+//                        'role' => ChatMessage::ERROR,
+//                        'message' => "SSE connection aborted by the client."
+//                    ]))
+//                        ->log(__METHOD__)
+//                        ->toChatHistory();
+//
+//                    // Exits the foreach loop
+//                    break;
+//                }
 
                 // Send a heartbeat to keep the SSE connection alive
                 if (++$heartbeatCounter % $heartbeatCycles === 0) {
@@ -473,18 +473,18 @@ class OpenAIService extends Component
      */
     private function _handleTextResponse(OutputMessage $item): void
     {
-        // If the SSE connection has been aborted
-        if (connection_aborted()) {
-            // Log error message
-            (new ChatMessage([
-                'role' => ChatMessage::ERROR,
-                'message' => "Unable to append reply, SSE connection aborted."
-            ]))
-                ->log(__METHOD__)
-                ->toChatHistory();
-            // Bail
-            return;
-        }
+//        // If the SSE connection has been aborted
+//        if (connection_aborted()) {
+//            // Log error message
+//            (new ChatMessage([
+//                'role' => ChatMessage::ERROR,
+//                'message' => "Unable to append reply, SSE connection aborted."
+//            ]))
+//                ->log(__METHOD__)
+//                ->toChatHistory();
+//            // Bail
+//            return;
+//        }
 
         // Get the AI response
         $aiResponse = ($item->content[0]->text ?? null);
