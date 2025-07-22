@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.11 - 2025-07-22
 
 ### Added
 - Easter egg for measuring output size.
