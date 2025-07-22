@@ -589,6 +589,9 @@ class OpenAIService extends Component
             ->log(__METHOD__)
             ->toChatHistory();
 
+        // Optionally measure the size of the tool output
+        Sidekick::getInstance()?->chat->measure('TOOL OUTPUT SIZE', $toolResponse);
+
         // Reset the thinking time
         $this->_resetThinkingTime();
     }

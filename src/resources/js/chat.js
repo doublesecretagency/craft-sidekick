@@ -337,16 +337,22 @@ const SidekickChat = {
         this.chatInput.value = '';
 
         // Get the greeting message
-        const greeting = (this.greeting ? this.greeting.message : null);
+        const greeting = (this.greeting ? this.greeting.message : '');
+
+        // Retrieve the current URL's query parameters
+        const pageParams = new URLSearchParams(window.location.search);
+
+        // Get the value of the 'report' parameter
+        const report = (pageParams.get('report') || '');
 
         // Convert parameters to a query string
-        const params = new URLSearchParams({message, greeting});
+        const ajaxParams = new URLSearchParams({message, greeting, report});
 
         // FOR TESTING PURPOSES ONLY
         // const eventSource = new EventSource(`/actions/sidekick/chat/test-stream`);
 
         // Create an event source
-        const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${params.toString()}`);
+        const eventSource = new EventSource(`/actions/sidekick/chat/send-message?${ajaxParams.toString()}`);
 
         // How long to wait before checking
         // whether the connection is still CONNECTING

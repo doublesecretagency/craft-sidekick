@@ -88,6 +88,9 @@ class ChatService extends Component
         // Append the new message to the conversation
         $conversation[] = $message;
 
+        // Optionally measure the size of the conversation
+        $this->measure('CONVERSATION SIZE', $conversation);
+
         // Set lifespan for the cache entry
         $lifespan = (60 * 60 * 24 * 14); // 14 days
 
@@ -101,5 +104,37 @@ class ChatService extends Component
 
 //        // Log an error message
 //        Craft::error("Unable to update the conversation.", __METHOD__);
+    }
+
+    /**
+     * Optionally display the size of a snippet in the chat window.
+     *
+     * @param string $label
+     * @param array $snippet
+     */
+    public function measure(string $label, array $snippet): void
+    {
+        // If not reporting, bail
+        if (!Craft::$app->getRequest()->getQueryParam('report')) {
+            return;
+        }
+
+        // Get the size of the snippet in bytes
+        $bytes = mb_strlen(Json::encode($snippet), '8bit');
+
+        // Format the size for display
+        if ($bytes > 1000000) {
+            $size = round($bytes / 1000000, 2) . ' MB';
+        } elseif ($bytes > 1000) {
+            $size = round($bytes / 1000, 2) . ' KB';
+        } else {
+            $size = $bytes . ' bytes';
+        }
+
+        // Report the size in the chat window
+        (new ChatMessage([
+            'role' => ChatMessage::SYSTEM,
+            'message' => "{$label}: {$size}"
+        ]))->toChatWindow();
     }
 }
