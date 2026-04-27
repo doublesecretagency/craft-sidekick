@@ -70,6 +70,18 @@ class AiSummary extends Field implements PreviewableFieldInterface
     /**
      * @inheritdoc
      */
+    public function init(): void
+    {
+        // Default new AI Summary fields to per-site translation
+        // (existing saved fields are overridden by setAttributes())
+        $this->translationMethod = Field::TRANSLATION_METHOD_SITE;
+
+        parent::init();
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getSettingsHtml(): ?string
     {
         // Render the settings template

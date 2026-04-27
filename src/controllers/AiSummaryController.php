@@ -39,10 +39,11 @@ class AiSummaryController extends Controller
         // Get IDs from the request
         $fieldId = $request->getBodyParam('fieldId');
         $elementId = $request->getBodyParam('elementId');
+        $siteId = (int) $request->getRequiredBodyParam('siteId');
 
-        // Get the field and element
+        // Get the field and element (scoped to the requested site)
         $field = Craft::$app->getFields()->getFieldById($fieldId);
-        $element = Craft::$app->getElements()->getElementById($elementId);
+        $element = Craft::$app->getElements()->getElementById($elementId, null, $siteId);
 
         // If the field is not found, return an error
         if (!$field) {
@@ -64,7 +65,7 @@ class AiSummaryController extends Controller
         if (!$element) {
             return $this->asJson([
                 'success' => false,
-                'message' => "Element {$elementId} not found."
+                'message' => "Element {$elementId} not found in site {$siteId}."
             ]);
         }
 

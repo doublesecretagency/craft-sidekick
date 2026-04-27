@@ -34,8 +34,9 @@ function sidekickClear(label, namespace) {
  * @param namespace
  * @param fieldId
  * @param elementId
+ * @param siteId
  */
-function sidekickGenerate(label, namespace, fieldId, elementId) {
+function sidekickGenerate(label, namespace, fieldId, elementId, siteId) {
 
     // Get the textarea element
     const $textarea = $(`textarea[name="${namespace}"]`);
@@ -61,11 +62,12 @@ function sidekickGenerate(label, namespace, fieldId, elementId) {
     // Show the generating message
     $generating.addClass('visible');
 
-    // Generate a fresh summary
+    // Generate a fresh summary (scoped to the currently-edited site)
     Craft.sendActionRequest('POST', 'sidekick/ai-summary/generate', {
         data: {
             'fieldId': fieldId,
-            'elementId': elementId
+            'elementId': elementId,
+            'siteId': siteId
         }
     }).then((response) => {
 

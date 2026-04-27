@@ -38,7 +38,7 @@
             </button>
             {% if element.id %}
                 <button type="button"
-                        onclick="sidekickGenerate('{{ field.name }}', '{{ field.handle|namespaceInputName }}', {{ field.id }}, {{ element.id }})"
+                        onclick="sidekickGenerate('{{ field.name }}', '{{ field.handle|namespaceInputName }}', {{ field.id }}, {{ element.id }}, {{ element.siteId }})"
                         class="btn small secondary">
                     Generate
                 </button>

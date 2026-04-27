@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- Changed default translation method for new AI Summary fields to "Translate for each site".
+
+### Fixed
+- Fixed bug which caused the AI Summary "Generate" button to summarize the primary site's content instead of the currently-edited site. ([#6](https://github.com/doublesecretagency/craft-sidekick/issues/6))
+
 ## 1.0.11 - 2025-07-22
 
 ### Added
