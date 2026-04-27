@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.12 - 2026-04-27
 
 ### Changed
 - Changed default translation method for new AI Summary fields to "Translate for each site".
