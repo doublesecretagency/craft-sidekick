@@ -13,10 +13,6 @@
 {#}#}
 {#{% endcss %}#}
 
-{# Get info icon #}
-{% set file = craft.app.view.assetManager.publish('@doublesecretagency/sidekick/resources/images/information.svg') %}
-{% set infoIcon = file[1] %}
-
 {# Get plugin settings #}
 {% set settings = craft.app.plugins.getPlugin('sidekick').getSettings() %}
 

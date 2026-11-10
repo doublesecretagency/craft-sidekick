@@ -4,6 +4,7 @@
 
 ### Fixed
 - Fixed the welcome screen icon on Craft Cloud.
+- Fixed the AI Summary field's info icon on Craft Cloud.
 
 ## 1.0.12 - 2026-04-27
 

@@ -1,10 +1,9 @@
 {% import '_includes/forms' as forms %}
 
-{% do view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\FieldsAssetBundle') %}
+{% set bundle = view.registerAssetBundle('doublesecretagency\\sidekick\\assetbundles\\FieldsAssetBundle') %}
 
-{# Get info icon #}
-{% set file = craft.app.view.assetManager.publish('@doublesecretagency/sidekick/resources/images/information.svg') %}
-{% set infoIcon = file[1] %}
+{# Get info icon from the bundle's folder, which Craft Cloud uploads at build time #}
+{% set infoIcon = bundle.baseUrl ~ '/images/information.svg' %}
 
 {{ forms.textarea({
     name: field.handle,
