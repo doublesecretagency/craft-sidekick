@@ -11,9 +11,8 @@
 
 {# Optionally show welcome message #}
 {% if welcome %}
-    {% set iconUrl = view.getAssetManager().getPublishedUrl('@doublesecretagency/sidekick/icon.svg', true) %}
     <div class="pane" style="">
-        <img src="{{ iconUrl }}" alt="" width="120" style="float:left; margin:12px;">
+        {{ svg('@doublesecretagency/sidekick/icon.svg', namespace=true)|attr({width: 120, height: 120, style: 'float:left; margin:12px;', 'aria-hidden': 'true'}) }}
         <div style="padding-left: 160px">
             <h2>Welcome! Thanks for using the Sidekick plugin. &nbsp;🎉</h2>
             <p>Be sure to add your <a href="{{ cpUrl('settings/plugins/sidekick') }}">OpenAI API key</a> to get started.</p>

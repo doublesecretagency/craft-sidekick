@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fixed the welcome screen icon on Craft Cloud.
+
 ## 1.0.12 - 2026-04-27
 
 ### Changed
